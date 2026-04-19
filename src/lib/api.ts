@@ -8,7 +8,8 @@ export async function apiPost<T>(endpoint: string, body: object): Promise<T> {
   })
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
-    throw new Error(err.detail || `API error ${res.status}`)
+    const detail = err.detail
+    throw new Error(typeof detail === 'string' ? detail : detail ? JSON.stringify(detail) : `API error ${res.status}`)
   }
   return res.json()
 }
@@ -19,7 +20,8 @@ export async function apiGet<T>(endpoint: string, params?: Record<string, string
   const res = await fetch(url.toString())
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
-    throw new Error(err.detail || `API error ${res.status}`)
+    const detail = err.detail
+    throw new Error(typeof detail === 'string' ? detail : detail ? JSON.stringify(detail) : `API error ${res.status}`)
   }
   return res.json()
 }

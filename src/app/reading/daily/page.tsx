@@ -1,7 +1,8 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
-import BirthForm, { BirthData } from '@/components/BirthForm'
+import { BirthData } from '@/components/BirthForm'
+import PersonPicker from '@/components/PersonPicker'
 import ReadingResult from '@/components/ReadingResult'
 import ReadingPageShell from '@/components/ReadingPageShell'
 import { apiPost } from '@/lib/api'
@@ -31,10 +32,10 @@ export default function DailyFortunePage() {
   const [birthData, setBirthData] = useState<BirthData | null>(null)
   const [targetDate, setTargetDate] = useState(DATE_OPTIONS[0].value)
   const [error, setError] = useState('')
-  const [savedPersons, setSavedPersons] = useState<SavedPerson[]>([])
+  const [people, setPeople] = useState<SavedPerson[]>([])
 
   useEffect(() => {
-    if (user?.email) getPeople(user.email).then(setSavedPersons)
+    if (user?.email) getPeople(user.email).then(setPeople)
   }, [user?.email])
 
   async function handleSubmit(data: BirthData) {
@@ -45,13 +46,9 @@ export default function DailyFortunePage() {
     try {
       const birth_date = birthDateStr(data.year, data.month, data.day)
       const cached = await getCachedReading(user.email, 'daily', data.name, birth_date, data.city, targetDate)
-      if (cached) {
-        setResult(cached.result)
-        setFromCache(true)
-        return
-      }
+      if (cached) { setResult(cached.result); setFromCache(true); return }
       const birthtime = data.hour !== null
-        ? `${String(data.hour).padStart(2, '0')}:${String(data.minute ?? 0).padStart(2, '0')}`
+        ? `${String(data.hour).padStart(2,'0')}:${String(data.minute ?? 0).padStart(2,'0')}`
         : '12:00'
       const raw = await apiPost('/personal_daily_fortune', {
         year: data.year, month: data.month, day: data.day,
@@ -61,9 +58,7 @@ export default function DailyFortunePage() {
       })
       await apiPost('/use_pouch', { email: user.email, amount: 1 })
       await saveReading(user.email, { reading_type: 'daily', name: data.name, birth_date, birth_city: data.city, target_date: targetDate, result: raw })
-      setResult(raw)
-      setFromCache(false)
-      refreshCredits()
+      setResult(raw); setFromCache(false); refreshCredits()
       gtagEvent('reading_completed', { reading_type: 'daily' })
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Something went wrong. Please try again.')
@@ -76,51 +71,42 @@ export default function DailyFortunePage() {
     if (!user?.email) return
     const birth_date = birthDateStr(data.year, data.month, data.day)
     await savePerson(user.email, { name: data.name, birth_date, sex: data.sex, birth_city: data.city, hour: data.hour, minute: data.minute })
-    getPeople(user.email).then(setSavedPersons)
+    getPeople(user.email).then(setPeople)
   }
-
-  function handleReset() { setResult(null); setFromCache(false); setBirthData(null) }
 
   if (loading) return <LoadingScreen />
 
   const selectedLabel = DATE_OPTIONS.find(d => d.value === targetDate)?.label ?? targetDate
 
+  const datePicker = (
+    <div style={{ marginBottom: 4 }}>
+      <label style={{ color:'var(--text-muted)', fontSize:11, letterSpacing:1.5, textTransform:'uppercase', marginBottom:8, display:'block' }}>
+        Read fortune for
+      </label>
+      <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+        {DATE_OPTIONS.map(opt => (
+          <button key={opt.value} type="button" onClick={() => setTargetDate(opt.value)} style={{
+            padding:'6px 12px', borderRadius:20, fontSize:12, cursor:'pointer',
+            border:`1px solid ${targetDate === opt.value ? 'var(--gold)' : 'var(--border)'}`,
+            background: targetDate === opt.value ? 'rgba(201,168,76,0.12)' : '#0f1829',
+            color: targetDate === opt.value ? 'var(--gold)' : 'var(--text-muted)',
+            fontWeight: targetDate === opt.value ? 700 : 400,
+          }}>
+            {opt.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+
   return (
-    <ReadingPageShell
-      title="Personal Daily Fortune"
-      subtitle={`Your energy for ${selectedLabel}`}
-      emoji="☀️" badge="1 Credit" credits={credits} requiredCredits={1}
-    >
+    <ReadingPageShell title="Personal Daily Fortune" subtitle={`Your energy for ${selectedLabel}`} emoji="☀️" badge="1 Credit" credits={credits} requiredCredits={1}>
       {result ? (
-        <ReadingResult raw={result} onReset={handleReset} userEmail={user?.email ?? undefined} fromCache={fromCache} birthData={birthData ?? undefined} />
+        <ReadingResult raw={result} onReset={() => { setResult(null); setFromCache(false); setBirthData(null) }} userEmail={user?.email ?? undefined} fromCache={fromCache} birthData={birthData ?? undefined} />
       ) : (
         <div className="card">
-          {/* Date selector */}
-          <div style={{ marginBottom: 20 }}>
-            <label style={{ color: 'var(--text-muted)', fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8, display: 'block' }}>
-              Read fortune for
-            </label>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              {DATE_OPTIONS.map(opt => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => setTargetDate(opt.value)}
-                  style={{
-                    padding: '6px 12px', borderRadius: 20, fontSize: 12, cursor: 'pointer',
-                    border: `1px solid ${targetDate === opt.value ? 'var(--gold)' : 'var(--border)'}`,
-                    background: targetDate === opt.value ? 'rgba(201,168,76,0.12)' : '#0f1829',
-                    color: targetDate === opt.value ? 'var(--gold)' : 'var(--text-muted)',
-                    fontWeight: targetDate === opt.value ? 700 : 400,
-                  }}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-          <BirthForm onSubmit={handleSubmit} loading={submitting} submitLabel={`Read ${selectedLabel}'s Stars`} costBadge="1 Credit" savedPersons={savedPersons} onSavePerson={handleSavePerson} />
-          {error && <p style={{ color: '#ef4444', fontSize: 13, marginTop: 14, textAlign: 'center' }}>{error}</p>}
+          <PersonPicker people={people} onSubmit={handleSubmit} loading={submitting} submitLabel={`Read ${selectedLabel}'s Stars`} costBadge="1 Credit" headerSlot={datePicker} />
+          {error && <p style={{ color:'#ef4444', fontSize:13, marginTop:14, textAlign:'center' }}>{error}</p>}
         </div>
       )}
     </ReadingPageShell>
@@ -129,8 +115,8 @@ export default function DailyFortunePage() {
 
 function LoadingScreen() {
   return (
-    <main style={{ background: 'var(--bg)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <p style={{ color: 'var(--gold)', fontFamily: "'Cormorant Garamond', serif", fontSize: 18 }}>Loading...</p>
+    <main style={{ background:'var(--bg)', minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center' }}>
+      <p style={{ color:'var(--gold)', fontFamily:"'Cormorant Garamond', serif", fontSize:18 }}>Loading...</p>
     </main>
   )
 }

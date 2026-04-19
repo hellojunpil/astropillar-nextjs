@@ -1,7 +1,8 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
-import BirthForm, { BirthData } from '@/components/BirthForm'
+import { BirthData } from '@/components/BirthForm'
+import PersonPicker from '@/components/PersonPicker'
 import ReadingResult from '@/components/ReadingResult'
 import ReadingPageShell from '@/components/ReadingPageShell'
 import { apiPost } from '@/lib/api'
@@ -15,10 +16,10 @@ export default function PersonalFortunePage() {
   const [fromCache, setFromCache] = useState(false)
   const [birthData, setBirthData] = useState<BirthData | null>(null)
   const [error, setError] = useState('')
-  const [savedPersons, setSavedPersons] = useState<SavedPerson[]>([])
+  const [people, setPeople] = useState<SavedPerson[]>([])
 
   useEffect(() => {
-    if (user?.email) getPeople(user.email).then(setSavedPersons)
+    if (user?.email) getPeople(user.email).then(setPeople)
   }, [user?.email])
 
   async function handleSubmit(data: BirthData) {
@@ -29,13 +30,9 @@ export default function PersonalFortunePage() {
     try {
       const birth_date = birthDateStr(data.year, data.month, data.day)
       const cached = await getCachedReading(user.email, 'personal_fortune', data.name, birth_date, data.city)
-      if (cached) {
-        setResult(cached.result)
-        setFromCache(true)
-        return
-      }
+      if (cached) { setResult(cached.result); setFromCache(true); return }
       const birthtime = data.hour !== null
-        ? `${String(data.hour).padStart(2, '0')}:${String(data.minute ?? 0).padStart(2, '0')}`
+        ? `${String(data.hour).padStart(2,'0')}:${String(data.minute ?? 0).padStart(2,'0')}`
         : '12:00'
       const raw = await apiPost('/personal_fortune', {
         year: data.year, month: data.month, day: data.day,
@@ -44,9 +41,7 @@ export default function PersonalFortunePage() {
       })
       await apiPost('/use_pouch', { email: user.email, amount: 1 })
       await saveReading(user.email, { reading_type: 'personal_fortune', name: data.name, birth_date, birth_city: data.city, result: raw })
-      setResult(raw)
-      setFromCache(false)
-      refreshCredits()
+      setResult(raw); setFromCache(false); refreshCredits()
       gtagEvent('reading_completed', { reading_type: 'personal_fortune' })
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Something went wrong. Please try again.')
@@ -59,25 +54,19 @@ export default function PersonalFortunePage() {
     if (!user?.email) return
     const birth_date = birthDateStr(data.year, data.month, data.day)
     await savePerson(user.email, { name: data.name, birth_date, sex: data.sex, birth_city: data.city, hour: data.hour, minute: data.minute })
-    getPeople(user.email).then(setSavedPersons)
+    getPeople(user.email).then(setPeople)
   }
-
-  function handleReset() { setResult(null); setFromCache(false); setBirthData(null) }
 
   if (loading) return <LoadingScreen />
 
   return (
-    <ReadingPageShell
-      title="Personal Fortune"
-      subtitle="Your lifetime destiny — career, love, life theme, and hidden potential"
-      emoji="✨" badge="1 Credit" credits={credits} requiredCredits={1}
-    >
+    <ReadingPageShell title="Personal Fortune" subtitle="Your lifetime destiny — career, love, life theme, and hidden potential" emoji="✨" badge="1 Credit" credits={credits} requiredCredits={1}>
       {result ? (
-        <ReadingResult raw={result} onReset={handleReset} userEmail={user?.email ?? undefined} fromCache={fromCache} birthData={birthData ?? undefined} />
+        <ReadingResult raw={result} onReset={() => { setResult(null); setFromCache(false); setBirthData(null) }} userEmail={user?.email ?? undefined} fromCache={fromCache} birthData={birthData ?? undefined} />
       ) : (
         <div className="card">
-          <BirthForm onSubmit={handleSubmit} loading={submitting} submitLabel="Reveal My Fortune" costBadge="1 Credit" savedPersons={savedPersons} onSavePerson={handleSavePerson} />
-          {error && <p style={{ color: '#ef4444', fontSize: 13, marginTop: 14, textAlign: 'center' }}>{error}</p>}
+          <PersonPicker people={people} onSubmit={handleSubmit} loading={submitting} submitLabel="Reveal My Fortune" costBadge="1 Credit" />
+          {error && <p style={{ color:'#ef4444', fontSize:13, marginTop:14, textAlign:'center' }}>{error}</p>}
         </div>
       )}
     </ReadingPageShell>
@@ -86,8 +75,8 @@ export default function PersonalFortunePage() {
 
 function LoadingScreen() {
   return (
-    <main style={{ background: 'var(--bg)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <p style={{ color: 'var(--gold)', fontFamily: "'Cormorant Garamond', serif", fontSize: 18 }}>Loading...</p>
+    <main style={{ background:'var(--bg)', minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center' }}>
+      <p style={{ color:'var(--gold)', fontFamily:"'Cormorant Garamond', serif", fontSize:18 }}>Loading...</p>
     </main>
   )
 }
