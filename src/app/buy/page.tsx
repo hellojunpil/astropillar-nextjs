@@ -6,6 +6,7 @@ import { signOut } from 'firebase/auth'
 import { useAuth } from '@/hooks/useAuth'
 import { auth } from '@/lib/firebase'
 import { gtagEvent } from '@/lib/gtag'
+import BottomNav from '@/components/BottomNav'
 
 const GUMROAD_1 = process.env.NEXT_PUBLIC_GUMROAD_URL_1 || ''
 const GUMROAD_5 = process.env.NEXT_PUBLIC_GUMROAD_URL_5 || ''
@@ -61,7 +62,7 @@ export default function BuyPage() {
   }
 
   return (
-    <main style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 48 }}>
+    <main style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 96 }}>
 
       {/* Header */}
       <header style={{
@@ -187,6 +188,7 @@ export default function BuyPage() {
         </Link>
 
       </div>
+      <BottomNav />
     </main>
   )
 }

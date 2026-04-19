@@ -5,6 +5,7 @@ import ReadingResult from '@/components/ReadingResult'
 import ReadingPageShell from '@/components/ReadingPageShell'
 import { apiGet, apiPost } from '@/lib/api'
 import { gtagEvent } from '@/lib/gtag'
+import { saveReading, getCachedReading, birthDateStr } from '@/lib/firestore'
 
 interface GeoResult { name: string; country: string }
 
@@ -106,6 +107,7 @@ export default function CompatibilityPage() {
   const [person2, setPerson2] = useState<PersonForm>(emptyPerson())
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<unknown>(null)
+  const [fromCache, setFromCache] = useState(false)
   const [error, setError] = useState('')
 
   const isValid = person1.year.length === 4 && !!person1.day && !!person1.city &&
@@ -117,12 +119,24 @@ export default function CompatibilityPage() {
     setSubmitting(true)
     setError('')
     try {
-      await apiPost('/use_pouch', { email: user.email, amount: 1 })
+      const bd1 = birthDateStr(parseInt(person1.year), parseInt(person1.month), parseInt(person1.day))
+      const cacheKey = `${person1.name || 'P1'}+${person2.name || 'P2'}`
+      const cacheDate = `${bd1}+${birthDateStr(parseInt(person2.year), parseInt(person2.month), parseInt(person2.day))}`
+      const cacheCity = `${person1.city}+${person2.city}`
+      const cached = await getCachedReading(user.email, 'compatibility', cacheKey, cacheDate, cacheCity)
+      if (cached) {
+        setResult(cached.result)
+        setFromCache(true)
+        return
+      }
       const raw = await apiPost('/compatibility_reading', {
         person1: { year: parseInt(person1.year), month: parseInt(person1.month), day: parseInt(person1.day), birthtime: '12:00', sex: person1.sex, city: person1.city, user_name: person1.name || 'Person 1' },
         person2: { year: parseInt(person2.year), month: parseInt(person2.month), day: parseInt(person2.day), birthtime: '12:00', sex: person2.sex, city: person2.city, user_name: person2.name || 'Person 2' },
       })
+      await apiPost('/use_pouch', { email: user.email, amount: 1 })
+      await saveReading(user.email, { reading_type: 'compatibility', name: cacheKey, birth_date: cacheDate, birth_city: cacheCity, result: raw })
       setResult(raw)
+      setFromCache(false)
       refreshCredits()
       gtagEvent('reading_completed', { reading_type: 'compatibility' })
     } catch (e: unknown) {
@@ -140,7 +154,7 @@ export default function CompatibilityPage() {
       emoji="💞" badge="1 Credit" credits={credits} requiredCredits={1}
     >
       {result ? (
-        <ReadingResult raw={result} onReset={() => setResult(null)} userEmail={user?.email ?? undefined} />
+        <ReadingResult raw={result} onReset={() => { setResult(null); setFromCache(false) }} userEmail={user?.email ?? undefined} fromCache={fromCache} />
       ) : (
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <PersonSection label="Person 1 — You" form={person1} onChange={p => setPerson1(prev => ({ ...prev, ...p }))} />

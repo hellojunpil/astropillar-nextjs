@@ -175,10 +175,10 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 - [x] Next.js 프로젝트 초기화 (TypeScript + Tailwind + App Router)
 - [x] Firebase 패키지 설치
 - [x] Firebase 초기화 (`src/lib/firebase.ts`)
-- [x] 레이아웃 & 글로벌 스타일 (다크 테마, `src/app/globals.css`)
-- [x] 랜딩 페이지 (`/`)
-- [x] 로그인/회원가입 (`/login`)
-- [x] 메뉴 페이지 (`/menu`)
+- [x] 레이아웃 & 글로벌 스타일 (다크 테마, `src/app/globals.css`) — CSS @import 순서 버그 수정 완료
+- [x] 랜딩 페이지 (`/`) — 브라우저 확인 완료
+- [x] 로그인/회원가입 (`/login`) — 브라우저 확인 완료
+- [x] 메뉴 페이지 (`/menu`) — 브라우저 확인 완료
 - [x] ~~Full Reading (`/reading/full`)~~ — **종료된 서비스, 페이지 삭제됨**
 - [x] Personal Fortune (`/reading/personal-fortune`) — 1 Credit
 - [x] Personal Daily Fortune (`/reading/daily`) — 1 Credit
@@ -186,9 +186,29 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 - [x] Compatibility (`/reading/compatibility`) — 1 Credit, 두 사람 입력
 - [x] Scenario Reading (`/reading/scenario`) — 2 Credits, reading_type: situation + 질문 입력 (2단계 플로우)
 - [x] Today's Fortune (`/today`) — 무료, 로그인 불필요, 별자리/띠 선택
-- [x] Credit 구매 페이지 (`/buy`) — Gumroad 연결
+- [x] Credit 구매 페이지 (`/buy`) — Gumroad 연결, credit_purchase_click GA4 이벤트 추가
 - [x] Gumroad Webhook (`/api/gumroad-webhook`) — seller_id 검증 후 FastAPI 전달
 - [x] 공유 컴포넌트: `src/hooks/useAuth.ts`, `src/components/BirthForm.tsx`, `src/components/ReadingResult.tsx`, `src/components/ReadingPageShell.tsx`
+- [x] .env.local Cloud Run URL 업데이트 → `https://snap-pillar-api-944836465041.asia-northeast3.run.app`
+- [x] 공유 보상 UI — `ReadingResult.tsx`에 ShareButton 추가, `/record_share` POST 연동, "3회 공유 → 1 Credit" 안내
+- [x] GA4 설치 — `layout.tsx` Script 태그, `src/lib/gtag.ts` 유틸, reading_completed 이벤트 (5개 리딩 페이지)
+- [x] git 초기화 + 첫 커밋 (36 files, master 브랜치)
+- [x] 폰트 전체 Noto Sans로 교체 — 로고(ASTROPILLAR)만 Cormorant Garamond 유지
+- [x] 로그인 페이지 스펙 완성 — 비밀번호 확인 필드, Forgot password (Firebase 재설정 이메일), Google 신규 유저만 register_user 호출
+- [x] Credit 차감 순서 수정 — 5개 리딩 페이지 전부 리딩 완료 후 /use_pouch 호출로 변경
+- [x] Firestore 연동 전체 검증 완료 (users/{email}, pouch_count, register_user, use_pouch, get_pouch, gumroad webhook)
+- [x] register_user 버그 수정 — 에러 묵살 제거, Google OAuth isNewUser를 getAdditionalUserInfo()로 교체, 이메일 회원가입 시 cred.user.email! 직접 사용
+- [x] FastAPI CORS 수정 — `D:\snap pillar\main.py` allow_origins에 `http://localhost:3000` 추가 (로컬 개발 테스트 가능)
+- [x] 하단 내비게이션 바 (`BottomNav.tsx`) — 5탭: Home/Destiny/Daily/Library/Credits, 골드 글로우 active 효과
+- [x] Library 페이지 (`/library`) — Reading History + My Persons 탭, Firestore 연동
+- [x] Reading History 저장 — 5개 리딩 페이지 전부 saveReading() 호출
+- [x] 결과 캐싱 — getCachedReading() → 캐시 히트 시 Credit 미차감, "✓ Cached result" 배지 표시
+- [x] Person 저장 — BirthForm에 savedPersons 필 버튼 + "Save this person" 버튼
+- [x] Daily 날짜 선택 — 오늘~+7일 필 버튼 (Today/Tomorrow/요일표시)
+- [x] Scenario 버튼 — ReadingResult에 질문 입력창 + sessionStorage로 /reading/scenario 이동
+- [x] Scenario 페이지 — sessionStorage에서 birthData/question 프리필
+- [x] FreeAstroAPI 연결 확인 — FREEASTRO_BASE env var, 기본값 astro-api-1qnc.onrender.com
+- [x] OpenAI API 연결 확인 — OPENAI_API_KEY env var (Cloud Run에 세팅됨)
 
 ## 결과 화면 구성 (ReadingResult.tsx)
 
@@ -204,12 +224,10 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 API 응답에서 천간/지지 데이터를 `pillars.year.gan`, `pillars.year.zhi` 등 다양한 필드명으로 유연하게 추출.
 
 ### ⏳ 남은 작업
-- [x] .env.local Cloud Run URL 실제값 확인 및 업데이트 → `https://snap-pillar-api-944836465041.asia-northeast3.run.app`
-- [x] 공유 보상 UI (읽기 결과 화면에 share 버튼 + `/record_share` 연동)
-- [x] GA4 이벤트 트래킹 (`gtag` 설치 및 주요 이벤트 추가 — reading_completed, credit_purchase_click)
-- [ ] GitHub 레포 연결 + Vercel 배포
-- [ ] CORS: FastAPI `main.py`에 `astropillar.com` 도메인 추가 확인
-- [ ] 실제 API 응답 구조 확인 후 pillar/western 추출 로직 검증
+- [ ] GitHub 레포 연결 + Vercel 배포 (`gh repo create hellojunpil/astropillar-nextjs --public` → Vercel 연결)
+- [ ] 실제 API 응답 구조 확인 후 pillar/western 추출 로직 검증 (실제 API 호출 후 응답 JSON 확인 필요)
+- [ ] Vercel 환경변수 세팅 (NEXT_PUBLIC_API_BASE, Firebase 키 등 .env.local 항목 전부)
+- [ ] FastAPI CORS에 `https://astropillar.com` 추가 확인 후 Cloud Run 재배포
 
 ---
 

@@ -1,11 +1,12 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import BirthForm, { BirthData } from '@/components/BirthForm'
 import ReadingResult from '@/components/ReadingResult'
 import ReadingPageShell from '@/components/ReadingPageShell'
 import { apiPost } from '@/lib/api'
 import { gtagEvent } from '@/lib/gtag'
+import { saveReading, birthDateStr } from '@/lib/firestore'
 
 const EXAMPLE_QUESTIONS = [
   "Should I quit my job and start my own business?",
@@ -24,6 +25,24 @@ export default function ScenarioPage() {
   const [error, setError] = useState('')
   const [step, setStep] = useState<'form' | 'question'>('form')
 
+  // Read pre-filled data from sessionStorage (when coming from ReadingResult)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const bd = sessionStorage.getItem('scenario_birth')
+    const q = sessionStorage.getItem('scenario_question')
+    if (bd) {
+      try {
+        setBirthData(JSON.parse(bd))
+        setStep('question')
+        sessionStorage.removeItem('scenario_birth')
+      } catch { /* ignore */ }
+    }
+    if (q) {
+      setQuestion(q)
+      sessionStorage.removeItem('scenario_question')
+    }
+  }, [])
+
   function handleBirthSubmit(data: BirthData) {
     setBirthData(data)
     setStep('question')
@@ -35,7 +54,6 @@ export default function ScenarioPage() {
     setSubmitting(true)
     setError('')
     try {
-      await apiPost('/use_pouch', { email: user.email, amount: 2 })
       const birthtime = birthData.hour !== null
         ? `${String(birthData.hour).padStart(2, '0')}:${String(birthData.minute ?? 0).padStart(2, '0')}`
         : '12:00'
@@ -45,6 +63,11 @@ export default function ScenarioPage() {
         reading_type: 'situation', situation: question.trim(),
         user_name: birthData.name, birth_year: birthData.year,
       })
+      await apiPost('/use_pouch', { email: user.email, amount: 2 })
+      if (user.email) {
+        const birth_date = birthDateStr(birthData.year, birthData.month, birthData.day)
+        await saveReading(user.email, { reading_type: 'scenario', name: birthData.name, birth_date, birth_city: birthData.city, result: raw })
+      }
       setResult(raw)
       refreshCredits()
       gtagEvent('reading_completed', { reading_type: 'scenario' })
@@ -86,7 +109,7 @@ export default function ScenarioPage() {
               style={{
                 background: '#0f1829', border: '1px solid var(--border)', borderRadius: 10,
                 color: '#fff', padding: '12px 14px', fontSize: 14, width: '100%',
-                outline: 'none', resize: 'vertical', fontFamily: 'Inter, sans-serif', lineHeight: 1.6,
+                outline: 'none', resize: 'vertical', fontFamily: "'Noto Sans', sans-serif", lineHeight: 1.6,
               }}
             />
             <div style={{ marginTop: 14 }}>

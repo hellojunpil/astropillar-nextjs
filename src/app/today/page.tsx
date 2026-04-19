@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { apiGet } from '@/lib/api'
+import BottomNav from '@/components/BottomNav'
 
 const ZODIAC_SIGNS = [
   { name: 'Aries', emoji: '♈', dates: 'Mar 21 – Apr 19' },
@@ -74,7 +75,7 @@ export default function TodayFortunePage() {
       : null)
 
   return (
-    <main style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 48 }}>
+    <main style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 96 }}>
 
       {/* Header */}
       <header style={{
@@ -203,6 +204,7 @@ export default function TodayFortunePage() {
           </div>
         )}
       </div>
+      <BottomNav />
     </main>
   )
 }

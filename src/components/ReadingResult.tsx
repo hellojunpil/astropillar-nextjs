@@ -2,7 +2,9 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { apiPost } from '@/lib/api'
+import { BirthData } from './BirthForm'
 
 const GH = 'https://raw.githubusercontent.com/hellojunpil/astropillar_images/main/'
 
@@ -203,14 +205,71 @@ function ShareButton({ userEmail }: { userEmail: string }) {
   )
 }
 
+// ─── Scenario Button ─────────────────────────────────────────────────────────
+function ScenarioButton({ birthData }: { birthData: BirthData }) {
+  const router = useRouter()
+  const [open, setOpen] = useState(false)
+  const [question, setQuestion] = useState('')
+
+  function handleGo() {
+    if (!question.trim()) return
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('scenario_birth', JSON.stringify(birthData))
+      sessionStorage.setItem('scenario_question', question.trim())
+    }
+    router.push('/reading/scenario')
+  }
+
+  if (!open) {
+    return (
+      <button onClick={() => setOpen(true)} style={{
+        width: '100%', background: 'rgba(167,139,250,0.08)',
+        border: '1px solid #a78bfa', color: '#a78bfa',
+        borderRadius: 50, padding: '12px', fontSize: 14, cursor: 'pointer',
+      }}>
+        🔮 Analyze This Scenario
+      </button>
+    )
+  }
+
+  return (
+    <div style={{ background: 'var(--card)', border: '1px solid #a78bfa', borderRadius: 16, padding: 20 }}>
+      <p style={{ color: '#a78bfa', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>Ask a Scenario Question</p>
+      <textarea
+        value={question}
+        onChange={e => setQuestion(e.target.value)}
+        placeholder="What do you want the stars to reveal about this situation?"
+        rows={3}
+        style={{
+          width: '100%', background: '#0f1829', border: '1px solid var(--border)', borderRadius: 10,
+          color: '#fff', padding: '12px 14px', fontSize: 14, outline: 'none', resize: 'vertical',
+          fontFamily: "'Noto Sans', sans-serif", lineHeight: 1.6, marginBottom: 12,
+        }}
+      />
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button onClick={() => setOpen(false)} style={{ flex: 1, background: 'none', border: '1px solid var(--border)', borderRadius: 50, color: 'var(--text-muted)', fontSize: 13, padding: '10px', cursor: 'pointer' }}>Cancel</button>
+        <button onClick={handleGo} disabled={!question.trim()} style={{
+          flex: 2, background: '#a78bfa', border: 'none', borderRadius: 50,
+          color: '#fff', fontSize: 14, fontWeight: 700, padding: '10px', cursor: 'pointer',
+          opacity: !question.trim() ? 0.5 : 1,
+        }}>
+          Analyze <span style={{ background: 'rgba(22,33,62,0.4)', borderRadius: 20, padding: '2px 8px', fontSize: 12 }}>2 Credits</span>
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 interface Props {
   raw: unknown
   onReset: () => void
   userEmail?: string
+  fromCache?: boolean
+  birthData?: BirthData
 }
 
-export default function ReadingResult({ raw, onReset, userEmail }: Props) {
+export default function ReadingResult({ raw, onReset, userEmail, fromCache, birthData }: Props) {
   const data = (typeof raw === 'object' && raw !== null) ? raw as Record<string, unknown> : {}
   const pillars = extractPillars(data)
   const western = extractWestern(data)
@@ -328,6 +387,12 @@ export default function ReadingResult({ raw, onReset, userEmail }: Props) {
 
       {/* ── Actions ── */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 8 }}>
+        {fromCache && (
+          <div style={{ textAlign: 'center', padding: '6px 12px', background: 'rgba(46,204,113,0.08)', border: '1px solid rgba(46,204,113,0.3)', borderRadius: 10 }}>
+            <span style={{ color: '#2ecc71', fontSize: 12 }}>✓ Cached result — no Credit charged</span>
+          </div>
+        )}
+        {birthData && <ScenarioButton birthData={birthData} />}
         {userEmail && <ShareButton userEmail={userEmail} />}
         <button
           onClick={onReset}

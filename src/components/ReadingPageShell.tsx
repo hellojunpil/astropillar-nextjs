@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { signOut } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
+import BottomNav from './BottomNav'
 
 interface Props {
   title: string
@@ -29,7 +30,7 @@ export default function ReadingPageShell({
   const notEnoughCredits = requiredCredits > 0 && credits !== null && credits < requiredCredits
 
   return (
-    <main style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 48 }}>
+    <main style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 96 }}>
 
       {/* Header */}
       <header style={{
@@ -90,6 +91,7 @@ export default function ReadingPageShell({
         ) : children}
 
       </div>
+      <BottomNav />
     </main>
   )
 }

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
 import { apiGet } from '@/lib/api'
+import BottomNav from '@/components/BottomNav'
 
 const SERVICES = [
   {
@@ -52,17 +53,6 @@ const SERVICES = [
     badgeColor: 'var(--gold)',
     emoji: '💞',
   },
-  {
-    id: 'scenario',
-    href: '/reading/scenario',
-    title: 'Scenario Reading',
-    subtitle: 'Ask a specific question',
-    description: 'Get cosmic guidance on a specific situation — career, love, decisions.',
-    cost: 2,
-    badge: '2 Credits',
-    badgeColor: '#a78bfa',
-    emoji: '🔮',
-  },
 ]
 
 export default function MenuPage() {
@@ -96,7 +86,7 @@ export default function MenuPage() {
   }
 
   return (
-    <main style={{ background: 'var(--bg)', minHeight: '100vh', padding: '0 0 48px' }}>
+    <main style={{ background: 'var(--bg)', minHeight: '100vh', padding: '0 0 96px' }}>
 
       {/* 헤더 */}
       <header style={{ padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: 480, margin: '0 auto', borderBottom: '1px solid var(--border)' }}>
@@ -215,6 +205,7 @@ export default function MenuPage() {
         )}
 
       </div>
+      <BottomNav />
     </main>
   )
 }
