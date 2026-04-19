@@ -55,6 +55,7 @@ export default function LibraryPage() {
   const [pSex, setPSex] = useState<'M'|'F'>('F')
   const [pCity, setPCity] = useState('')
   const [savingPerson, setSavingPerson] = useState(false)
+  const [savePersonError, setSavePersonError] = useState('')
 
   useEffect(() => {
     if (!user?.email) return
@@ -79,13 +80,19 @@ export default function LibraryPage() {
     e.preventDefault()
     if (!user?.email || !pName || !pYear || !pDay || !pCity) return
     setSavingPerson(true)
-    const birth_date = `${pYear}-${String(parseInt(pMonth)).padStart(2,'0')}-${String(parseInt(pDay)).padStart(2,'0')}`
-    await savePerson(user.email, { name: pName, birth_date, sex: pSex, birth_city: pCity, hour: null, minute: null })
-    const refreshed = await getPeople(user.email)
-    setPeople(refreshed)
-    setPName(''); setPYear(''); setPMonth('1'); setPDay(''); setPCity('')
-    setShowAddPerson(false)
-    setSavingPerson(false)
+    setSavePersonError('')
+    try {
+      const birth_date = `${pYear}-${String(parseInt(pMonth)).padStart(2,'0')}-${String(parseInt(pDay)).padStart(2,'0')}`
+      await savePerson(user.email, { name: pName, birth_date, sex: pSex, birth_city: pCity, hour: null, minute: null })
+      const refreshed = await getPeople(user.email)
+      setPeople(refreshed)
+      setPName(''); setPYear(''); setPMonth('1'); setPDay(''); setPCity('')
+      setShowAddPerson(false)
+    } catch (err: unknown) {
+      setSavePersonError(err instanceof Error ? err.message : 'Failed to save. Check Firestore rules.')
+    } finally {
+      setSavingPerson(false)
+    }
   }
 
   function formatDate(r: ReadingRecord) {
@@ -251,10 +258,11 @@ export default function LibraryPage() {
                     </div>
                     <div>
                       <label style={labelStyle}>Birth City</label>
-                      <input style={inputStyle} placeholder="e.g. Seoul, KR" value={pCity} onChange={e => setPCity(e.target.value)} required />
+                      <input style={inputStyle} placeholder="e.g. New York" value={pCity} onChange={e => setPCity(e.target.value)} required />
                     </div>
+                    {savePersonError && <p style={{ color: '#ef4444', fontSize: 12, textAlign: 'center' }}>{savePersonError}</p>}
                     <div style={{ display: 'flex', gap: 8 }}>
-                      <button type="button" onClick={() => setShowAddPerson(false)} style={{ flex: 1, background: 'none', border: '1px solid var(--border)', borderRadius: 50, color: 'var(--text-muted)', fontSize: 13, padding: '11px', cursor: 'pointer' }}>Cancel</button>
+                      <button type="button" onClick={() => { setShowAddPerson(false); setSavePersonError('') }} style={{ flex: 1, background: 'none', border: '1px solid var(--border)', borderRadius: 50, color: 'var(--text-muted)', fontSize: 13, padding: '11px', cursor: 'pointer' }}>Cancel</button>
                       <button type="submit" disabled={savingPerson} className="btn-gold" style={{ flex: 2, opacity: savingPerson ? 0.7 : 1 }}>{savingPerson ? 'Saving...' : 'Save Person'}</button>
                     </div>
                   </form>

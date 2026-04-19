@@ -1,6 +1,5 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
-import { apiGet } from '@/lib/api'
+import { useState } from 'react'
 import { SavedPerson } from '@/lib/firestore'
 
 export interface BirthData {
@@ -14,13 +13,6 @@ export interface BirthData {
   city: string
 }
 
-interface GeoResult {
-  name: string
-  country: string
-  lat: number
-  lon: number
-}
-
 interface Props {
   onSubmit: (data: BirthData) => void
   loading: boolean
@@ -30,8 +22,22 @@ interface Props {
   onSavePerson?: (data: BirthData) => Promise<void>
 }
 
-const HOURS = Array.from({ length: 24 }, (_, i) => i)
-const MINUTES = [0, 15, 30, 45]
+const TIME_RANGES: { label: string; hour: number | null }[] = [
+  { label: "Unknown (I don't know my birth time)", hour: null },
+  { label: '23:30 - 01:30', hour: 0 },
+  { label: '01:30 - 03:30', hour: 2 },
+  { label: '03:30 - 05:30', hour: 4 },
+  { label: '05:30 - 07:30', hour: 6 },
+  { label: '07:30 - 09:30', hour: 8 },
+  { label: '09:30 - 11:30', hour: 10 },
+  { label: '11:30 - 13:30', hour: 12 },
+  { label: '13:30 - 15:30', hour: 14 },
+  { label: '15:30 - 17:30', hour: 16 },
+  { label: '17:30 - 19:30', hour: 18 },
+  { label: '19:30 - 21:30', hour: 20 },
+  { label: '21:30 - 23:30', hour: 22 },
+]
+
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
 const inputStyle: React.CSSProperties = {
@@ -59,42 +65,11 @@ export default function BirthForm({ onSubmit, loading, submitLabel = 'Get My Rea
   const [year, setYear] = useState('')
   const [month, setMonth] = useState('1')
   const [day, setDay] = useState('')
-  const [hour, setHour] = useState<string>('unknown')
-  const [minute, setMinute] = useState('0')
+  const [hourIndex, setHourIndex] = useState(0) // index into TIME_RANGES
   const [sex, setSex] = useState<'M' | 'F'>('F')
   const [city, setCity] = useState('')
-  const [cityQuery, setCityQuery] = useState('')
-  const [cityResults, setCityResults] = useState<GeoResult[]>([])
-  const [citySearching, setCitySearching] = useState(false)
-  const [showDropdown, setShowDropdown] = useState(false)
   const [savingPerson, setSavingPerson] = useState(false)
   const [personSaved, setPersonSaved] = useState(false)
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(() => {
-    if (cityQuery.length < 2) { setCityResults([]); setShowDropdown(false); return }
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(async () => {
-      setCitySearching(true)
-      try {
-        const results = await apiGet<GeoResult[]>('/geo/search', { q: cityQuery })
-        setCityResults(results || [])
-        setShowDropdown(true)
-      } catch {
-        setCityResults([])
-      } finally {
-        setCitySearching(false)
-      }
-    }, 400)
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
-  }, [cityQuery])
-
-  function selectCity(r: GeoResult) {
-    const label = `${r.name}, ${r.country}`
-    setCity(label)
-    setCityQuery(label)
-    setShowDropdown(false)
-  }
 
   function applyPerson(p: SavedPerson) {
     setName(p.name)
@@ -104,21 +79,25 @@ export default function BirthForm({ onSubmit, loading, submitLabel = 'Get My Rea
     setMonth(String(parseInt(m)))
     setDay(String(parseInt(d)))
     setCity(p.birth_city)
-    setCityQuery(p.birth_city)
-    setHour(p.hour !== null ? String(p.hour) : 'unknown')
-    setMinute(p.minute !== null ? String(p.minute) : '0')
+    if (p.hour !== null) {
+      const idx = TIME_RANGES.findIndex(t => t.hour === p.hour)
+      setHourIndex(idx >= 0 ? idx : 0)
+    } else {
+      setHourIndex(0)
+    }
   }
 
   function currentBirthData(): BirthData | null {
     const y = parseInt(year)
     const d = parseInt(day)
-    if (!y || !d || !city) return null
+    if (!y || !d || !city.trim()) return null
+    const range = TIME_RANGES[hourIndex]
     return {
       name: name.trim() || 'You',
       year: y, month: parseInt(month), day: d,
-      hour: hour === 'unknown' ? null : parseInt(hour),
-      minute: hour === 'unknown' ? null : parseInt(minute),
-      sex, city,
+      hour: range.hour,
+      minute: range.hour !== null ? 0 : null,
+      sex, city: city.trim(),
     }
   }
 
@@ -140,32 +119,28 @@ export default function BirthForm({ onSubmit, loading, submitLabel = 'Get My Rea
     onSubmit(data)
   }
 
-  const isValid = year.length === 4 && day.length > 0 && city.length > 0
+  const isValid = year.length === 4 && day.length > 0 && city.trim().length > 0
 
   return (
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
 
-      {/* Saved persons selector */}
+      {/* Saved persons dropdown */}
       {savedPersons && savedPersons.length > 0 && (
         <div>
-          <label style={labelStyle}>Saved Persons</label>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <label style={labelStyle}>Select a Person</label>
+          <select
+            style={inputStyle}
+            defaultValue=""
+            onChange={e => {
+              const p = savedPersons.find(p => p.id === e.target.value)
+              if (p) applyPerson(p)
+            }}
+          >
+            <option value="" disabled>— Select a saved person —</option>
             {savedPersons.map(p => (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => applyPerson(p)}
-                style={{
-                  background: '#0f1829', border: '1px solid var(--border)', borderRadius: 20,
-                  color: 'var(--text-muted)', fontSize: 12, padding: '6px 12px', cursor: 'pointer',
-                }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--gold)'; e.currentTarget.style.color = 'var(--gold)' }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-muted)' }}
-              >
-                {p.name}
-              </button>
+              <option key={p.id} value={p.id}>{p.name} ({p.birth_date})</option>
             ))}
-          </div>
+          </select>
         </div>
       )}
 
@@ -208,46 +183,23 @@ export default function BirthForm({ onSubmit, loading, submitLabel = 'Get My Rea
       {/* Birth Time */}
       <div>
         <label style={labelStyle}>Birth Time <span style={{ color: 'var(--text-muted)', textTransform: 'none', letterSpacing: 0 }}>(optional — improves accuracy)</span></label>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-          <select style={inputStyle} value={hour} onChange={e => setHour(e.target.value)}>
-            <option value="unknown">Unknown</option>
-            {HOURS.map(h => <option key={h} value={h}>{String(h).padStart(2, '0')}:00</option>)}
-          </select>
-          {hour !== 'unknown' && (
-            <select style={inputStyle} value={minute} onChange={e => setMinute(e.target.value)}>
-              {MINUTES.map(m => <option key={m} value={m}>:{String(m).padStart(2, '0')}</option>)}
-            </select>
-          )}
-        </div>
+        <select style={inputStyle} value={hourIndex} onChange={e => setHourIndex(parseInt(e.target.value))}>
+          {TIME_RANGES.map((t, i) => (
+            <option key={i} value={i}>{t.label}</option>
+          ))}
+        </select>
       </div>
 
       {/* City */}
-      <div style={{ position: 'relative' }}>
+      <div>
         <label style={labelStyle}>Birth City</label>
         <input
           style={inputStyle}
-          placeholder="Search city..."
-          value={cityQuery}
-          onChange={e => { setCityQuery(e.target.value); setCity('') }}
+          placeholder="e.g. New York"
+          value={city}
+          onChange={e => setCity(e.target.value)}
           autoComplete="off"
         />
-        {citySearching && <span style={{ position: 'absolute', right: 14, top: '50%', color: 'var(--gold)', fontSize: 12 }}>✦</span>}
-        {showDropdown && cityResults.length > 0 && (
-          <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100, background: '#16213E', border: '1px solid var(--border)', borderRadius: 10, marginTop: 4, overflow: 'hidden' }}>
-            {cityResults.slice(0, 6).map((r, i) => (
-              <button key={i} type="button" onClick={() => selectCity(r)} style={{
-                width: '100%', textAlign: 'left', padding: '11px 14px', background: 'none',
-                border: 'none', color: '#fff', fontSize: 14, cursor: 'pointer',
-                borderBottom: i < cityResults.length - 1 ? '1px solid var(--border)' : 'none',
-              }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(201,168,76,0.08)')}
-                onMouseLeave={e => (e.currentTarget.style.background = 'none')}
-              >
-                {r.name}, <span style={{ color: 'var(--text-muted)' }}>{r.country}</span>
-              </button>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* Save person button */}

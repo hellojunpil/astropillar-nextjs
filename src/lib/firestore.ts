@@ -92,11 +92,7 @@ export async function savePerson(
   email: string,
   data: Omit<SavedPerson, 'id'>
 ): Promise<void> {
-  try {
-    await addDoc(collection(db, 'users', email, 'people'), data)
-  } catch {
-    // non-fatal
-  }
+  await addDoc(collection(db, 'users', email, 'people'), data)
 }
 
 export async function getPeople(email: string): Promise<SavedPerson[]> {

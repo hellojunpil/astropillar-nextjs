@@ -1,13 +1,11 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import ReadingResult from '@/components/ReadingResult'
 import ReadingPageShell from '@/components/ReadingPageShell'
-import { apiGet, apiPost } from '@/lib/api'
+import { apiPost } from '@/lib/api'
 import { gtagEvent } from '@/lib/gtag'
 import { saveReading, getCachedReading, birthDateStr } from '@/lib/firestore'
-
-interface GeoResult { name: string; country: string }
 
 const inputStyle: React.CSSProperties = {
   background: '#0f1829', border: '1px solid var(--border)', borderRadius: 10,
@@ -20,28 +18,10 @@ const labelStyle: React.CSSProperties = {
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
 interface PersonForm {
-  name: string; year: string; month: string; day: string; sex: 'M'|'F'; city: string; cityQuery: string
-}
-
-function useCitySearch(query: string) {
-  const [results, setResults] = useState<GeoResult[]>([])
-  const ref = useRef<ReturnType<typeof setTimeout> | null>(null)
-  useEffect(() => {
-    if (query.length < 2) { setResults([]); return }
-    if (ref.current) clearTimeout(ref.current)
-    ref.current = setTimeout(async () => {
-      try { const r = await apiGet<GeoResult[]>('/geo/search', { q: query }); setResults(r || []) }
-      catch { setResults([]) }
-    }, 400)
-  }, [query])
-  return results
+  name: string; year: string; month: string; day: string; sex: 'M'|'F'; city: string
 }
 
 function PersonSection({ label, form, onChange }: { label: string; form: PersonForm; onChange: (f: Partial<PersonForm>) => void }) {
-  const results = useCitySearch(form.cityQuery)
-  const [showDrop, setShowDrop] = useState(false)
-  useEffect(() => { setShowDrop(results.length > 0) }, [results])
-
   return (
     <div style={{ background: '#0f1829', borderRadius: 14, padding: '20px', border: '1px solid var(--border)' }}>
       <p style={{ color: 'var(--gold)', fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 16 }}>{label}</p>
@@ -75,31 +55,22 @@ function PersonSection({ label, form, onChange }: { label: string; form: PersonF
             <input style={inputStyle} placeholder="Year" type="number" min={1900} max={2025} value={form.year} onChange={e => onChange({ year: e.target.value })} />
           </div>
         </div>
-        <div style={{ position: 'relative' }}>
+        <div>
           <label style={labelStyle}>Birth City</label>
-          <input style={inputStyle} placeholder="Search city..." value={form.cityQuery}
-            onChange={e => { onChange({ cityQuery: e.target.value, city: '' }) }} autoComplete="off" />
-          {showDrop && (
-            <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100, background: '#16213E', border: '1px solid var(--border)', borderRadius: 10, marginTop: 4 }}>
-              {results.slice(0, 5).map((r, i) => (
-                <button key={i} type="button"
-                  onClick={() => { onChange({ city: `${r.name}, ${r.country}`, cityQuery: `${r.name}, ${r.country}` }); setShowDrop(false) }}
-                  style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', color: '#fff', fontSize: 14, cursor: 'pointer', borderBottom: i < results.length - 1 ? '1px solid var(--border)' : 'none' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(201,168,76,0.08)')}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'none')}
-                >
-                  {r.name}, <span style={{ color: 'var(--text-muted)' }}>{r.country}</span>
-                </button>
-              ))}
-            </div>
-          )}
+          <input
+            style={inputStyle}
+            placeholder="e.g. New York"
+            value={form.city}
+            onChange={e => onChange({ city: e.target.value })}
+            autoComplete="off"
+          />
         </div>
       </div>
     </div>
   )
 }
 
-const emptyPerson = (): PersonForm => ({ name: '', year: '', month: '1', day: '', sex: 'F', city: '', cityQuery: '' })
+const emptyPerson = (): PersonForm => ({ name: '', year: '', month: '1', day: '', sex: 'F', city: '' })
 
 export default function CompatibilityPage() {
   const { user, credits, loading, refreshCredits } = useAuth()
@@ -110,8 +81,8 @@ export default function CompatibilityPage() {
   const [fromCache, setFromCache] = useState(false)
   const [error, setError] = useState('')
 
-  const isValid = person1.year.length === 4 && !!person1.day && !!person1.city &&
-                  person2.year.length === 4 && !!person2.day && !!person2.city
+  const isValid = person1.year.length === 4 && !!person1.day && !!person1.city.trim() &&
+                  person2.year.length === 4 && !!person2.day && !!person2.city.trim()
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
