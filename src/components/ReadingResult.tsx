@@ -74,6 +74,20 @@ function extractWestern(data: Record<string,unknown>): WesternData | null {
   const w = (data.western ?? data.astrology ?? data.natal_chart ?? data.western_chart) as WesternData | undefined
   if (w && (w.sun_sign || w.moon_sign)) return w
   if (data.sun_sign) return data as WesternData
+  // Flat fields from FastAPI: western_sun, western_moon, western_asc, western_mercury, ...
+  if (data.western_sun || data.western_moon || data.western_asc) {
+    const planets: Record<string,string> = {}
+    for (const planet of ['mercury','venus','mars','jupiter','saturn','uranus','neptune','pluto']) {
+      const val = data[`western_${planet}`] as string | undefined
+      if (val) planets[planet] = val
+    }
+    return {
+      sun_sign: (data.western_sun as string) || undefined,
+      moon_sign: (data.western_moon as string) || undefined,
+      ascendant: (data.western_asc as string) || undefined,
+      planets: Object.keys(planets).length > 0 ? planets : undefined,
+    }
+  }
   return null
 }
 
@@ -127,6 +141,105 @@ function normalizeTitle(t: string): string {
     if (low.includes(key)) return val
   }
   return t.replace(/^[✨💼❤️💰🌿📊💡]\s*/,'').replace(/\s*—.*$/,'').trim()
+}
+
+const PLANET_SYMBOLS: Record<string, string> = {
+  sun:'☀', moon:'☽', mercury:'☿', venus:'♀', mars:'♂',
+  jupiter:'♃', saturn:'♄', uranus:'♅', neptune:'♆', pluto:'♇',
+}
+
+function zodiacSvg(sign: string) {
+  const key = sign.toLowerCase().replace(/\s/g,'')
+  return ZODIAC_SVG_KEYS.includes(key) ? `${GH}r_${key}.svg` : ''
+}
+
+function PlanetCardBig({ planet, symbol, sign }: { planet: string; symbol: string; sign: string }) {
+  const src = zodiacSvg(sign)
+  const label = sign ? sign.charAt(0).toUpperCase() + sign.slice(1).toLowerCase() : '—'
+  return (
+    <div style={{ flex:1, background:'rgba(22,33,62,0.85)', border:'1px solid rgba(201,168,76,0.3)', borderRadius:16, padding:'14px 6px', display:'flex', flexDirection:'column', alignItems:'center', gap:8 }}>
+      <span style={{ fontSize:9, color:'#C9A84C', letterSpacing:2, textTransform:'uppercase', opacity:0.85 }}>{planet}</span>
+      <span style={{ fontSize:18, color:'rgba(246,246,248,0.7)', lineHeight:1 }}>{symbol}</span>
+      {src ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={src} alt={sign} width={62} height={62} style={{ filter:'invert(1) sepia(1) saturate(3) hue-rotate(10deg) brightness(0.9)' }} />
+      ) : <div style={{ width:62, height:62, display:'flex', alignItems:'center', justifyContent:'center', fontSize:28 }}>{ZODIAC_SYMBOL[sign.toLowerCase()] ?? '✦'}</div>}
+      <span style={{ fontSize:12, color:'#F6F6F8', fontWeight:700, textAlign:'center' }}>{label}</span>
+    </div>
+  )
+}
+
+function PlanetCardSm({ planet, symbol, sign }: { planet: string; symbol: string; sign: string }) {
+  const src = zodiacSvg(sign)
+  const label = sign ? sign.charAt(0).toUpperCase() + sign.slice(1).toLowerCase() : '—'
+  return (
+    <div style={{ flex:1, background:'rgba(22,33,62,0.6)', border:'1px solid rgba(201,168,76,0.18)', borderRadius:12, padding:'10px 4px', display:'flex', flexDirection:'column', alignItems:'center', gap:5 }}>
+      <span style={{ fontSize:8, color:'#C9A84C', letterSpacing:1.5, textTransform:'uppercase', opacity:0.75 }}>{planet}</span>
+      <span style={{ fontSize:13, color:'rgba(246,246,248,0.55)', lineHeight:1 }}>{symbol}</span>
+      {src ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={src} alt={sign} width={36} height={36} style={{ filter:'invert(1) sepia(1) saturate(3) hue-rotate(10deg) brightness(0.9)' }} />
+      ) : <div style={{ width:36, height:36, display:'flex', alignItems:'center', justifyContent:'center', fontSize:20 }}>{ZODIAC_SYMBOL[sign.toLowerCase()] ?? '✦'}</div>}
+      <span style={{ fontSize:9, color:'rgba(246,246,248,0.75)', fontWeight:700, textAlign:'center' }}>{label}</span>
+    </div>
+  )
+}
+
+function Divider({ label }: { label: string }) {
+  return (
+    <div style={{ margin:'14px 0 10px', display:'flex', alignItems:'center', gap:8 }}>
+      <div style={{ flex:1, height:1, background:'rgba(201,168,76,0.2)' }} />
+      <span style={{ fontSize:8, color:'rgba(201,168,76,0.5)', letterSpacing:2, textTransform:'uppercase' }}>{label}</span>
+      <div style={{ flex:1, height:1, background:'rgba(201,168,76,0.2)' }} />
+    </div>
+  )
+}
+
+function AstrologyProfile({ western, data }: { western: WesternData | null; data: Record<string,unknown> }) {
+  const sunSign   = (western?.sun_sign  ?? (data.western_sun  as string) ?? '').toLowerCase().trim()
+  const moonSign  = (western?.moon_sign ?? (data.western_moon as string) ?? '').toLowerCase().trim()
+  const ascSign   = ((western?.ascendant ?? western?.rising ?? (data.western_asc as string)) ?? '').toLowerCase().trim()
+  const planets   = (western?.planets ?? {}) as Record<string,string>
+
+  const pSign = (key: string) => ((planets[key] ?? (data[`western_${key}`] as string) ?? '') as string).toLowerCase().trim()
+
+  const hasAny = sunSign || moonSign || ascSign
+
+  if (!hasAny) {
+    return <p style={{ color:'var(--text-muted)', fontSize:13, textAlign:'center', padding:20 }}>No Western chart data available.</p>
+  }
+
+  return (
+    <div>
+      {/* Big Three */}
+      <div style={{ display:'flex', gap:8, width:'100%' }}>
+        <PlanetCardBig planet="Sun"    symbol="☀"  sign={sunSign} />
+        <PlanetCardBig planet="Moon"   symbol="☽"  sign={moonSign} />
+        <PlanetCardBig planet="Rising" symbol="ASC" sign={ascSign} />
+      </div>
+      <div style={{ display:'flex', gap:8, marginTop:10 }}>
+        {['Your core identity — the self you were born to express','Your inner world — emotions and what makes you feel safe','How the world sees you — your outer mask and first impression'].map((t,i) => (
+          <div key={i} style={{ flex:1, textAlign:'center', fontSize:10, color:'rgba(215,215,217,0.55)', lineHeight:1.6 }}>{t}</div>
+        ))}
+      </div>
+
+      {/* Inner Planets */}
+      <Divider label="Inner Planets" />
+      <div style={{ display:'flex', gap:6, width:'100%' }}>
+        {(['mercury','venus','mars','jupiter'] as const).map(p => (
+          <PlanetCardSm key={p} planet={p.charAt(0).toUpperCase()+p.slice(1)} symbol={PLANET_SYMBOLS[p]} sign={pSign(p)} />
+        ))}
+      </div>
+
+      {/* Outer Planets */}
+      <Divider label="Outer Planets" />
+      <div style={{ display:'flex', gap:6, width:'100%' }}>
+        {(['saturn','uranus','neptune','pluto'] as const).map(p => (
+          <PlanetCardSm key={p} planet={p.charAt(0).toUpperCase()+p.slice(1)} symbol={PLANET_SYMBOLS[p]} sign={pSign(p)} />
+        ))}
+      </div>
+    </div>
+  )
 }
 
 function ZodiacBadge({ sign }: { sign: string }) {
@@ -337,43 +450,7 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
 
           {/* Astrology Profile */}
           {chartTab === 'astrology' && (
-            <div>
-              {western ? (
-                <>
-                  <div style={{ display:'flex', gap:16, flexWrap:'wrap', justifyContent:'center', marginBottom:16 }}>
-                    {western.sun_sign && (
-                      <div style={{ textAlign:'center' }}>
-                        <p style={{ color:'var(--text-muted)', fontSize:10, marginBottom:6 }}>☀ Sun Sign</p>
-                        <ZodiacBadge sign={western.sun_sign} />
-                      </div>
-                    )}
-                    {western.moon_sign && (
-                      <div style={{ textAlign:'center' }}>
-                        <p style={{ color:'var(--text-muted)', fontSize:10, marginBottom:6 }}>☽ Moon Sign</p>
-                        <ZodiacBadge sign={western.moon_sign} />
-                      </div>
-                    )}
-                    {(western.ascendant || western.rising) && (
-                      <div style={{ textAlign:'center' }}>
-                        <p style={{ color:'var(--text-muted)', fontSize:10, marginBottom:6 }}>↑ Rising</p>
-                        <ZodiacBadge sign={(western.ascendant || western.rising) as string} />
-                      </div>
-                    )}
-                  </div>
-                  {western.planets && typeof western.planets === 'object' && (
-                    <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
-                      {Object.entries(western.planets as Record<string,string>).map(([planet,sign]) => (
-                        <span key={planet} style={{ background:'#0f1829', border:'1px solid var(--border)', borderRadius:20, padding:'4px 10px', fontSize:11, color:'var(--text-muted)' }}>
-                          <span style={{ color:'#a78bfa', textTransform:'capitalize' }}>{planet}</span> · {sign}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </>
-              ) : (
-                <p style={{ color:'var(--text-muted)', fontSize:13, textAlign:'center', padding:20 }}>No Western chart data available.</p>
-              )}
-            </div>
+            <AstrologyProfile western={western} data={data} />
           )}
         </div>
       )}

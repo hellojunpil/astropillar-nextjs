@@ -83,7 +83,7 @@ export default function PersonPicker({
       const pHour = TIME_RANGES[pHourIndex].hour
       const saved = await savePerson(userEmail, { name: pName, birth_date, sex: pSex, birth_city: pCity, hour: pHour, minute: pHour !== null ? 0 : null })
       // savePerson returns the new person with id
-      const newPerson: SavedPerson = { id: saved?.id, name: pName, birth_date, sex: pSex, birth_city: pCity, hour: null, minute: null }
+      const newPerson: SavedPerson = { id: saved?.id, name: pName, birth_date, sex: pSex, birth_city: pCity, hour: pHour, minute: pHour !== null ? 0 : null }
       const updated = [...people, newPerson]
       onPeopleChange?.(updated)
       setSelectedId(newPerson.id ?? '')
