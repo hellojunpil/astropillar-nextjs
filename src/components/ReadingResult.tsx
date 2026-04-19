@@ -41,6 +41,7 @@ interface WesternData {
   moon_sign?: string
   ascendant?: string
   rising?: string
+  planets?: Record<string, string>
   [key: string]: unknown
 }
 
