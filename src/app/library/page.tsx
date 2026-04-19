@@ -37,6 +37,22 @@ const labelStyle: React.CSSProperties = {
 }
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
+const TIME_RANGES: { label: string; hour: number | null }[] = [
+  { label: "Unknown (I don't know my birth time)", hour: null },
+  { label: '23:30 - 01:30', hour: 0 },
+  { label: '01:30 - 03:30', hour: 2 },
+  { label: '03:30 - 05:30', hour: 4 },
+  { label: '05:30 - 07:30', hour: 6 },
+  { label: '07:30 - 09:30', hour: 8 },
+  { label: '09:30 - 11:30', hour: 10 },
+  { label: '11:30 - 13:30', hour: 12 },
+  { label: '13:30 - 15:30', hour: 14 },
+  { label: '15:30 - 17:30', hour: 16 },
+  { label: '17:30 - 19:30', hour: 18 },
+  { label: '19:30 - 21:30', hour: 20 },
+  { label: '21:30 - 23:30', hour: 22 },
+]
+
 function LibraryPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -57,6 +73,7 @@ function LibraryPageInner() {
   const [pDay, setPDay] = useState('')
   const [pSex, setPSex] = useState<'M'|'F'>('F')
   const [pCity, setPCity] = useState('')
+  const [pHourIndex, setPHourIndex] = useState(0)
   const [savingPerson, setSavingPerson] = useState(false)
   const [savePersonError, setSavePersonError] = useState('')
 
@@ -86,10 +103,11 @@ function LibraryPageInner() {
     setSavePersonError('')
     try {
       const birth_date = `${pYear}-${String(parseInt(pMonth)).padStart(2,'0')}-${String(parseInt(pDay)).padStart(2,'0')}`
-      await savePerson(user.email, { name: pName, birth_date, sex: pSex, birth_city: pCity, hour: null, minute: null })
+      const pHour = TIME_RANGES[pHourIndex].hour
+      await savePerson(user.email, { name: pName, birth_date, sex: pSex, birth_city: pCity, hour: pHour, minute: pHour !== null ? 0 : null })
       const refreshed = await getPeople(user.email)
       setPeople(refreshed)
-      setPName(''); setPYear(''); setPMonth('1'); setPDay(''); setPCity('')
+      setPName(''); setPYear(''); setPMonth('1'); setPDay(''); setPCity(''); setPHourIndex(0)
       setShowAddPerson(false)
     } catch (err: unknown) {
       setSavePersonError(err instanceof Error ? err.message : 'Failed to save. Check Firestore rules.')
@@ -218,6 +236,9 @@ function LibraryPageInner() {
                         <p style={{ color: 'var(--text-muted)', fontSize: 12, marginTop: 3 }}>
                           {p.birth_date} · {p.sex === 'F' ? '♀' : '♂'} · {p.birth_city}
                         </p>
+                        <p style={{ color: 'var(--text-muted)', fontSize: 11, marginTop: 2 }}>
+                          {p.hour !== null && p.hour !== undefined ? `${String(p.hour).padStart(2,'0')}:${String(p.minute ?? 0).padStart(2,'0')}` : 'Birth time unknown'}
+                        </p>
                       </div>
                       <button onClick={() => p.id && handleDeletePerson(p.id)} style={{
                         background: 'none', border: '1px solid #ef4444', borderRadius: 8,
@@ -258,6 +279,12 @@ function LibraryPageInner() {
                         <input style={inputStyle} placeholder="Day" type="number" min={1} max={31} value={pDay} onChange={e => setPDay(e.target.value)} required />
                         <input style={inputStyle} placeholder="Year" type="number" min={1900} max={2025} value={pYear} onChange={e => setPYear(e.target.value)} required />
                       </div>
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Birth Time <span style={{ color: 'var(--text-muted)', textTransform: 'none', letterSpacing: 0 }}>(optional)</span></label>
+                      <select style={inputStyle} value={pHourIndex} onChange={e => setPHourIndex(parseInt(e.target.value))}>
+                        {TIME_RANGES.map((t, i) => <option key={i} value={i}>{t.label}</option>)}
+                      </select>
                     </div>
                     <div>
                       <label style={labelStyle}>Birth City</label>

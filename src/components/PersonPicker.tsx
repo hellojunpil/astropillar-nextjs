@@ -15,6 +15,22 @@ function birthTimeLabel(p: SavedPerson) {
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
+const TIME_RANGES: { label: string; hour: number | null }[] = [
+  { label: "Unknown (I don't know my birth time)", hour: null },
+  { label: '23:30 - 01:30', hour: 0 },
+  { label: '01:30 - 03:30', hour: 2 },
+  { label: '03:30 - 05:30', hour: 4 },
+  { label: '05:30 - 07:30', hour: 6 },
+  { label: '07:30 - 09:30', hour: 8 },
+  { label: '09:30 - 11:30', hour: 10 },
+  { label: '11:30 - 13:30', hour: 12 },
+  { label: '13:30 - 15:30', hour: 14 },
+  { label: '15:30 - 17:30', hour: 16 },
+  { label: '17:30 - 19:30', hour: 18 },
+  { label: '19:30 - 21:30', hour: 20 },
+  { label: '21:30 - 23:30', hour: 22 },
+]
+
 const inputStyle: React.CSSProperties = {
   background: '#0f1829', border: '1px solid var(--border)', borderRadius: 10,
   color: '#fff', padding: '10px 14px', fontSize: 14, width: '100%', outline: 'none',
@@ -51,6 +67,7 @@ export default function PersonPicker({
   const [pDay, setPDay] = useState('')
   const [pYear, setPYear] = useState('')
   const [pCity, setPCity] = useState('')
+  const [pHourIndex, setPHourIndex] = useState(0)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
 
@@ -63,14 +80,15 @@ export default function PersonPicker({
     setSaveError('')
     try {
       const birth_date = birthDateStr(parseInt(pYear), parseInt(pMonth), parseInt(pDay))
-      const saved = await savePerson(userEmail, { name: pName, birth_date, sex: pSex, birth_city: pCity, hour: null, minute: null })
+      const pHour = TIME_RANGES[pHourIndex].hour
+      const saved = await savePerson(userEmail, { name: pName, birth_date, sex: pSex, birth_city: pCity, hour: pHour, minute: pHour !== null ? 0 : null })
       // savePerson returns the new person with id
       const newPerson: SavedPerson = { id: saved?.id, name: pName, birth_date, sex: pSex, birth_city: pCity, hour: null, minute: null }
       const updated = [...people, newPerson]
       onPeopleChange?.(updated)
       setSelectedId(newPerson.id ?? '')
       setShowAddForm(false)
-      setPName(''); setPSex('F'); setPMonth('1'); setPDay(''); setPYear(''); setPCity('')
+      setPName(''); setPSex('F'); setPMonth('1'); setPDay(''); setPYear(''); setPCity(''); setPHourIndex(0)
     } catch (err: unknown) {
       setSaveError(err instanceof Error ? err.message : 'Failed to save.')
     } finally {
@@ -107,6 +125,12 @@ export default function PersonPicker({
           <input style={inputStyle} placeholder="Day" type="number" min={1} max={31} value={pDay} onChange={e => setPDay(e.target.value)} required />
           <input style={inputStyle} placeholder="Year" type="number" min={1900} max={2025} value={pYear} onChange={e => setPYear(e.target.value)} required />
         </div>
+      </div>
+      <div>
+        <label style={labelStyle}>Birth Time <span style={{ color:'var(--text-muted)', textTransform:'none', letterSpacing:0 }}>(optional)</span></label>
+        <select style={inputStyle} value={pHourIndex} onChange={e => setPHourIndex(parseInt(e.target.value))}>
+          {TIME_RANGES.map((t, i) => <option key={i} value={i}>{t.label}</option>)}
+        </select>
       </div>
       <div>
         <label style={labelStyle}>Birth City</label>
