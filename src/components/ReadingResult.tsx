@@ -155,14 +155,14 @@ function zodiacSvg(sign: string) {
 
 function PlanetCardBig({ planet, symbol, sign }: { planet: string; symbol: string; sign: string }) {
   const src = zodiacSvg(sign)
-  const label = sign ? sign.charAt(0).toUpperCase() + sign.slice(1).toLowerCase() : '—'
+  const label = sign ? sign.charAt(0).toUpperCase() + sign.slice(1).toLowerCase() : 'Unknown'
   return (
     <div style={{ flex:1, background:'rgba(22,33,62,0.85)', border:'1px solid rgba(201,168,76,0.3)', borderRadius:16, padding:'14px 6px', display:'flex', flexDirection:'column', alignItems:'center', gap:8 }}>
       <span style={{ fontSize:9, color:'#C9A84C', letterSpacing:2, textTransform:'uppercase', opacity:0.85 }}>{planet}</span>
       <span style={{ fontSize:18, color:'rgba(246,246,248,0.7)', lineHeight:1 }}>{symbol}</span>
       {src ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={src} alt={sign} width={62} height={62} style={{ filter:'invert(1) sepia(1) saturate(3) hue-rotate(10deg) brightness(0.9)' }} />
+        <img src={src} alt={sign} width={62} height={62} />
       ) : <div style={{ width:62, height:62, display:'flex', alignItems:'center', justifyContent:'center', fontSize:28 }}>{ZODIAC_SYMBOL[sign.toLowerCase()] ?? '✦'}</div>}
       <span style={{ fontSize:12, color:'#F6F6F8', fontWeight:700, textAlign:'center' }}>{label}</span>
     </div>
@@ -171,14 +171,14 @@ function PlanetCardBig({ planet, symbol, sign }: { planet: string; symbol: strin
 
 function PlanetCardSm({ planet, symbol, sign }: { planet: string; symbol: string; sign: string }) {
   const src = zodiacSvg(sign)
-  const label = sign ? sign.charAt(0).toUpperCase() + sign.slice(1).toLowerCase() : '—'
+  const label = sign ? sign.charAt(0).toUpperCase() + sign.slice(1).toLowerCase() : 'Unknown'
   return (
     <div style={{ flex:1, background:'rgba(22,33,62,0.6)', border:'1px solid rgba(201,168,76,0.18)', borderRadius:12, padding:'10px 4px', display:'flex', flexDirection:'column', alignItems:'center', gap:5 }}>
       <span style={{ fontSize:8, color:'#C9A84C', letterSpacing:1.5, textTransform:'uppercase', opacity:0.75 }}>{planet}</span>
       <span style={{ fontSize:13, color:'rgba(246,246,248,0.55)', lineHeight:1 }}>{symbol}</span>
       {src ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={src} alt={sign} width={36} height={36} style={{ filter:'invert(1) sepia(1) saturate(3) hue-rotate(10deg) brightness(0.9)' }} />
+        <img src={src} alt={sign} width={36} height={36} />
       ) : <div style={{ width:36, height:36, display:'flex', alignItems:'center', justifyContent:'center', fontSize:20 }}>{ZODIAC_SYMBOL[sign.toLowerCase()] ?? '✦'}</div>}
       <span style={{ fontSize:9, color:'rgba(246,246,248,0.75)', fontWeight:700, textAlign:'center' }}>{label}</span>
     </div>
@@ -198,8 +198,16 @@ function Divider({ label }: { label: string }) {
 function AstrologyProfile({ western, data }: { western: WesternData | null; data: Record<string,unknown> }) {
   const sunSign   = (western?.sun_sign  ?? (data.western_sun  as string) ?? '').toLowerCase().trim()
   const moonSign  = (western?.moon_sign ?? (data.western_moon as string) ?? '').toLowerCase().trim()
-  const ascSign   = ((western?.ascendant ?? western?.rising ?? (data.western_asc as string)) ?? '').toLowerCase().trim()
+  const ascSign   = (
+    western?.ascendant ?? western?.rising ??
+    (western as Record<string,unknown> | null)?.['asc'] as string ??
+    (western as Record<string,unknown> | null)?.['ascendant_sign'] as string ??
+    (data.western_asc as string) ?? ''
+  ).toLowerCase().trim()
   const planets   = (western?.planets ?? {}) as Record<string,string>
+
+  console.log('[AstrologyProfile] western:', JSON.stringify(western))
+  console.log('[AstrologyProfile] sun:', sunSign, 'moon:', moonSign, 'asc:', ascSign)
 
   const pSign = (key: string) => ((planets[key] ?? (data[`western_${key}`] as string) ?? '') as string).toLowerCase().trim()
 
@@ -251,7 +259,7 @@ function ZodiacBadge({ sign }: { sign: string }) {
       {isValid ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={`${GH}r_${key}.svg`} alt={sign} width={52} height={52}
-          style={{ borderRadius:8, filter:'invert(1) sepia(1) saturate(3) hue-rotate(10deg) brightness(0.9)' }}
+          style={{ borderRadius:8 }}
           onError={e => { (e.target as HTMLImageElement).replaceWith(Object.assign(document.createElement('span'),{textContent:symbol,style:'font-size:32px'})) }}
         />
       ) : <span style={{ fontSize:32 }}>{symbol}</span>}

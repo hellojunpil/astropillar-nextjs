@@ -9,26 +9,27 @@ export function personToBirthData(p: SavedPerson): BirthData {
 }
 
 function birthTimeLabel(p: SavedPerson) {
+  if (p.birth_time_label) return p.birth_time_label
   if (p.hour === null || p.hour === undefined) return 'Birth time unknown'
   return `${String(p.hour).padStart(2,'0')}:${String(p.minute ?? 0).padStart(2,'0')}`
 }
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
-const TIME_RANGES: { label: string; hour: number | null }[] = [
-  { label: "Unknown (I don't know my birth time)", hour: null },
-  { label: '23:30 - 01:30', hour: 0 },
-  { label: '01:30 - 03:30', hour: 2 },
-  { label: '03:30 - 05:30', hour: 4 },
-  { label: '05:30 - 07:30', hour: 6 },
-  { label: '07:30 - 09:30', hour: 8 },
-  { label: '09:30 - 11:30', hour: 10 },
-  { label: '11:30 - 13:30', hour: 12 },
-  { label: '13:30 - 15:30', hour: 14 },
-  { label: '15:30 - 17:30', hour: 16 },
-  { label: '17:30 - 19:30', hour: 18 },
-  { label: '19:30 - 21:30', hour: 20 },
-  { label: '21:30 - 23:30', hour: 22 },
+const TIME_RANGES: { label: string; hour: number | null; minute: number }[] = [
+  { label: "Unknown (I don't know my birth time)", hour: null, minute: 0 },
+  { label: '23:30 - 01:30', hour: 23, minute: 30 },
+  { label: '01:30 - 03:30', hour: 1, minute: 30 },
+  { label: '03:30 - 05:30', hour: 3, minute: 30 },
+  { label: '05:30 - 07:30', hour: 5, minute: 30 },
+  { label: '07:30 - 09:30', hour: 7, minute: 30 },
+  { label: '09:30 - 11:30', hour: 9, minute: 30 },
+  { label: '11:30 - 13:30', hour: 11, minute: 30 },
+  { label: '13:30 - 15:30', hour: 13, minute: 30 },
+  { label: '15:30 - 17:30', hour: 15, minute: 30 },
+  { label: '17:30 - 19:30', hour: 17, minute: 30 },
+  { label: '19:30 - 21:30', hour: 19, minute: 30 },
+  { label: '21:30 - 23:30', hour: 21, minute: 30 },
 ]
 
 const inputStyle: React.CSSProperties = {
@@ -80,10 +81,12 @@ export default function PersonPicker({
     setSaveError('')
     try {
       const birth_date = birthDateStr(parseInt(pYear), parseInt(pMonth), parseInt(pDay))
-      const pHour = TIME_RANGES[pHourIndex].hour
-      const saved = await savePerson(userEmail, { name: pName, birth_date, sex: pSex, birth_city: pCity, hour: pHour, minute: pHour !== null ? 0 : null })
-      // savePerson returns the new person with id
-      const newPerson: SavedPerson = { id: saved?.id, name: pName, birth_date, sex: pSex, birth_city: pCity, hour: pHour, minute: pHour !== null ? 0 : null }
+      const pRange = TIME_RANGES[pHourIndex]
+      const pHour = pRange.hour
+      const pMinute = pHour !== null ? pRange.minute : null
+      const pLabel = pRange.label
+      const saved = await savePerson(userEmail, { name: pName, birth_date, sex: pSex, birth_city: pCity, hour: pHour, minute: pMinute, birth_time_label: pLabel })
+      const newPerson: SavedPerson = { id: saved?.id, name: pName, birth_date, sex: pSex, birth_city: pCity, hour: pHour, minute: pMinute, birth_time_label: pLabel }
       const updated = [...people, newPerson]
       onPeopleChange?.(updated)
       setSelectedId(newPerson.id ?? '')

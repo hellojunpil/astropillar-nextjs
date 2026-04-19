@@ -37,20 +37,20 @@ const labelStyle: React.CSSProperties = {
 }
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
-const TIME_RANGES: { label: string; hour: number | null }[] = [
-  { label: "Unknown (I don't know my birth time)", hour: null },
-  { label: '23:30 - 01:30', hour: 0 },
-  { label: '01:30 - 03:30', hour: 2 },
-  { label: '03:30 - 05:30', hour: 4 },
-  { label: '05:30 - 07:30', hour: 6 },
-  { label: '07:30 - 09:30', hour: 8 },
-  { label: '09:30 - 11:30', hour: 10 },
-  { label: '11:30 - 13:30', hour: 12 },
-  { label: '13:30 - 15:30', hour: 14 },
-  { label: '15:30 - 17:30', hour: 16 },
-  { label: '17:30 - 19:30', hour: 18 },
-  { label: '19:30 - 21:30', hour: 20 },
-  { label: '21:30 - 23:30', hour: 22 },
+const TIME_RANGES: { label: string; hour: number | null; minute: number }[] = [
+  { label: "Unknown (I don't know my birth time)", hour: null, minute: 0 },
+  { label: '23:30 - 01:30', hour: 23, minute: 30 },
+  { label: '01:30 - 03:30', hour: 1, minute: 30 },
+  { label: '03:30 - 05:30', hour: 3, minute: 30 },
+  { label: '05:30 - 07:30', hour: 5, minute: 30 },
+  { label: '07:30 - 09:30', hour: 7, minute: 30 },
+  { label: '09:30 - 11:30', hour: 9, minute: 30 },
+  { label: '11:30 - 13:30', hour: 11, minute: 30 },
+  { label: '13:30 - 15:30', hour: 13, minute: 30 },
+  { label: '15:30 - 17:30', hour: 15, minute: 30 },
+  { label: '17:30 - 19:30', hour: 17, minute: 30 },
+  { label: '19:30 - 21:30', hour: 19, minute: 30 },
+  { label: '21:30 - 23:30', hour: 21, minute: 30 },
 ]
 
 function LibraryPageInner() {
@@ -103,8 +103,9 @@ function LibraryPageInner() {
     setSavePersonError('')
     try {
       const birth_date = `${pYear}-${String(parseInt(pMonth)).padStart(2,'0')}-${String(parseInt(pDay)).padStart(2,'0')}`
-      const pHour = TIME_RANGES[pHourIndex].hour
-      await savePerson(user.email, { name: pName, birth_date, sex: pSex, birth_city: pCity, hour: pHour, minute: pHour !== null ? 0 : null })
+      const pRange = TIME_RANGES[pHourIndex]
+      const pHour = pRange.hour
+      await savePerson(user.email, { name: pName, birth_date, sex: pSex, birth_city: pCity, hour: pHour, minute: pHour !== null ? pRange.minute : null, birth_time_label: pRange.label })
       const refreshed = await getPeople(user.email)
       setPeople(refreshed)
       setPName(''); setPYear(''); setPMonth('1'); setPDay(''); setPCity(''); setPHourIndex(0)
@@ -237,7 +238,7 @@ function LibraryPageInner() {
                           {p.birth_date} · {p.sex === 'F' ? '♀' : '♂'} · {p.birth_city}
                         </p>
                         <p style={{ color: 'var(--text-muted)', fontSize: 11, marginTop: 2 }}>
-                          {p.hour !== null && p.hour !== undefined ? `${String(p.hour).padStart(2,'0')}:${String(p.minute ?? 0).padStart(2,'0')}` : 'Birth time unknown'}
+                          {p.birth_time_label ?? (p.hour !== null && p.hour !== undefined ? `${String(p.hour).padStart(2,'0')}:${String(p.minute ?? 0).padStart(2,'0')}` : 'Birth time unknown')}
                         </p>
                       </div>
                       <button onClick={() => p.id && handleDeletePerson(p.id)} style={{

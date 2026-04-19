@@ -13,6 +13,7 @@ export interface SavedPerson {
   birth_city: string
   hour: number | null
   minute: number | null
+  birth_time_label?: string  // e.g. "11:30 - 13:30" or "Unknown"
 }
 
 export interface ReadingRecord {

@@ -11,6 +11,7 @@ export interface BirthData {
   minute: number | null
   sex: 'M' | 'F'
   city: string
+  birth_time_label?: string  // e.g. "11:30 - 13:30" or "Unknown"
 }
 
 interface Props {
@@ -22,20 +23,20 @@ interface Props {
   onSavePerson?: (data: BirthData) => Promise<void>
 }
 
-const TIME_RANGES: { label: string; hour: number | null }[] = [
-  { label: "Unknown (I don't know my birth time)", hour: null },
-  { label: '23:30 - 01:30', hour: 0 },
-  { label: '01:30 - 03:30', hour: 2 },
-  { label: '03:30 - 05:30', hour: 4 },
-  { label: '05:30 - 07:30', hour: 6 },
-  { label: '07:30 - 09:30', hour: 8 },
-  { label: '09:30 - 11:30', hour: 10 },
-  { label: '11:30 - 13:30', hour: 12 },
-  { label: '13:30 - 15:30', hour: 14 },
-  { label: '15:30 - 17:30', hour: 16 },
-  { label: '17:30 - 19:30', hour: 18 },
-  { label: '19:30 - 21:30', hour: 20 },
-  { label: '21:30 - 23:30', hour: 22 },
+const TIME_RANGES: { label: string; hour: number | null; minute: number }[] = [
+  { label: "Unknown (I don't know my birth time)", hour: null, minute: 0 },
+  { label: '23:30 - 01:30', hour: 23, minute: 30 },
+  { label: '01:30 - 03:30', hour: 1, minute: 30 },
+  { label: '03:30 - 05:30', hour: 3, minute: 30 },
+  { label: '05:30 - 07:30', hour: 5, minute: 30 },
+  { label: '07:30 - 09:30', hour: 7, minute: 30 },
+  { label: '09:30 - 11:30', hour: 9, minute: 30 },
+  { label: '11:30 - 13:30', hour: 11, minute: 30 },
+  { label: '13:30 - 15:30', hour: 13, minute: 30 },
+  { label: '15:30 - 17:30', hour: 15, minute: 30 },
+  { label: '17:30 - 19:30', hour: 17, minute: 30 },
+  { label: '19:30 - 21:30', hour: 19, minute: 30 },
+  { label: '21:30 - 23:30', hour: 21, minute: 30 },
 ]
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
@@ -79,7 +80,10 @@ export default function BirthForm({ onSubmit, loading, submitLabel = 'Get My Rea
     setMonth(String(parseInt(m)))
     setDay(String(parseInt(d)))
     setCity(p.birth_city)
-    if (p.hour !== null) {
+    if (p.birth_time_label) {
+      const idx = TIME_RANGES.findIndex(t => t.label === p.birth_time_label)
+      setHourIndex(idx >= 0 ? idx : 0)
+    } else if (p.hour !== null) {
       const idx = TIME_RANGES.findIndex(t => t.hour === p.hour)
       setHourIndex(idx >= 0 ? idx : 0)
     } else {
@@ -96,8 +100,9 @@ export default function BirthForm({ onSubmit, loading, submitLabel = 'Get My Rea
       name: name.trim() || 'You',
       year: y, month: parseInt(month), day: d,
       hour: range.hour,
-      minute: range.hour !== null ? 0 : null,
+      minute: range.hour !== null ? range.minute : null,
       sex, city: city.trim(),
+      birth_time_label: range.label,
     }
   }
 
