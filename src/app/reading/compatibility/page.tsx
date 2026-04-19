@@ -7,6 +7,7 @@ import ReadingPageShell from '@/components/ReadingPageShell'
 import { apiPost } from '@/lib/api'
 import { gtagEvent } from '@/lib/gtag'
 import { saveReading, getCachedReading, getPeople, birthDateStr, SavedPerson } from '@/lib/firestore'
+import ReadingLoader from '@/components/ReadingLoader'
 
 const RELATIONSHIPS = [
   'Romantic Partner',
@@ -97,7 +98,7 @@ export default function CompatibilityPage() {
         city2: person2.birth_city,
         relationship,
       })
-      await apiPost('/use_pouch', { email: user.email, amount: 1 })
+      await apiPost('/use_pouch', { email: user.email, reading_type: 'compatibility' })
       await saveReading(user.email, { reading_type: 'compatibility', name: cacheKey, birth_date: cacheDate, birth_city: cacheCity, result: raw })
       setResult(raw)
       setFromCache(false)
@@ -124,6 +125,8 @@ export default function CompatibilityPage() {
           userEmail={user?.email ?? undefined}
           fromCache={fromCache}
         />
+      ) : submitting ? (
+        <ReadingLoader onComplete={() => {}} />
       ) : loadingPeople ? (
         <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: 40 }}>Loading...</p>
       ) : people.length < 2 ? (

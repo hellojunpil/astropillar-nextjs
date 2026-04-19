@@ -162,7 +162,6 @@ export default function MenuPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                      <span style={{ fontSize: 18 }}>{s.emoji}</span>
                       <span style={{ color: '#fff', fontWeight: 600, fontSize: 15 }}>{s.title}</span>
                     </div>
                     <p style={{ color: 'var(--text-muted)', fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 }}>

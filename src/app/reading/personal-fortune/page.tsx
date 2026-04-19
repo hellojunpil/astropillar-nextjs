@@ -8,6 +8,7 @@ import ReadingPageShell from '@/components/ReadingPageShell'
 import { apiPost } from '@/lib/api'
 import { gtagEvent } from '@/lib/gtag'
 import { saveReading, getCachedReading, savePerson, getPeople, birthDateStr, SavedPerson } from '@/lib/firestore'
+import ReadingLoader from '@/components/ReadingLoader'
 
 export default function PersonalFortunePage() {
   const { user, credits, loading, refreshCredits } = useAuth()
@@ -38,8 +39,9 @@ export default function PersonalFortunePage() {
         year: data.year, month: data.month, day: data.day,
         birthtime, sex: data.sex, city: data.city,
         user_name: data.name, birth_year: data.year,
+        reading_type: 'personal_fortune',
       })
-      await apiPost('/use_pouch', { email: user.email, amount: 1 })
+      await apiPost('/use_pouch', { email: user.email, reading_type: 'personal_fortune' })
       await saveReading(user.email, { reading_type: 'personal_fortune', name: data.name, birth_date, birth_city: data.city, result: raw })
       setResult(raw); setFromCache(false); refreshCredits()
       gtagEvent('reading_completed', { reading_type: 'personal_fortune' })
@@ -63,9 +65,11 @@ export default function PersonalFortunePage() {
     <ReadingPageShell title="Personal Fortune" subtitle="Your lifetime destiny — career, love, life theme, and hidden potential" emoji="✨" badge="1 Credit" credits={credits} requiredCredits={1}>
       {result ? (
         <ReadingResult raw={result} onReset={() => { setResult(null); setFromCache(false); setBirthData(null) }} userEmail={user?.email ?? undefined} fromCache={fromCache} birthData={birthData ?? undefined} />
+      ) : submitting ? (
+        <ReadingLoader onComplete={() => {}} />
       ) : (
         <div className="card">
-          <PersonPicker people={people} onSubmit={handleSubmit} loading={submitting} submitLabel="Reveal My Fortune" costBadge="1 Credit" />
+          <PersonPicker people={people} onSubmit={handleSubmit} loading={submitting} submitLabel="Reveal My Fortune" costBadge="1 Credit" userEmail={user?.email ?? ''} onPeopleChange={setPeople} />
           {error && <p style={{ color:'#ef4444', fontSize:13, marginTop:14, textAlign:'center' }}>{error}</p>}
         </div>
       )}

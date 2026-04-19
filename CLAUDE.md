@@ -209,6 +209,21 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 - [x] Scenario 페이지 — sessionStorage에서 birthData/question 프리필
 - [x] FreeAstroAPI 연결 확인 — FREEASTRO_BASE env var, 기본값 astro-api-1qnc.onrender.com
 - [x] OpenAI API 연결 확인 — OPENAI_API_KEY env var (Cloud Run에 세팅됨)
+- [x] git 2차 커밋 — 이번 세션 전체 변경사항 18 files (BottomNav, Library, firestore.ts 등) 커밋 완료
+- [x] 배포 절차 문서화 — CLAUDE.md에 GitHub 레포 생성/푸시 명령어, Vercel 환경변수 전체 목록, 도메인 연결 방법 기록
+- [x] TypeScript 빌드 오류 수정 — `WesternData.planets` 타입 명시 (`Record<string,string>`) → 로컬 빌드 통과 확인
+- [x] Vercel 배포 실패 원인 해결 — `npm run build` 로컬 검증 후 fix 커밋 완료
+- [x] FastAPI CORS에 `https://astropillar-nextjs.vercel.app` 추가 — `D:\snap pillar\main.py` 저장 완료 (Cloud Run 재배포 필요)
+- [x] Birth Time 드롭다운 → 2시간 범위 12슬롯으로 교체 (Unknown 포함, 00~23:00 목록 제거)
+- [x] Birth City 자동완성 완전 제거 — BirthForm + Compatibility 페이지 모두 자유 텍스트 입력창으로 교체, 입력값 있으면 버튼 활성화
+- [x] Saved Persons 드롭다운 — 저장된 인물 있으면 "Select a Person" select 표시, 선택 시 폼 자동 입력
+- [x] savePerson 에러 묵살 제거 — Firestore 저장 실패 시 Library 페이지에 에러 메시지 표시
+- [x] Birth City placeholder "e.g. New York" 으로 변경 (나라 코드 제거)
+- [x] Compatibility 페이지 전면 개편 — 수동 입력 폼 제거, Firestore saved persons 드롭다운으로 교체, 관계 선택 12종, API 플랫 필드 수정(name1/year1 등), 저장 인물 부족 시 빈 상태 + Add Person 버튼
+- [x] 랜딩 페이지 (`/`) — index.html 전체 Next.js 변환 완료: Firebase Auth 세션 유지(로그인 시 /menu 리다이렉트), 3-view SPA(v1 랜딩/v2 폼/v3 결과), 모든 스타일·애니메이션·이미지 URL 유지, GA4 이벤트 유지, window.parent 제거
+- [x] [object Object] 에러 수정 — `api.ts` detail 필드가 배열/객체일 때 JSON.stringify로 변환
+- [x] PersonPicker 컴포넌트 — 인물 카드 선택 UX, 빈 상태 + Add Person 링크, Enter manually 토글
+- [x] 리딩 페이지 UX 전면 개편 — Personal Fortune/Daily/Yearly/Scenario 모두 PersonPicker로 교체, Daily 날짜 선택 유지(headerSlot), Scenario 1단계 인물 선택 + Change 버튼
 
 ## 결과 화면 구성 (ReadingResult.tsx)
 
@@ -223,11 +238,63 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 
 API 응답에서 천간/지지 데이터를 `pillars.year.gan`, `pillars.year.zhi` 등 다양한 필드명으로 유연하게 추출.
 
+### ✅ 이번 세션 추가 완료
+- [x] 이모지 제거 — `ReadingPageShell.tsx` 타이틀 emoji span 삭제, `menu/page.tsx` 서비스 카드 emoji span 삭제
+- [x] Add Person 버튼 URL 수정 — `PersonPicker.tsx` `href="/library?tab=persons"`
+- [x] Library 페이지 URL 파라미터 처리 — `useSearchParams`로 `?tab=persons` 감지, Suspense 래핑
+- [x] 리딩 로딩 화면 (`ReadingLoader.tsx`) — 골드 프로그레스 바, 롤링 문구 20개 (4초 간격), 60~120초 완료 후 결과 전환, 5개 리딩 페이지 적용
+- [x] Firestore 보안 규칙 — `firestore.rules` 파일 생성 (users/{email}/** 읽기/쓰기 이메일 인증), Firebase 콘솔 또는 `firebase deploy --only firestore:rules` 배포 필요
+- [x] Personal Fortune `reading_type` 누락 수정 — `/personal_fortune` API 호출에 `reading_type: 'personal_fortune'` 추가
+- [x] Credit 차감 흐름 검증 — 5개 리딩 페이지 모두 `use_pouch` → `refreshCredits()` 순서 정상 확인
+- [x] PersonPicker 인라인 Add Person 폼 — /library 이동 없이 같은 페이지에서 인물 입력/저장/자동선택 후 바로 리딩 진행, `savePerson` ID 반환으로 변경, 5개 리딩 페이지 `userEmail`+`onPeopleChange` prop 전달
+- [x] API 오류 메시지 개선 — `api.ts` Pydantic 배열/객체 오류 시 "Something went wrong. Please try again." 표시 (모든 리딩 페이지 자동 적용)
+- [x] `/use_pouch` 파라미터 수정 — 프론트 `amount` → `reading_type` 으로 변경 (5개 리딩 페이지), 백엔드 `UsePouchRequest` 스펙 일치
+- [x] Scenario `reading_type` 수정 — `situation` → `scenario` (Firestore service_config/pricing 키 일치)
+
 ### ⏳ 남은 작업
-- [ ] GitHub 레포 연결 + Vercel 배포 (`gh repo create hellojunpil/astropillar-nextjs --public` → Vercel 연결)
-- [ ] 실제 API 응답 구조 확인 후 pillar/western 추출 로직 검증 (실제 API 호출 후 응답 JSON 확인 필요)
-- [ ] Vercel 환경변수 세팅 (NEXT_PUBLIC_API_BASE, Firebase 키 등 .env.local 항목 전부)
-- [ ] FastAPI CORS에 `https://astropillar.com` 추가 확인 후 Cloud Run 재배포
+- [ ] `firestore.rules` Firebase에 실제 배포 (`firebase deploy --only firestore:rules`)
+- [ ] GitHub 레포 연결 + Vercel 배포 (아래 "배포 절차" 참고)
+- [ ] 실제 API 응답 구조 확인 후 pillar/western 추출 로직 검증
+- [ ] Vercel 환경변수 세팅 (아래 목록 참고)
+- [ ] FastAPI CORS에 `https://astropillar.com` 확인 후 Cloud Run 재배포
+- [ ] `.env.local` `NEXT_PUBLIC_FIREBASE_APP_ID` 값 입력, `NEXT_PUBLIC_GOOGLE_CLIENT_ID` 추가
+
+---
+
+## 배포 절차 (GitHub + Vercel)
+
+### 1단계 — GitHub 레포 생성 & 푸시
+`gh` CLI가 없을 경우 GitHub에서 빈 레포 `hellojunpil/astropillar-nextjs` 수동 생성 후:
+```bash
+git -C "E:/My Team/astropillar" remote add origin https://github.com/hellojunpil/astropillar-nextjs.git
+git -C "E:/My Team/astropillar" push -u origin master
+```
+`gh` CLI 있을 경우:
+```bash
+gh repo create hellojunpil/astropillar-nextjs --public --source="E:/My Team/astropillar" --remote=origin --push
+```
+
+### 2단계 — Vercel 배포
+1. https://vercel.com → "Add New Project" → GitHub 레포 import
+2. Framework: **Next.js** (자동 감지)
+3. 환경변수 아래 목록 전부 입력 후 Deploy
+
+### 3단계 — Vercel 환경변수 목록
+```
+NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyAWFmD7UDYuO0EErZDF3kxlmTYxw1tz9KU
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=pillarfortune.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=pillarfortune
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=944836465041-ofkua0sdrnabng4nq6laaiu1sa1n7vbl.apps.googleusercontent.com
+NEXT_PUBLIC_API_BASE=https://snap-pillar-api-944836465041.asia-northeast3.run.app
+NEXT_PUBLIC_GUMROAD_URL_1=https://junpil.gumroad.com/l/gveeli
+NEXT_PUBLIC_GUMROAD_URL_5=https://junpil.gumroad.com/l/idksv
+GUMROAD_SELLER_ID=0DwFvQOjnySBKZVYvOzIJg==
+NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
+```
+
+### 4단계 — 도메인 연결
+- Vercel → Settings → Domains → `astropillar.com` 추가
+- DNS: Vercel이 안내하는 A레코드 또는 CNAME 설정
 
 ---
 

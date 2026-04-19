@@ -1,17 +1,28 @@
 'use client'
 import { useState } from 'react'
-import Link from 'next/link'
-import { SavedPerson } from '@/lib/firestore'
+import { SavedPerson, savePerson, birthDateStr } from '@/lib/firestore'
 import BirthForm, { BirthData } from './BirthForm'
 
 export function personToBirthData(p: SavedPerson): BirthData {
   const [year, month, day] = p.birth_date.split('-').map(Number)
-  return { name: p.name, year, month, day, hour: p.hour, minute: p.minute, sex: p.sex, city: p.birth_city }
+  return { name: p.name, year, month, day, hour: p.hour ?? null, minute: p.minute ?? null, sex: p.sex, city: p.birth_city }
 }
 
 function birthTimeLabel(p: SavedPerson) {
   if (p.hour === null || p.hour === undefined) return 'Birth time unknown'
   return `${String(p.hour).padStart(2,'0')}:${String(p.minute ?? 0).padStart(2,'0')}`
+}
+
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+
+const inputStyle: React.CSSProperties = {
+  background: '#0f1829', border: '1px solid var(--border)', borderRadius: 10,
+  color: '#fff', padding: '10px 14px', fontSize: 14, width: '100%', outline: 'none',
+  fontFamily: "'Noto Sans', sans-serif",
+}
+const labelStyle: React.CSSProperties = {
+  color: 'var(--text-muted)', fontSize: 11, letterSpacing: 1.5,
+  textTransform: 'uppercase', marginBottom: 5, display: 'block',
 }
 
 interface Props {
@@ -21,20 +32,105 @@ interface Props {
   submitLabel?: string
   costBadge?: string
   headerSlot?: React.ReactNode
+  userEmail?: string
+  onPeopleChange?: (people: SavedPerson[]) => void
 }
 
-export default function PersonPicker({ people, onSubmit, loading, submitLabel = 'Get My Reading', costBadge, headerSlot }: Props) {
+export default function PersonPicker({
+  people, onSubmit, loading, submitLabel = 'Get My Reading',
+  costBadge, headerSlot, userEmail, onPeopleChange,
+}: Props) {
   const [mode, setMode] = useState<'select' | 'manual'>('select')
   const [selectedId, setSelectedId] = useState('')
+  const [showAddForm, setShowAddForm] = useState(false)
+
+  // Add person form state
+  const [pName, setPName] = useState('')
+  const [pSex, setPSex] = useState<'M'|'F'>('F')
+  const [pMonth, setPMonth] = useState('1')
+  const [pDay, setPDay] = useState('')
+  const [pYear, setPYear] = useState('')
+  const [pCity, setPCity] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
 
   const selectedPerson = people.find(p => p.id === selectedId) ?? null
+
+  async function handleAddPerson(e: React.FormEvent) {
+    e.preventDefault()
+    if (!userEmail || !pName || !pYear || !pDay || !pCity) return
+    setSaving(true)
+    setSaveError('')
+    try {
+      const birth_date = birthDateStr(parseInt(pYear), parseInt(pMonth), parseInt(pDay))
+      const saved = await savePerson(userEmail, { name: pName, birth_date, sex: pSex, birth_city: pCity, hour: null, minute: null })
+      // savePerson returns the new person with id
+      const newPerson: SavedPerson = { id: saved?.id, name: pName, birth_date, sex: pSex, birth_city: pCity, hour: null, minute: null }
+      const updated = [...people, newPerson]
+      onPeopleChange?.(updated)
+      setSelectedId(newPerson.id ?? '')
+      setShowAddForm(false)
+      setPName(''); setPSex('F'); setPMonth('1'); setPDay(''); setPYear(''); setPCity('')
+    } catch (err: unknown) {
+      setSaveError(err instanceof Error ? err.message : 'Failed to save.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const addPersonForm = (
+    <form onSubmit={handleAddPerson} style={{ display:'flex', flexDirection:'column', gap:12, background:'rgba(201,168,76,0.04)', border:'1px solid rgba(201,168,76,0.2)', borderRadius:14, padding:'18px 16px', marginTop:4 }}>
+      <p style={{ color:'var(--gold)', fontSize:11, letterSpacing:2, textTransform:'uppercase', marginBottom:4 }}>New Person</p>
+      <div>
+        <label style={labelStyle}>Name</label>
+        <input style={inputStyle} placeholder="e.g. Jessica" value={pName} onChange={e => setPName(e.target.value)} required />
+      </div>
+      <div>
+        <label style={labelStyle}>Gender</label>
+        <div style={{ display:'flex', gap:8 }}>
+          {(['F','M'] as const).map(s => (
+            <button key={s} type="button" onClick={() => setPSex(s)} style={{
+              flex:1, padding:'9px', borderRadius:10, cursor:'pointer', fontWeight:600, fontSize:13,
+              border:`1px solid ${pSex === s ? 'var(--gold)' : 'var(--border)'}`,
+              background: pSex === s ? 'rgba(201,168,76,0.12)' : 'transparent',
+              color: pSex === s ? 'var(--gold)' : 'var(--text-muted)',
+            }}>{s === 'F' ? '♀ Female' : '♂ Male'}</button>
+          ))}
+        </div>
+      </div>
+      <div>
+        <label style={labelStyle}>Birth Date</label>
+        <div style={{ display:'grid', gridTemplateColumns:'2fr 2fr 3fr', gap:8 }}>
+          <select style={inputStyle} value={pMonth} onChange={e => setPMonth(e.target.value)}>
+            {MONTHS.map((m, i) => <option key={i} value={i+1}>{m}</option>)}
+          </select>
+          <input style={inputStyle} placeholder="Day" type="number" min={1} max={31} value={pDay} onChange={e => setPDay(e.target.value)} required />
+          <input style={inputStyle} placeholder="Year" type="number" min={1900} max={2025} value={pYear} onChange={e => setPYear(e.target.value)} required />
+        </div>
+      </div>
+      <div>
+        <label style={labelStyle}>Birth City</label>
+        <input style={inputStyle} placeholder="e.g. New York" value={pCity} onChange={e => setPCity(e.target.value)} required />
+      </div>
+      {saveError && <p style={{ color:'#ef4444', fontSize:12 }}>{saveError}</p>}
+      <div style={{ display:'flex', gap:8, marginTop:4 }}>
+        <button type="button" onClick={() => { setShowAddForm(false); setSaveError('') }} style={{
+          flex:1, background:'none', border:'1px solid var(--border)', borderRadius:50,
+          color:'var(--text-muted)', fontSize:13, padding:'10px', cursor:'pointer',
+        }}>Cancel</button>
+        <button type="submit" disabled={saving} className="btn-gold" style={{ flex:2, opacity: saving ? 0.7 : 1 }}>
+          {saving ? 'Saving...' : 'Save & Select'}
+        </button>
+      </div>
+    </form>
+  )
 
   if (mode === 'manual') {
     return (
       <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
         {headerSlot}
         {people.length > 0 && (
-          <button type="button" onClick={() => setMode('select')} style={{ background:'none', border:'none', color:'var(--text-muted)', fontSize:13, cursor:'pointer', textAlign:'left', padding:0, display:'flex', alignItems:'center', gap:6 }}>
+          <button type="button" onClick={() => setMode('select')} style={{ background:'none', border:'none', color:'var(--text-muted)', fontSize:13, cursor:'pointer', textAlign:'left', padding:0 }}>
             ← Select a saved person
           </button>
         )}
@@ -43,21 +139,29 @@ export default function PersonPicker({ people, onSubmit, loading, submitLabel = 
     )
   }
 
-  // Select mode
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
       {headerSlot}
 
       {people.length === 0 ? (
-        <div className="card" style={{ textAlign:'center', padding:'36px 24px' }}>
-          <p style={{ fontSize:28, marginBottom:12 }}>👤</p>
-          <p style={{ color:'#fff', fontSize:15, fontWeight:600, marginBottom:8 }}>No saved persons yet.</p>
-          <p style={{ color:'var(--text-muted)', fontSize:13, marginBottom:20, lineHeight:1.6 }}>
-            Save yourself in My Persons first for quick readings.
-          </p>
-          <Link href="/library" className="btn-gold" style={{ display:'inline-block', padding:'11px 24px', fontSize:13, textDecoration:'none' }}>
-            Add Person →
-          </Link>
+        <div style={{ display:'flex', flexDirection:'column', gap:0 }}>
+          {!showAddForm && (
+            <div style={{ textAlign:'center', padding:'36px 24px', background:'var(--card)', border:'1px solid var(--border)', borderRadius:14 }}>
+              <p style={{ fontSize:28, marginBottom:12 }}>👤</p>
+              <p style={{ color:'#fff', fontSize:15, fontWeight:600, marginBottom:8 }}>No saved persons yet.</p>
+              <p style={{ color:'var(--text-muted)', fontSize:13, marginBottom:20, lineHeight:1.6 }}>
+                Save yourself to get started with quick readings.
+              </p>
+              {userEmail ? (
+                <button type="button" onClick={() => setShowAddForm(true)} className="btn-gold" style={{ padding:'11px 24px', fontSize:13 }}>
+                  + Add Person
+                </button>
+              ) : (
+                <p style={{ color:'var(--text-muted)', fontSize:12 }}>Please sign in to save persons.</p>
+              )}
+            </div>
+          )}
+          {showAddForm && addPersonForm}
         </div>
       ) : (
         <>
@@ -71,7 +175,7 @@ export default function PersonPicker({ people, onSubmit, loading, submitLabel = 
                   onClick={() => setSelectedId(p.id ?? '')}
                   style={{
                     width:'100%', textAlign:'left', padding:'14px 16px', borderRadius:14, cursor:'pointer',
-                    border: `1.5px solid ${selected ? 'var(--gold)' : 'var(--border)'}`,
+                    border:`1.5px solid ${selected ? 'var(--gold)' : 'var(--border)'}`,
                     background: selected ? 'rgba(201,168,76,0.08)' : 'var(--card)',
                     transition:'border-color 0.15s, background 0.15s',
                   }}
@@ -88,6 +192,17 @@ export default function PersonPicker({ people, onSubmit, loading, submitLabel = 
               )
             })}
           </div>
+
+          {showAddForm ? addPersonForm : (
+            userEmail && (
+              <button type="button" onClick={() => setShowAddForm(true)} style={{
+                background:'rgba(201,168,76,0.06)', border:'1px dashed rgba(201,168,76,0.35)',
+                borderRadius:12, padding:'10px', color:'var(--gold)', fontSize:13, cursor:'pointer',
+              }}>
+                + Add Another Person
+              </button>
+            )
+          )}
 
           <button
             type="button"

@@ -8,6 +8,7 @@ import ReadingPageShell from '@/components/ReadingPageShell'
 import { apiPost } from '@/lib/api'
 import { gtagEvent } from '@/lib/gtag'
 import { saveReading, getCachedReading, savePerson, getPeople, birthDateStr, SavedPerson } from '@/lib/firestore'
+import ReadingLoader from '@/components/ReadingLoader'
 
 const currentYear = new Date().getFullYear()
 
@@ -41,7 +42,7 @@ export default function YearlyFortunePage() {
         birthtime, sex: data.sex, city: data.city,
         reading_type: 'yearly', user_name: data.name, birth_year: data.year,
       })
-      await apiPost('/use_pouch', { email: user.email, amount: 1 })
+      await apiPost('/use_pouch', { email: user.email, reading_type: 'yearly' })
       await saveReading(user.email, { reading_type: 'yearly', name: data.name, birth_date, birth_city: data.city, result: raw })
       setResult(raw); setFromCache(false); refreshCredits()
       gtagEvent('reading_completed', { reading_type: 'yearly' })
@@ -65,9 +66,11 @@ export default function YearlyFortunePage() {
     <ReadingPageShell title="Yearly Fortune" subtitle={`Month-by-month guidance for ${currentYear} based on your chart`} emoji="📅" badge="1 Credit" credits={credits} requiredCredits={1}>
       {result ? (
         <ReadingResult raw={result} onReset={() => { setResult(null); setFromCache(false); setBirthData(null) }} userEmail={user?.email ?? undefined} fromCache={fromCache} birthData={birthData ?? undefined} />
+      ) : submitting ? (
+        <ReadingLoader onComplete={() => {}} />
       ) : (
         <div className="card">
-          <PersonPicker people={people} onSubmit={handleSubmit} loading={submitting} submitLabel={`Reveal My ${currentYear}`} costBadge="1 Credit" />
+          <PersonPicker people={people} onSubmit={handleSubmit} loading={submitting} submitLabel={`Reveal My ${currentYear}`} costBadge="1 Credit" userEmail={user?.email ?? ''} onPeopleChange={setPeople} />
           {error && <p style={{ color:'#ef4444', fontSize:13, marginTop:14, textAlign:'center' }}>{error}</p>}
         </div>
       )}

@@ -8,6 +8,7 @@ import ReadingPageShell from '@/components/ReadingPageShell'
 import { apiPost } from '@/lib/api'
 import { gtagEvent } from '@/lib/gtag'
 import { saveReading, birthDateStr, getPeople, SavedPerson } from '@/lib/firestore'
+import ReadingLoader from '@/components/ReadingLoader'
 
 const EXAMPLE_QUESTIONS = [
   "Should I quit my job and start my own business?",
@@ -62,7 +63,7 @@ export default function ScenarioPage() {
         reading_type: 'situation', situation: question.trim(),
         user_name: birthData.name, birth_year: birthData.year,
       })
-      await apiPost('/use_pouch', { email: user.email, amount: 2 })
+      await apiPost('/use_pouch', { email: user.email, reading_type: 'scenario' })
       const birth_date = birthDateStr(birthData.year, birthData.month, birthData.day)
       await saveReading(user.email, { reading_type: 'scenario', name: birthData.name, birth_date, birth_city: birthData.city, result: raw })
       setResult(raw); refreshCredits()
@@ -80,12 +81,14 @@ export default function ScenarioPage() {
     <ReadingPageShell title="Scenario Reading" subtitle="Get cosmic guidance on a specific situation — ask anything" emoji="🔮" badge="2 Credits" badgeColor="#a78bfa" credits={credits} requiredCredits={2}>
       {result ? (
         <ReadingResult raw={result} onReset={() => { setResult(null); setStep('form'); setBirthData(null); setQuestion('') }} userEmail={user?.email ?? undefined} />
+      ) : submitting ? (
+        <ReadingLoader onComplete={() => {}} />
       ) : step === 'form' ? (
         <div className="card">
           <p style={{ color:'var(--text-muted)', fontSize:13, marginBottom:20 }}>
             First, select whose chart to read for your question.
           </p>
-          <PersonPicker people={people} onSubmit={handlePersonSelect} loading={false} submitLabel="Next → Ask Your Question" />
+          <PersonPicker people={people} onSubmit={handlePersonSelect} loading={false} submitLabel="Next → Ask Your Question" userEmail={user?.email ?? ''} onPeopleChange={setPeople} />
         </div>
       ) : (
         <form onSubmit={handleQuestionSubmit} style={{ display:'flex', flexDirection:'column', gap:16 }}>

@@ -8,6 +8,7 @@ import ReadingPageShell from '@/components/ReadingPageShell'
 import { apiPost } from '@/lib/api'
 import { gtagEvent } from '@/lib/gtag'
 import { saveReading, getCachedReading, savePerson, getPeople, birthDateStr, SavedPerson } from '@/lib/firestore'
+import ReadingLoader from '@/components/ReadingLoader'
 
 function getDateOptions() {
   const today = new Date()
@@ -56,7 +57,7 @@ export default function DailyFortunePage() {
         user_name: data.name, birth_year: data.year,
         target_date: targetDate,
       })
-      await apiPost('/use_pouch', { email: user.email, amount: 1 })
+      await apiPost('/use_pouch', { email: user.email, reading_type: 'personal_daily_fortune' })
       await saveReading(user.email, { reading_type: 'daily', name: data.name, birth_date, birth_city: data.city, target_date: targetDate, result: raw })
       setResult(raw); setFromCache(false); refreshCredits()
       gtagEvent('reading_completed', { reading_type: 'daily' })
@@ -103,9 +104,11 @@ export default function DailyFortunePage() {
     <ReadingPageShell title="Personal Daily Fortune" subtitle={`Your energy for ${selectedLabel}`} emoji="☀️" badge="1 Credit" credits={credits} requiredCredits={1}>
       {result ? (
         <ReadingResult raw={result} onReset={() => { setResult(null); setFromCache(false); setBirthData(null) }} userEmail={user?.email ?? undefined} fromCache={fromCache} birthData={birthData ?? undefined} />
+      ) : submitting ? (
+        <ReadingLoader onComplete={() => {}} />
       ) : (
         <div className="card">
-          <PersonPicker people={people} onSubmit={handleSubmit} loading={submitting} submitLabel={`Read ${selectedLabel}'s Stars`} costBadge="1 Credit" headerSlot={datePicker} />
+          <PersonPicker people={people} onSubmit={handleSubmit} loading={submitting} submitLabel={`Read ${selectedLabel}'s Stars`} costBadge="1 Credit" headerSlot={datePicker} userEmail={user?.email ?? ''} onPeopleChange={setPeople} />
           {error && <p style={{ color:'#ef4444', fontSize:13, marginTop:14, textAlign:'center' }}>{error}</p>}
         </div>
       )}

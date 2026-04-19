@@ -63,7 +63,6 @@ export default function ReadingPageShell({
         {/* Page Title */}
         <div style={{ marginBottom: 28 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-            <span style={{ fontSize: 24 }}>{emoji}</span>
             <h1 className="font-display" style={{ color: '#fff', fontSize: 22, fontWeight: 600 }}>{title}</h1>
             <span style={{
               border: `1px solid ${badgeColor}`, color: badgeColor,

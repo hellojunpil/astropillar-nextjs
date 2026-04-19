@@ -91,8 +91,9 @@ export async function getCachedReading(
 export async function savePerson(
   email: string,
   data: Omit<SavedPerson, 'id'>
-): Promise<void> {
-  await addDoc(collection(db, 'users', email, 'people'), data)
+): Promise<{ id: string }> {
+  const ref = await addDoc(collection(db, 'users', email, 'people'), data)
+  return { id: ref.id }
 }
 
 export async function getPeople(email: string): Promise<SavedPerson[]> {

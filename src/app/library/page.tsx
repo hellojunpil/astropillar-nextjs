@@ -1,6 +1,6 @@
 'use client'
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { signOut } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
@@ -37,10 +37,13 @@ const labelStyle: React.CSSProperties = {
 }
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
-export default function LibraryPage() {
+function LibraryPageInner() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { user, loading } = useAuth()
-  const [tab, setTab] = useState<'history' | 'persons'>('history')
+  const [tab, setTab] = useState<'history' | 'persons'>(() =>
+    searchParams.get('tab') === 'persons' ? 'persons' : 'history'
+  )
   const [readings, setReadings] = useState<ReadingRecord[]>([])
   const [people, setPeople] = useState<SavedPerson[]>([])
   const [loadingData, setLoadingData] = useState(true)
@@ -282,5 +285,17 @@ export default function LibraryPage() {
 
       <BottomNav />
     </main>
+  )
+}
+
+export default function LibraryPage() {
+  return (
+    <Suspense fallback={
+      <main style={{ background: 'var(--bg)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ color: 'var(--gold)', fontFamily: "'Cormorant Garamond', serif", fontSize: 18 }}>Loading...</p>
+      </main>
+    }>
+      <LibraryPageInner />
+    </Suspense>
   )
 }
