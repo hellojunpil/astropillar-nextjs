@@ -1,217 +1,185 @@
 'use client'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { apiPost } from '@/lib/api'
 import { BirthData } from './BirthForm'
 
 const GH = 'https://raw.githubusercontent.com/hellojunpil/astropillar_images/main/'
 
-function ganImg(char: string) {
-  return `${GH}gan_${encodeURIComponent(char)}.png`
-}
-function zhiImg(char: string) {
-  return `${GH}zhi_${encodeURIComponent(char)}.png`
-}
+function ganImg(char: string) { return `${GH}gan_${encodeURIComponent(char)}.png` }
+function zhiImg(char: string) { return `${GH}zhi_${encodeURIComponent(char)}.png` }
 
-// r_*.svg format — used for all zodiac displays in readings
 const ZODIAC_SVG_KEYS = [
   'aries','taurus','gemini','cancer','leo','virgo',
   'libra','scorpio','sagittarius','capricorn','aquarius','pisces',
 ]
-
 const ZODIAC_SYMBOL: Record<string, string> = {
-  aries: '♈', taurus: '♉', gemini: '♊', cancer: '♋',
-  leo: '♌', virgo: '♍', libra: '♎', scorpio: '♏',
-  sagittarius: '♐', capricorn: '♑', aquarius: '♒', pisces: '♓',
+  aries:'♈',taurus:'♉',gemini:'♊',cancer:'♋',leo:'♌',virgo:'♍',
+  libra:'♎',scorpio:'♏',sagittarius:'♐',capricorn:'♑',aquarius:'♒',pisces:'♓',
 }
 
-const PILLAR_LABELS = ['Year', 'Month', 'Day', 'Hour']
-const PILLAR_KEYS = ['year', 'month', 'day', 'hour']
-const PILLAR_KR = ['년주', '월주', '일주', '시주']
+const PILLAR_LABELS = ['YEAR','MONTH','DAY','HOUR']
+const PILLAR_KEYS = ['year','month','day','hour']
 
-interface Pillar {
-  gan: string
-  zhi: string
+// Day stem → romanized key & element
+const GAN_TO_KEY: Record<string,string> = {
+  '甲':'jia','乙':'yi','丙':'bing','丁':'ding','戊':'wu',
+  '己':'ji','庚':'geng','辛':'xin','壬':'ren','癸':'gui',
+}
+const GAN_TO_ELEMENT: Record<string,string> = {
+  '甲':'wood','乙':'wood','丙':'fire','丁':'fire','戊':'earth',
+  '己':'earth','庚':'metal','辛':'metal','壬':'water','癸':'water',
+}
+const ELEMENT_COLOR: Record<string,string> = {
+  wood:'#4CAF50',fire:'#F44336',earth:'#FF9800',metal:'#9E9E9E',water:'#2196F3',
+}
+const ELEMENT_DESC: Record<string,string> = {
+  wood:'Growth-driven and ambitious. Energized by new challenges. At best when building something meaningful.',
+  fire:'Connection and expression. Feels deeply, communicates powerfully, brings life to every room.',
+  earth:'The steady one. Grounded, dependable, turns ideas into real results. People rely on you.',
+  metal:'Precision and integrity. High standards, strong convictions, pushes self and others toward excellence.',
+  water:'Wisdom and depth. Reads people and situations well, adapts to anything, carries quiet insight.',
 }
 
+interface Pillar { gan: string; zhi: string }
 interface WesternData {
-  sun_sign?: string
-  moon_sign?: string
-  ascendant?: string
-  rising?: string
-  planets?: Record<string, string>
-  [key: string]: unknown
+  sun_sign?: string; moon_sign?: string; ascendant?: string; rising?: string
+  planets?: Record<string, string>; [key: string]: unknown
 }
+interface Section { title?: string; content: string }
 
-interface Section {
-  title?: string
-  content: string
-}
-
-// ─── Pillar extraction ───────────────────────────────────────────────────────
-function extractPillars(data: Record<string, unknown>): Pillar[] | null {
-  // Try nested { year: {gan, zhi}, month: ... }
-  const nested = (data.pillars ?? data.bazi ?? data.four_pillars ?? data.saju ?? data) as Record<string, unknown>
-
+function extractPillars(data: Record<string,unknown>): Pillar[] | null {
+  const nested = (data.pillars ?? data.bazi ?? data.four_pillars ?? data.saju ?? data) as Record<string,unknown>
   const pillars: Pillar[] = []
   for (const key of PILLAR_KEYS) {
-    const p = nested[key] as Record<string, unknown> | undefined
+    const p = nested[key] as Record<string,unknown> | undefined
     if (!p) continue
     const gan = (p.gan ?? p.stem ?? p.heavenly_stem ?? p.tian_gan ?? '') as string
     const zhi = (p.zhi ?? p.branch ?? p.earthly_branch ?? p.di_zhi ?? '') as string
     if (gan && zhi) pillars.push({ gan, zhi })
   }
   if (pillars.length >= 2) return pillars
-
-  // Try flat fields: year_gan, year_zhi, year_stem, year_branch ...
   const flat: Pillar[] = []
   for (const key of PILLAR_KEYS) {
-    const gan = (nested[`${key}_gan`] ?? nested[`${key}_stem`] ?? nested[`${key}_heavenly_stem`] ?? '') as string
-    const zhi = (nested[`${key}_zhi`] ?? nested[`${key}_branch`] ?? nested[`${key}_earthly_branch`] ?? '') as string
+    const gan = (nested[`${key}_gan`] ?? nested[`${key}_stem`] ?? '') as string
+    const zhi = (nested[`${key}_zhi`] ?? nested[`${key}_branch`] ?? '') as string
     if (gan && zhi) flat.push({ gan, zhi })
   }
-  if (flat.length >= 2) return flat
-
-  return null
+  return flat.length >= 2 ? flat : null
 }
 
-// ─── Western chart extraction ─────────────────────────────────────────────────
-function extractWestern(data: Record<string, unknown>): WesternData | null {
+function extractWestern(data: Record<string,unknown>): WesternData | null {
   const w = (data.western ?? data.astrology ?? data.natal_chart ?? data.western_chart) as WesternData | undefined
   if (w && (w.sun_sign || w.moon_sign)) return w
-  // Maybe sun_sign is at the root
   if (data.sun_sign) return data as WesternData
   return null
 }
 
-// ─── Text sections extraction ─────────────────────────────────────────────────
 export function parseResult(raw: unknown): Section[] {
   if (!raw) return []
   if (typeof raw === 'string') {
-    const blocks = raw.split(/\n(?=#{1,3} |\*\*[A-Z\u00C0-\uFFFF])/)
+    const blocks = raw.split(/\n(?=#{1,3} |\*\*[A-Z\u00C0-\uFFFF]|[✨💼❤️💰🌿📊💡])/)
     return blocks.map(b => {
       const hMatch = b.match(/^#{1,3} (.+?)\n([\s\S]*)/)
       const bMatch = b.match(/^\*\*(.+?)\*\*\n?([\s\S]*)/)
-      if (hMatch) return { title: hMatch[1].replace(/\*\*/g, ''), content: hMatch[2].trim() }
-      if (bMatch) return { title: bMatch[1], content: bMatch[2].trim() }
+      const eMatch = b.match(/^[✨💼❤️💰🌿📊💡]\s*(.+?)\n([\s\S]*)/)
+      if (hMatch) return { title: hMatch[1].replace(/\*\*/g,'').replace(/^[✨💼❤️💰🌿📊💡]\s*/,''), content: hMatch[2].trim() }
+      if (bMatch) return { title: bMatch[1].replace(/^[✨💼❤️💰🌿📊💡]\s*/,''), content: bMatch[2].trim() }
+      if (eMatch) return { title: eMatch[1].replace(/\s*—.*$/,'').trim(), content: eMatch[2].trim() }
       return { content: b.trim() }
     }).filter(s => s.content.length > 0)
   }
   if (Array.isArray(raw)) return raw as Section[]
   if (typeof raw === 'object' && raw !== null) {
-    const obj = raw as Record<string, unknown>
-    // Text fields
-    const textFields = ['reading', 'interpretation', 'result', 'content', 'summary', 'fortune', 'message']
+    const obj = raw as Record<string,unknown>
+    const textFields = ['reading','interpretation','result','content','summary','fortune','message','content_text']
     for (const f of textFields) {
-      if (typeof obj[f] === 'string' && (obj[f] as string).length > 30) {
-        return parseResult(obj[f] as string)
-      }
+      if (typeof obj[f] === 'string' && (obj[f] as string).length > 30) return parseResult(obj[f] as string)
     }
     if (obj.sections) return parseResult(obj.sections)
-    // Fall back: collect all string values as sections
     return Object.entries(obj)
-      .filter(([k, v]) => typeof v === 'string' && (v as string).length > 20 && !['sun_sign','moon_sign','ascendant','rising'].includes(k))
-      .map(([k, v]) => ({
-        title: k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
-        content: v as string,
-      }))
+      .filter(([k,v]) => typeof v === 'string' && (v as string).length > 20 && !['sun_sign','moon_sign','ascendant','rising'].includes(k))
+      .map(([k,v]) => ({ title: k.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()), content: v as string }))
   }
   return []
 }
 
-// ─── Zodiac image helper ──────────────────────────────────────────────────────
+// Known section title mapping for accordion labels
+const SECTION_LABELS: Record<string,string> = {
+  'who you are': 'Who You Are',
+  'career': 'Career & Life Path',
+  'career & life path': 'Career & Life Path',
+  'love': 'Love & Relationships',
+  'love & relationships': 'Love & Relationships',
+  'wealth': 'Wealth & Money',
+  'wealth & money': 'Wealth & Money',
+  'health': 'Health & Vitality',
+  'health & vitality': 'Health & Vitality',
+  'life chapters': 'Life Chapters',
+  'one thing': 'One Thing to Remember',
+  'one thing to remember': 'One Thing to Remember',
+}
+function normalizeTitle(t: string): string {
+  const low = t.toLowerCase().replace(/[^a-z& ]/g,'').trim()
+  for (const [key, val] of Object.entries(SECTION_LABELS)) {
+    if (low.includes(key)) return val
+  }
+  return t.replace(/^[✨💼❤️💰🌿📊💡]\s*/,'').replace(/\s*—.*$/,'').trim()
+}
+
 function ZodiacBadge({ sign }: { sign: string }) {
-  const key = sign.toLowerCase().replace(/\s/g, '')
+  const key = sign.toLowerCase().replace(/\s/g,'')
   const isValid = ZODIAC_SVG_KEYS.includes(key)
   const symbol = ZODIAC_SYMBOL[key] ?? '✦'
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6 }}>
       {isValid ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={`${GH}r_${key}.svg`}
-          alt={sign}
-          width={52}
-          height={52}
-          style={{ borderRadius: 8, filter: 'invert(1) sepia(1) saturate(3) hue-rotate(10deg) brightness(0.9)' }}
-          onError={(e) => { (e.target as HTMLImageElement).replaceWith(Object.assign(document.createElement('span'), { textContent: symbol, style: 'font-size:32px' })) }}
+        <img src={`${GH}r_${key}.svg`} alt={sign} width={52} height={52}
+          style={{ borderRadius:8, filter:'invert(1) sepia(1) saturate(3) hue-rotate(10deg) brightness(0.9)' }}
+          onError={e => { (e.target as HTMLImageElement).replaceWith(Object.assign(document.createElement('span'),{textContent:symbol,style:'font-size:32px'})) }}
         />
-      ) : (
-        <span style={{ fontSize: 32 }}>{symbol}</span>
-      )}
-      <span style={{ color: 'var(--text-muted)', fontSize: 11, textAlign: 'center' }}>{sign}</span>
+      ) : <span style={{ fontSize:32 }}>{symbol}</span>}
+      <span style={{ color:'var(--text-muted)', fontSize:11, textAlign:'center' }}>{sign}</span>
     </div>
   )
 }
 
-// ─── Share Button ─────────────────────────────────────────────────────────────
 function ShareButton({ userEmail }: { userEmail: string }) {
   const [msg, setMsg] = useState('')
   const [loading, setLoading] = useState(false)
-
   async function handleShare() {
     if (loading) return
     setLoading(true)
     const shareUrl = typeof window !== 'undefined' ? window.location.origin : 'https://astropillar.com'
-    const shareData = {
-      title: 'AstroPillar — Where the stars meet your fate',
-      text: 'Get your free BaZi + Astrology reading ✨',
-      url: shareUrl,
-    }
+    const shareData = { title:'AstroPillar — Where the stars meet your fate', text:'Get your free BaZi + Astrology reading ✨', url:shareUrl }
     try {
-      if (navigator.share) {
-        await navigator.share(shareData)
-      } else {
-        await navigator.clipboard.writeText(`${shareData.text} ${shareUrl}`)
-        setMsg('Link copied!')
-      }
-      const res = await apiPost<{ share_count?: number; credit_earned?: boolean; credits_added?: number }>('/record_share', { email: userEmail })
+      if (navigator.share) { await navigator.share(shareData) }
+      else { await navigator.clipboard.writeText(`${shareData.text} ${shareUrl}`); setMsg('Link copied!') }
+      const res = await apiPost<{ share_count?: number; credit_earned?: boolean; credits_added?: number }>('/record_share', { email:userEmail })
       const count = res.share_count ?? 0
-      if (res.credit_earned || res.credits_added) {
-        setMsg('🎉 You earned 1 Credit!')
-      } else {
-        const remaining = 3 - (count % 3)
-        setMsg(`Shared! ${remaining} more share${remaining !== 1 ? 's' : ''} → 1 Credit`)
-      }
-    } catch {
-      setMsg('')
-    } finally {
-      setLoading(false)
-    }
+      if (res.credit_earned || res.credits_added) { setMsg('🎉 You earned 1 Credit!') }
+      else { const r = 3-(count%3); setMsg(`Shared! ${r} more share${r!==1?'s':''} → 1 Credit`) }
+    } catch { setMsg('') }
+    finally { setLoading(false) }
   }
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-      <button
-        onClick={handleShare}
-        disabled={loading}
-        style={{
-          width: '100%', background: 'rgba(201,168,76,0.08)',
-          border: '1px solid var(--gold)', color: 'var(--gold)',
-          borderRadius: 50, padding: '12px', fontSize: 14, cursor: loading ? 'not-allowed' : 'pointer',
-          opacity: loading ? 0.7 : 1,
-        }}
-      >
+    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6 }}>
+      <button onClick={handleShare} disabled={loading} style={{ width:'100%', background:'rgba(201,168,76,0.08)', border:'1px solid var(--gold)', color:'var(--gold)', borderRadius:50, padding:12, fontSize:14, cursor:loading?'not-allowed':'pointer', opacity:loading?0.7:1 }}>
         {loading ? '✦ Sharing...' : '↗ Share & Earn Credits'}
       </button>
-      {msg && (
-        <p style={{ color: '#aaa', fontSize: 12, textAlign: 'center' }}>{msg}</p>
-      )}
-      <p style={{ color: 'var(--text-muted)', fontSize: 11, textAlign: 'center' }}>
-        Every 3 shares = 1 free Credit
-      </p>
+      {msg && <p style={{ color:'#aaa', fontSize:12, textAlign:'center' }}>{msg}</p>}
+      <p style={{ color:'var(--text-muted)', fontSize:11, textAlign:'center' }}>Every 3 shares = 1 free Credit</p>
     </div>
   )
 }
 
-// ─── Scenario Button ─────────────────────────────────────────────────────────
 function ScenarioButton({ birthData }: { birthData: BirthData }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [question, setQuestion] = useState('')
-
   function handleGo() {
     if (!question.trim()) return
     if (typeof window !== 'undefined') {
@@ -220,191 +188,223 @@ function ScenarioButton({ birthData }: { birthData: BirthData }) {
     }
     router.push('/reading/scenario')
   }
-
-  if (!open) {
-    return (
-      <button onClick={() => setOpen(true)} style={{
-        width: '100%', background: 'rgba(167,139,250,0.08)',
-        border: '1px solid #a78bfa', color: '#a78bfa',
-        borderRadius: 50, padding: '12px', fontSize: 14, cursor: 'pointer',
-      }}>
-        🔮 Analyze This Scenario
-      </button>
-    )
-  }
-
+  if (!open) return (
+    <button onClick={() => setOpen(true)} style={{ width:'100%', background:'rgba(167,139,250,0.08)', border:'1px solid #a78bfa', color:'#a78bfa', borderRadius:50, padding:12, fontSize:14, cursor:'pointer' }}>
+      🔮 Analyze This Scenario
+    </button>
+  )
   return (
-    <div style={{ background: 'var(--card)', border: '1px solid #a78bfa', borderRadius: 16, padding: 20 }}>
-      <p style={{ color: '#a78bfa', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>Ask a Scenario Question</p>
-      <textarea
-        value={question}
-        onChange={e => setQuestion(e.target.value)}
-        placeholder="What do you want the stars to reveal about this situation?"
-        rows={3}
-        style={{
-          width: '100%', background: '#0f1829', border: '1px solid var(--border)', borderRadius: 10,
-          color: '#fff', padding: '12px 14px', fontSize: 14, outline: 'none', resize: 'vertical',
-          fontFamily: "'Noto Sans', sans-serif", lineHeight: 1.6, marginBottom: 12,
-        }}
+    <div style={{ background:'var(--card)', border:'1px solid #a78bfa', borderRadius:16, padding:20 }}>
+      <p style={{ color:'#a78bfa', fontSize:11, letterSpacing:2, textTransform:'uppercase', marginBottom:12 }}>Ask a Scenario Question</p>
+      <textarea value={question} onChange={e=>setQuestion(e.target.value)} placeholder="What do you want the stars to reveal about this situation?" rows={3}
+        style={{ width:'100%', background:'#0f1829', border:'1px solid var(--border)', borderRadius:10, color:'#fff', padding:'12px 14px', fontSize:14, outline:'none', resize:'vertical', fontFamily:"'Noto Sans', sans-serif", lineHeight:1.6, marginBottom:12 }}
       />
-      <div style={{ display: 'flex', gap: 8 }}>
-        <button onClick={() => setOpen(false)} style={{ flex: 1, background: 'none', border: '1px solid var(--border)', borderRadius: 50, color: 'var(--text-muted)', fontSize: 13, padding: '10px', cursor: 'pointer' }}>Cancel</button>
-        <button onClick={handleGo} disabled={!question.trim()} style={{
-          flex: 2, background: '#a78bfa', border: 'none', borderRadius: 50,
-          color: '#fff', fontSize: 14, fontWeight: 700, padding: '10px', cursor: 'pointer',
-          opacity: !question.trim() ? 0.5 : 1,
-        }}>
-          Analyze <span style={{ background: 'rgba(22,33,62,0.4)', borderRadius: 20, padding: '2px 8px', fontSize: 12 }}>2 Credits</span>
+      <div style={{ display:'flex', gap:8 }}>
+        <button onClick={()=>setOpen(false)} style={{ flex:1, background:'none', border:'1px solid var(--border)', borderRadius:50, color:'var(--text-muted)', fontSize:13, padding:10, cursor:'pointer' }}>Cancel</button>
+        <button onClick={handleGo} disabled={!question.trim()} style={{ flex:2, background:'#a78bfa', border:'none', borderRadius:50, color:'#fff', fontSize:14, fontWeight:700, padding:10, cursor:'pointer', opacity:!question.trim()?0.5:1 }}>
+          Analyze <span style={{ background:'rgba(22,33,62,0.4)', borderRadius:20, padding:'2px 8px', fontSize:12 }}>2 Credits</span>
         </button>
       </div>
     </div>
   )
 }
 
+// ─── Accordion section ────────────────────────────────────────────────────────
+function AccordionSection({ title, content, defaultOpen }: { title: string; content: string; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen ?? false)
+  return (
+    <div style={{ border:'1px solid rgba(201,168,76,0.2)', borderRadius:14, overflow:'hidden', marginBottom:10 }}>
+      <button type="button" onClick={()=>setOpen(o=>!o)} style={{
+        width:'100%', display:'flex', justifyContent:'space-between', alignItems:'center',
+        padding:'15px 18px', background:'var(--card)', border:'none', cursor:'pointer',
+        textAlign:'left',
+      }}>
+        <span style={{ color:'var(--gold)', fontSize:12, fontWeight:700, letterSpacing:1.5, textTransform:'uppercase', fontFamily:"'Cormorant Garamond', serif" }}>{title}</span>
+        <span style={{ color:'var(--gold)', fontSize:11, transform:open?'rotate(180deg)':'none', transition:'transform 0.2s', flexShrink:0, marginLeft:10 }}>▼</span>
+      </button>
+      {open && (
+        <div style={{ padding:'16px 18px', background:'var(--card)', borderTop:'1px solid rgba(201,168,76,0.12)' }}>
+          <p style={{ color:'#ddd', fontSize:14, lineHeight:1.9, whiteSpace:'pre-wrap' }}>{content}</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 interface Props {
-  raw: unknown
-  onReset: () => void
-  userEmail?: string
-  fromCache?: boolean
-  birthData?: BirthData
+  raw: unknown; onReset: () => void; userEmail?: string; fromCache?: boolean; birthData?: BirthData
 }
 
 export default function ReadingResult({ raw, onReset, userEmail, fromCache, birthData }: Props) {
-  const data = (typeof raw === 'object' && raw !== null) ? raw as Record<string, unknown> : {}
+  const [chartTab, setChartTab] = useState<'bazi'|'elements'|'astrology'>('bazi')
+
+  const data = (typeof raw === 'object' && raw !== null) ? raw as Record<string,unknown> : {}
   const pillars = extractPillars(data)
   const western = extractWestern(data)
   const sections = parseResult(raw)
 
+  // Day master info for /explain link
+  const dayPillar = pillars?.[2] ?? null
+  const dayGanKey = dayPillar ? (GAN_TO_KEY[dayPillar.gan] ?? '') : ''
+  const dayElement = dayPillar ? (GAN_TO_ELEMENT[dayPillar.gan] ?? '') : ''
+  const sunSign = western?.sun_sign?.toLowerCase().replace(/\s/g,'') ?? ''
+
+  const explainUrl = `/explain?day_gan=${dayGanKey}&element=${dayElement}&sun=${sunSign}`
+  const hasExplainData = dayGanKey || dayElement || sunSign
+
+  const TABS = [
+    { key:'bazi', label:'BaZi Chart' },
+    { key:'elements', label:'Elements' },
+    { key:'astrology', label:'Astrology Profile' },
+  ] as const
+
+  const tabStyle = (active: boolean): React.CSSProperties => ({
+    flex:1, padding:'9px 0', borderRadius:8, border:'none', cursor:'pointer',
+    fontSize:12, fontWeight:600, background: active ? 'var(--gold)' : 'transparent',
+    color: active ? '#16213E' : 'var(--text-muted)',
+  })
+
   return (
     <div>
-      {/* ── 사주팔자 (Four Pillars) ── */}
-      {pillars && pillars.length >= 2 && (
-        <div className="card" style={{ marginBottom: 20 }}>
-          <p style={{ color: 'var(--gold)', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 16 }}>
-            四柱八字 · Four Pillars
-          </p>
-          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${pillars.length}, 1fr)`, gap: 10 }}>
-            {pillars.map((p, i) => (
-              <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                <p style={{ color: 'var(--text-muted)', fontSize: 10, letterSpacing: 1, textTransform: 'uppercase' }}>
-                  {PILLAR_LABELS[i]}
-                </p>
-                {/* 천간 */}
-                <Image
-                  src={ganImg(p.gan)}
-                  alt={p.gan}
-                  width={56}
-                  height={56}
-                  unoptimized
-                  style={{ borderRadius: 8 }}
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-                />
-                {/* 지지 */}
-                <Image
-                  src={zhiImg(p.zhi)}
-                  alt={p.zhi}
-                  width={56}
-                  height={56}
-                  unoptimized
-                  style={{ borderRadius: 8 }}
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-                />
-                <p style={{ color: 'var(--text-muted)', fontSize: 10, textAlign: 'center' }}>
-                  {PILLAR_KR[i]}
-                </p>
-              </div>
+      {/* ── Chart Tabs ── */}
+      {(pillars || western) && (
+        <div className="card" style={{ marginBottom:20, padding:'16px' }}>
+          {/* Tab switcher */}
+          <div style={{ display:'flex', background:'#0a0a1a', borderRadius:10, padding:4, marginBottom:16 }}>
+            {TABS.map(t => (
+              <button key={t.key} onClick={() => setChartTab(t.key)} style={tabStyle(chartTab === t.key)}>
+                {t.label}
+              </button>
             ))}
           </div>
-        </div>
-      )}
 
-      {/* ── Western Chart ── */}
-      {western && (
-        <div className="card" style={{ marginBottom: 20 }}>
-          <p style={{ color: '#a78bfa', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 16 }}>
-            ☽ Western Astrology Chart
-          </p>
-          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center' }}>
-            {western.sun_sign && (
-              <div style={{ textAlign: 'center' }}>
-                <p style={{ color: 'var(--text-muted)', fontSize: 10, marginBottom: 6 }}>☀ Sun Sign</p>
-                <ZodiacBadge sign={western.sun_sign} />
-              </div>
-            )}
-            {western.moon_sign && (
-              <div style={{ textAlign: 'center' }}>
-                <p style={{ color: 'var(--text-muted)', fontSize: 10, marginBottom: 6 }}>☽ Moon Sign</p>
-                <ZodiacBadge sign={western.moon_sign} />
-              </div>
-            )}
-            {(western.ascendant || western.rising) && (
-              <div style={{ textAlign: 'center' }}>
-                <p style={{ color: 'var(--text-muted)', fontSize: 10, marginBottom: 6 }}>↑ Rising</p>
-                <ZodiacBadge sign={(western.ascendant || western.rising) as string} />
-              </div>
-            )}
-          </div>
+          {/* BaZi Chart */}
+          {chartTab === 'bazi' && (
+            <div>
+              {pillars && pillars.length >= 2 ? (
+                <>
+                  <div style={{ display:'grid', gridTemplateColumns:`repeat(${pillars.length},1fr)`, gap:10, marginBottom:16 }}>
+                    {pillars.map((p,i) => (
+                      <div key={i} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6 }}>
+                        <p style={{ color:'var(--text-muted)', fontSize:9, letterSpacing:1.5, textTransform:'uppercase' }}>{PILLAR_LABELS[i]}</p>
+                        <Image src={ganImg(p.gan)} alt={p.gan} width={56} height={56} unoptimized style={{ borderRadius:8 }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
+                        <Image src={zhiImg(p.zhi)} alt={p.zhi} width={56} height={56} unoptimized style={{ borderRadius:8 }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
+                      </div>
+                    ))}
+                  </div>
+                  {hasExplainData && (
+                    <Link href={explainUrl} style={{ display:'block', textAlign:'center', background:'rgba(201,168,76,0.08)', border:'1px solid rgba(201,168,76,0.3)', borderRadius:10, padding:'10px 16px', color:'var(--gold)', fontSize:13, textDecoration:'none' }}>
+                      What does this mean? →
+                    </Link>
+                  )}
+                </>
+              ) : (
+                <p style={{ color:'var(--text-muted)', fontSize:13, textAlign:'center', padding:20 }}>No BaZi chart data available.</p>
+              )}
+            </div>
+          )}
 
-          {/* Other planets */}
-          {western.planets && typeof western.planets === 'object' && (
-            <div style={{ marginTop: 16, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {Object.entries(western.planets as Record<string, string>).map(([planet, sign]) => (
-                <span key={planet} style={{
-                  background: '#0f1829', border: '1px solid var(--border)',
-                  borderRadius: 20, padding: '4px 10px', fontSize: 11, color: 'var(--text-muted)',
-                }}>
-                  <span style={{ color: '#a78bfa', textTransform: 'capitalize' }}>{planet}</span> · {sign}
-                </span>
-              ))}
+          {/* Elements */}
+          {chartTab === 'elements' && (
+            <div>
+              {dayElement ? (
+                <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+                  <div style={{ background:'rgba(201,168,76,0.04)', border:`1px solid ${ELEMENT_COLOR[dayElement]}40`, borderRadius:12, padding:'16px' }}>
+                    <p style={{ color:'var(--text-muted)', fontSize:10, letterSpacing:2, textTransform:'uppercase', marginBottom:8 }}>Day Master Element</p>
+                    <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:10 }}>
+                      <div style={{ width:44, height:44, borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', background:`${ELEMENT_COLOR[dayElement]}18`, border:`1.5px solid ${ELEMENT_COLOR[dayElement]}`, color:ELEMENT_COLOR[dayElement], fontSize:20, fontWeight:700 }}>
+                        {dayPillar?.gan}
+                      </div>
+                      <div>
+                        <p style={{ color:'#fff', fontSize:16, fontWeight:700, textTransform:'capitalize' }}>{dayElement}</p>
+                        <p style={{ color:'var(--text-muted)', fontSize:12 }}>{dayGanKey ? dayGanKey.charAt(0).toUpperCase()+dayGanKey.slice(1) : ''} Day Master</p>
+                      </div>
+                    </div>
+                    <p style={{ color:'var(--text-muted)', fontSize:13, lineHeight:1.7, fontStyle:'italic' }}>{ELEMENT_DESC[dayElement]}</p>
+                  </div>
+                  {hasExplainData && (
+                    <Link href={explainUrl} style={{ textAlign:'center', background:'rgba(201,168,76,0.08)', border:'1px solid rgba(201,168,76,0.3)', borderRadius:10, padding:'10px 16px', color:'var(--gold)', fontSize:13, textDecoration:'none', display:'block' }}>
+                      Explore all Five Elements →
+                    </Link>
+                  )}
+                </div>
+              ) : (
+                <p style={{ color:'var(--text-muted)', fontSize:13, textAlign:'center', padding:20 }}>Element data not available.</p>
+              )}
+            </div>
+          )}
+
+          {/* Astrology Profile */}
+          {chartTab === 'astrology' && (
+            <div>
+              {western ? (
+                <>
+                  <div style={{ display:'flex', gap:16, flexWrap:'wrap', justifyContent:'center', marginBottom:16 }}>
+                    {western.sun_sign && (
+                      <div style={{ textAlign:'center' }}>
+                        <p style={{ color:'var(--text-muted)', fontSize:10, marginBottom:6 }}>☀ Sun Sign</p>
+                        <ZodiacBadge sign={western.sun_sign} />
+                      </div>
+                    )}
+                    {western.moon_sign && (
+                      <div style={{ textAlign:'center' }}>
+                        <p style={{ color:'var(--text-muted)', fontSize:10, marginBottom:6 }}>☽ Moon Sign</p>
+                        <ZodiacBadge sign={western.moon_sign} />
+                      </div>
+                    )}
+                    {(western.ascendant || western.rising) && (
+                      <div style={{ textAlign:'center' }}>
+                        <p style={{ color:'var(--text-muted)', fontSize:10, marginBottom:6 }}>↑ Rising</p>
+                        <ZodiacBadge sign={(western.ascendant || western.rising) as string} />
+                      </div>
+                    )}
+                  </div>
+                  {western.planets && typeof western.planets === 'object' && (
+                    <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+                      {Object.entries(western.planets as Record<string,string>).map(([planet,sign]) => (
+                        <span key={planet} style={{ background:'#0f1829', border:'1px solid var(--border)', borderRadius:20, padding:'4px 10px', fontSize:11, color:'var(--text-muted)' }}>
+                          <span style={{ color:'#a78bfa', textTransform:'capitalize' }}>{planet}</span> · {sign}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p style={{ color:'var(--text-muted)', fontSize:13, textAlign:'center', padding:20 }}>No Western chart data available.</p>
+              )}
             </div>
           )}
         </div>
       )}
 
-      {/* ── GPT Interpretation ── */}
+      {/* ── GPT Accordion ── */}
       {sections.length > 0 && (
-        <div className="card" style={{ marginBottom: 20 }}>
-          <p style={{ color: 'var(--gold)', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 16 }}>
-            ✦ Your Reading
-          </p>
-          {sections.map((s, i) => (
-            <div key={i} style={{ marginBottom: 20 }}>
-              {s.title && (
-                <h3 style={{
-                  color: 'var(--gold)', fontFamily: "'Cormorant Garamond', serif",
-                  fontSize: 17, fontWeight: 600, marginBottom: 8, letterSpacing: 0.5,
-                }}>
-                  {s.title}
-                </h3>
-              )}
-              <p style={{ color: '#ddd', fontSize: 15, lineHeight: 1.85, whiteSpace: 'pre-wrap' }}>
-                {s.content}
-              </p>
-            </div>
+        <div style={{ marginBottom:20 }}>
+          {sections.map((s,i) => (
+            <AccordionSection
+              key={i}
+              title={s.title ? normalizeTitle(s.title) : `Section ${i+1}`}
+              content={s.content}
+              defaultOpen={i === 0}
+            />
           ))}
         </div>
       )}
 
       {/* ── Actions ── */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 8 }}>
+      <div style={{ display:'flex', flexDirection:'column', gap:10, marginTop:8 }}>
         {fromCache && (
-          <div style={{ textAlign: 'center', padding: '6px 12px', background: 'rgba(46,204,113,0.08)', border: '1px solid rgba(46,204,113,0.3)', borderRadius: 10 }}>
-            <span style={{ color: '#2ecc71', fontSize: 12 }}>✓ Cached result — no Credit charged</span>
+          <div style={{ textAlign:'center', padding:'6px 12px', background:'rgba(46,204,113,0.08)', border:'1px solid rgba(46,204,113,0.3)', borderRadius:10 }}>
+            <span style={{ color:'#2ecc71', fontSize:12 }}>✓ Cached result — no Credit charged</span>
           </div>
         )}
         {birthData && <ScenarioButton birthData={birthData} />}
         {userEmail && <ShareButton userEmail={userEmail} />}
-        <button
-          onClick={onReset}
-          style={{
-            background: 'none', border: '1px solid var(--border)', color: 'var(--text-muted)',
-            borderRadius: 50, padding: '12px', fontSize: 14, cursor: 'pointer',
-          }}
-        >
+        <button onClick={onReset} style={{ background:'none', border:'1px solid var(--border)', color:'var(--text-muted)', borderRadius:50, padding:12, fontSize:14, cursor:'pointer' }}>
           ← New Reading
         </button>
-        <Link href="/menu" style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: 13, textDecoration: 'none' }}>
+        <Link href="/menu" style={{ textAlign:'center', color:'var(--text-muted)', fontSize:13, textDecoration:'none' }}>
           Back to Menu
         </Link>
       </div>
