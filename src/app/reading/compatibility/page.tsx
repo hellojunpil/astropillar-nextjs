@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
+import { usePricing } from '@/hooks/usePricing'
 import ReadingResult from '@/components/ReadingResult'
 import ReadingPageShell from '@/components/ReadingPageShell'
 import { apiPost } from '@/lib/api'
@@ -47,6 +48,8 @@ function parseBirthDate(birth_date: string): { year: number; month: number; day:
 
 export default function CompatibilityPage() {
   const { user, credits, loading, refreshCredits } = useAuth()
+  const pricing = usePricing()
+  const cost = pricing.compatibility
   const [people, setPeople] = useState<SavedPerson[]>([])
   const [loadingPeople, setLoadingPeople] = useState(true)
   const [person1Id, setPerson1Id] = useState('')
@@ -102,7 +105,7 @@ export default function CompatibilityPage() {
       await saveReading(user.email, { reading_type: 'compatibility', name: cacheKey, birth_date: cacheDate, birth_city: cacheCity, result: raw })
       setResult(raw)
       setFromCache(false)
-      refreshCredits(1)
+      refreshCredits(cost)
       gtagEvent('reading_completed', { reading_type: 'compatibility' })
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Something went wrong. Please try again.')
@@ -116,7 +119,7 @@ export default function CompatibilityPage() {
   return (
     <ReadingPageShell
       title="Compatibility" subtitle="How your energy aligns with someone special — deep compatibility analysis"
-      emoji="💞" badge="1 Credit" credits={credits} requiredCredits={1} inProgress={submitting || !!result}
+      emoji="💞" badge={`${cost} Credit${cost !== 1 ? 's' : ''}`} credits={credits} requiredCredits={cost} inProgress={submitting || !!result}
     >
       {result ? (
         <ReadingResult
@@ -194,7 +197,7 @@ export default function CompatibilityPage() {
           <button type="submit" disabled={!isValid || submitting} className="btn-gold"
             style={{ marginTop: 4, opacity: (!isValid || submitting) ? 0.5 : 1, cursor: (!isValid || submitting) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
             {submitting ? '✦ Reading the stars...' : (
-              <>Check Compatibility <span style={{ background: 'rgba(22,33,62,0.6)', borderRadius: 20, padding: '2px 10px', fontSize: 12 }}>1 Credit</span></>
+              <>Check Compatibility <span style={{ background: 'rgba(22,33,62,0.6)', borderRadius: 20, padding: '2px 10px', fontSize: 12 }}>{cost} Credit{cost !== 1 ? 's' : ''}</span></>
             )}
           </button>
         </form>

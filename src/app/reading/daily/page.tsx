@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
+import { usePricing } from '@/hooks/usePricing'
 import { BirthData } from '@/components/BirthForm'
 import PersonPicker from '@/components/PersonPicker'
 import ReadingResult from '@/components/ReadingResult'
@@ -27,6 +28,8 @@ const DATE_OPTIONS = getDateOptions()
 
 export default function DailyFortunePage() {
   const { user, credits, loading, refreshCredits } = useAuth()
+  const pricing = usePricing()
+  const cost = pricing.personal_daily_fortune
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<unknown>(null)
   const [fromCache, setFromCache] = useState(false)
@@ -59,7 +62,7 @@ export default function DailyFortunePage() {
       })
       await apiPost('/use_pouch', { email: user.email, reading_type: 'personal_daily_fortune' })
       await saveReading(user.email, { reading_type: 'daily', name: data.name, birth_date, birth_city: data.city, target_date: targetDate, result: raw })
-      setResult(raw); setFromCache(false); refreshCredits(1)
+      setResult(raw); setFromCache(false); refreshCredits(cost)
       gtagEvent('reading_completed', { reading_type: 'daily' })
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Something went wrong. Please try again.')
@@ -101,14 +104,14 @@ export default function DailyFortunePage() {
   )
 
   return (
-    <ReadingPageShell title="Personal Daily Fortune" subtitle={`Your energy for ${selectedLabel}`} emoji="☀️" badge="1 Credit" credits={credits} requiredCredits={1} inProgress={submitting || !!result}>
+    <ReadingPageShell title="Personal Daily Fortune" subtitle={`Your energy for ${selectedLabel}`} emoji="☀️" badge={`${cost} Credit${cost !== 1 ? 's' : ''}`} credits={credits} requiredCredits={cost} inProgress={submitting || !!result}>
       {result ? (
         <ReadingResult raw={result} onReset={() => { setResult(null); setFromCache(false); setBirthData(null) }} userEmail={user?.email ?? undefined} fromCache={fromCache} birthData={birthData ?? undefined} />
       ) : submitting ? (
         <ReadingLoader onComplete={() => {}} />
       ) : (
         <div className="card">
-          <PersonPicker people={people} onSubmit={handleSubmit} loading={submitting} submitLabel={`Read ${selectedLabel}'s Stars`} costBadge="1 Credit" headerSlot={datePicker} userEmail={user?.email ?? ''} onPeopleChange={setPeople} />
+          <PersonPicker people={people} onSubmit={handleSubmit} loading={submitting} submitLabel={`Read ${selectedLabel}'s Stars`} costBadge={`${cost} Credit${cost !== 1 ? 's' : ''}`} headerSlot={datePicker} userEmail={user?.email ?? ''} onPeopleChange={setPeople} />
           {error && <p style={{ color:'#ef4444', fontSize:13, marginTop:14, textAlign:'center' }}>{error}</p>}
         </div>
       )}

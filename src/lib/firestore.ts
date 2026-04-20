@@ -1,7 +1,7 @@
 'use client'
 import { db } from './firebase'
 import {
-  collection, addDoc, getDocs, query, where,
+  collection, addDoc, getDocs, getDoc, query, where,
   orderBy, deleteDoc, doc, Timestamp, serverTimestamp,
 } from 'firebase/firestore'
 
@@ -104,6 +104,33 @@ export async function getPeople(email: string): Promise<SavedPerson[]> {
   } catch {
     return []
   }
+}
+
+// ─── Pricing ──────────────────────────────────────────────────────────────────
+
+export interface PricingConfig {
+  personal_fortune: number
+  personal_daily_fortune: number
+  yearly: number
+  compatibility: number
+  scenario: number
+  [key: string]: number
+}
+
+const PRICING_DEFAULTS: PricingConfig = {
+  personal_fortune: 1,
+  personal_daily_fortune: 1,
+  yearly: 1,
+  compatibility: 1,
+  scenario: 1,
+}
+
+export async function getPricing(): Promise<PricingConfig> {
+  try {
+    const snap = await getDoc(doc(db, 'service_config', 'pricing'))
+    if (snap.exists()) return { ...PRICING_DEFAULTS, ...snap.data() as PricingConfig }
+  } catch { /* ignore */ }
+  return PRICING_DEFAULTS
 }
 
 export async function deletePerson(email: string, personId: string): Promise<void> {
