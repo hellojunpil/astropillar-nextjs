@@ -292,7 +292,7 @@ function ShareButton({ userEmail }: { userEmail: string }) {
         {loading ? '✦ Sharing...' : '↗ Share & Earn Credits'}
       </button>
       {msg && <p style={{ color:'#aaa', fontSize:12, textAlign:'center' }}>{msg}</p>}
-      <p style={{ color:'var(--text-muted)', fontSize:11, textAlign:'center' }}>Every 3 shares = 1 free Credit</p>
+      <p style={{ color:'var(--text-muted)', fontSize:11, textAlign:'center' }}>Every 3 shares = 1 free Credit · Max 1 Credit per day</p>
     </div>
   )
 }
