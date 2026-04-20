@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { signOut } from 'firebase/auth'
 import { useAuth } from '@/hooks/useAuth'
+import { usePricing } from '@/hooks/usePricing'
 import { auth } from '@/lib/firebase'
 import { gtagEvent } from '@/lib/gtag'
 import BottomNav from '@/components/BottomNav'
@@ -35,18 +36,22 @@ const PACKAGES = [
   },
 ]
 
-const SERVICES = [
-  { name: 'Full Reading', cost: 'FREE', color: '#2ecc71' },
-  { name: 'Personal Fortune', cost: '1 Credit', color: 'var(--gold)' },
-  { name: 'Personal Daily Fortune', cost: '1 Credit', color: 'var(--gold)' },
-  { name: 'Yearly Fortune', cost: '1 Credit', color: 'var(--gold)' },
-  { name: 'Compatibility Reading', cost: '1 Credit', color: 'var(--gold)' },
-  { name: 'Scenario Reading', cost: '2 Credits', color: '#a78bfa' },
+const SERVICE_PRICE_KEYS = [
+  { name: 'Personal Fortune', key: 'personal_fortune' },
+  { name: 'Personal Daily Fortune', key: 'personal_daily_fortune' },
+  { name: 'Yearly Fortune', key: 'yearly' },
+  { name: 'Compatibility Reading', key: 'compatibility' },
+  { name: 'Scenario Reading', key: 'scenario' },
 ]
 
 export default function BuyPage() {
   const router = useRouter()
   const { user, credits, loading } = useAuth()
+  const pricing = usePricing()
+  const SERVICES = SERVICE_PRICE_KEYS.map(s => {
+    const n = pricing[s.key] ?? 1
+    return { name: s.name, cost: `${n} Credit${n !== 1 ? 's' : ''}`, color: 'var(--gold)' }
+  })
 
   async function handleSignOut() {
     await signOut(auth)
