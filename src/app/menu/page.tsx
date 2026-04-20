@@ -6,53 +6,14 @@ import Link from 'next/link'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
 import { apiGet } from '@/lib/api'
+import { usePricing } from '@/hooks/usePricing'
 import BottomNav from '@/components/BottomNav'
 
-const SERVICES = [
-  {
-    id: 'personal-fortune',
-    href: '/reading/personal-fortune',
-    title: 'Personal Fortune',
-    subtitle: 'Lifetime destiny reading',
-    description: 'Deep dive into your life theme, career, love, and hidden potential.',
-    cost: 1,
-    badge: '1 Credit',
-    badgeColor: 'var(--gold)',
-    emoji: '✨',
-  },
-  {
-    id: 'daily',
-    href: '/reading/daily',
-    title: 'Personal Daily Fortune',
-    subtitle: "Today's energy for you",
-    description: "Today's luck, opportunities, and things to watch out for — personalized.",
-    cost: 1,
-    badge: '1 Credit',
-    badgeColor: 'var(--gold)',
-    emoji: '☀️',
-  },
-  {
-    id: 'yearly',
-    href: '/reading/yearly',
-    title: 'Yearly Fortune',
-    subtitle: 'The year ahead',
-    description: 'Month-by-month guidance for the current year based on your chart.',
-    cost: 1,
-    badge: '1 Credit',
-    badgeColor: 'var(--gold)',
-    emoji: '📅',
-  },
-  {
-    id: 'compatibility',
-    href: '/reading/compatibility',
-    title: 'Compatibility Reading',
-    subtitle: 'Love & relationship synergy',
-    description: 'How your energy aligns with someone special — deep compatibility analysis.',
-    cost: 1,
-    badge: '1 Credit',
-    badgeColor: 'var(--gold)',
-    emoji: '💞',
-  },
+const SERVICE_DEFS = [
+  { id: 'personal-fortune', pricingKey: 'personal_fortune', href: '/reading/personal-fortune', title: 'Personal Fortune', subtitle: 'Lifetime destiny reading', description: 'Deep dive into your life theme, career, love, and hidden potential.', badgeColor: 'var(--gold)' },
+  { id: 'daily', pricingKey: 'personal_daily_fortune', href: '/reading/daily', title: 'Personal Daily Fortune', subtitle: "Today's energy for you", description: "Today's luck, opportunities, and things to watch out for — personalized.", badgeColor: 'var(--gold)' },
+  { id: 'yearly', pricingKey: 'yearly', href: '/reading/yearly', title: 'Yearly Fortune', subtitle: 'The year ahead', description: 'Month-by-month guidance for the current year based on your chart.', badgeColor: 'var(--gold)' },
+  { id: 'compatibility', pricingKey: 'compatibility', href: '/reading/compatibility', title: 'Compatibility Reading', subtitle: 'Love & relationship synergy', description: 'How your energy aligns with someone special — deep compatibility analysis.', badgeColor: 'var(--gold)' },
 ]
 
 export default function MenuPage() {
@@ -60,6 +21,11 @@ export default function MenuPage() {
   const [email, setEmail] = useState('')
   const [credits, setCredits] = useState<number | null>(null)
   const [loadingCredits, setLoadingCredits] = useState(true)
+  const pricing = usePricing()
+  const SERVICES = SERVICE_DEFS.map(s => {
+    const cost = pricing[s.pricingKey] ?? 1
+    return { ...s, cost, badge: `${cost} Credit${cost !== 1 ? 's' : ''}` }
+  })
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
