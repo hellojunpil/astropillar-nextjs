@@ -44,7 +44,7 @@ export default function YearlyFortunePage() {
       })
       await apiPost('/use_pouch', { email: user.email, reading_type: 'yearly' })
       await saveReading(user.email, { reading_type: 'yearly', name: data.name, birth_date, birth_city: data.city, result: raw })
-      setResult(raw); setFromCache(false); refreshCredits()
+      setResult(raw); setFromCache(false); refreshCredits(1)
       gtagEvent('reading_completed', { reading_type: 'yearly' })
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Something went wrong. Please try again.')

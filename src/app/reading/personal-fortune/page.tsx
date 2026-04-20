@@ -43,7 +43,7 @@ export default function PersonalFortunePage() {
       })
       await apiPost('/use_pouch', { email: user.email, reading_type: 'personal_fortune' })
       await saveReading(user.email, { reading_type: 'personal_fortune', name: data.name, birth_date, birth_city: data.city, result: raw })
-      setResult(raw); setFromCache(false); refreshCredits()
+      setResult(raw); setFromCache(false); refreshCredits(1)
       gtagEvent('reading_completed', { reading_type: 'personal_fortune' })
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Something went wrong. Please try again.')

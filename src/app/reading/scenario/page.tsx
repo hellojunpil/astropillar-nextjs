@@ -66,7 +66,7 @@ export default function ScenarioPage() {
       await apiPost('/use_pouch', { email: user.email, reading_type: 'scenario' })
       const birth_date = birthDateStr(birthData.year, birthData.month, birthData.day)
       await saveReading(user.email, { reading_type: 'scenario', name: birthData.name, birth_date, birth_city: birthData.city, result: raw })
-      setResult(raw); refreshCredits()
+      setResult(raw); refreshCredits(2)
       gtagEvent('reading_completed', { reading_type: 'scenario' })
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Something went wrong. Please try again.')

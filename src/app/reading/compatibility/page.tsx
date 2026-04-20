@@ -102,7 +102,7 @@ export default function CompatibilityPage() {
       await saveReading(user.email, { reading_type: 'compatibility', name: cacheKey, birth_date: cacheDate, birth_city: cacheCity, result: raw })
       setResult(raw)
       setFromCache(false)
-      refreshCredits()
+      refreshCredits(1)
       gtagEvent('reading_completed', { reading_type: 'compatibility' })
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Something went wrong. Please try again.')

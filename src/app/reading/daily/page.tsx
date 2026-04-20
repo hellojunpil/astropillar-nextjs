@@ -59,7 +59,7 @@ export default function DailyFortunePage() {
       })
       await apiPost('/use_pouch', { email: user.email, reading_type: 'personal_daily_fortune' })
       await saveReading(user.email, { reading_type: 'daily', name: data.name, birth_date, birth_city: data.city, target_date: targetDate, result: raw })
-      setResult(raw); setFromCache(false); refreshCredits()
+      setResult(raw); setFromCache(false); refreshCredits(1)
       gtagEvent('reading_completed', { reading_type: 'daily' })
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Something went wrong. Please try again.')

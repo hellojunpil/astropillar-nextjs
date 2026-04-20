@@ -32,14 +32,14 @@ export function useAuth(requireAuth = true) {
     return () => unsub()
   }, [router, requireAuth])
 
-  async function refreshCredits() {
+  function refreshCredits(decrement?: number) {
     if (!user?.email) return
-    try {
-      const data = await apiGet<{ pouch_count: number }>('/get_pouch', { email: user.email })
-      setCredits(data.pouch_count)
-    } catch {
-      /* ignore */
+    if (decrement !== undefined) {
+      setCredits(prev => prev !== null ? prev - decrement : null)
     }
+    apiGet<{ pouch_count: number }>('/get_pouch', { email: user.email })
+      .then(data => setCredits(data.pouch_count))
+      .catch(() => { /* ignore */ })
   }
 
   return { user, credits, loading, refreshCredits }
