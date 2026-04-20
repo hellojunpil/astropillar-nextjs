@@ -233,19 +233,39 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
   - 연동 위치: 5개 reading 페이지 헤더 배지, Reveal 버튼, menu 서비스 카드, buy 페이지 서비스 목록
   - 필드명: `personal_fortune`, `personal_daily_fortune`, `yearly`, `compatibility`, `scenario`
 
+### ✅ 완료 — QA 테스트 (2026-04-21)
+- ✅ k@k.com 계정으로 전체 서비스 Playwright 자동 테스트 완료
+- ✅ 상세 리포트: `D:\snap_pillar bck\result\result_20260421_1.txt`
+
+**발견된 버그 (우선순위):**
+- [P1] 랜딩 "100% Private. Never stored. Never shared." — 실제 동작과 불일치, 교체 필요
+- [P2] 하단 네비게이션 Credits 수치가 리딩 후 갱신 안 됨 (헤더와 불일치)
+- [P2] Astrology Profile RISING 카드 — 별자리 이미지 대신 "ASC" 텍스트 표시
+- [P3] PersonPicker 저장 인물 auto-select 안 됨 (클릭 1번 추가 마찰)
+- [P3] Scenario Reading이 메뉴 카드에 없음 (결과 화면에서만 접근 가능)
+
+**콘텐츠 퀄리티:** Personal Fortune 결과 $1.99 대비 OVER-DELIVER 수준. 더 받아도 됨.
+
+**전환율 개선 TOP 3:**
+1. 공유용 "Cosmic Identity Card" 이미지 생성 기능 — 가장 강력한 바이럴 드라이버
+2. 랜딩 → 폼 사이 리뷰/사회증거 뷰 복원
+3. 로그인 페이지에 "1 Free Credit on signup" 뱃지 추가
+
 ### ⏳ 확인 필요
-- [ ] Personal Fortune 리딩 후 브라우저 콘솔 `[AstrologyProfile] western:` 로그 확인 → ASC 키 이름 파악
-- [ ] Cloud Run 로그 `DEBUG fetch_natal_western OK:` / `DEBUG western_fields:` 확인 → sun/moon/asc 값 검증
+- [ ] ASC 이미지 로드 실패 원인 — `r_cancer.svg` 파일 존재 여부 및 키 파싱 확인
 
 ### 📋 남은 작업
 - [ ] `firebase deploy --only firestore:rules` — Firebase CLI 설치 후 실행 (`npm install -g firebase-tools`)
 - [ ] Vercel 환경변수 세팅 확인 (`NEXT_PUBLIC_FIREBASE_APP_ID`, `NEXT_PUBLIC_GOOGLE_CLIENT_ID`)
+- [ ] 하단 네비게이션 Credits 갱신 버그 수정
+- [ ] "Never stored." 문구 교체
+- [ ] PersonPicker 저장 인물 1명일 때 auto-select
 
 ---
 
 ## 다음 세션 시작 가이드
 
-> 마지막 작업: 2026-04-21
+> 마지막 작업: 2026-04-21 (오전 세션)
 
 ### 직전 세션에서 완료한 것
 1. **파비콘 교체** — `favicon_ap3.png` → `src/app/icon.png`, 기존 `favicon.ico` 삭제
@@ -253,14 +273,24 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
    - 리딩 완료 후 credits=0 되면 결과 대신 경고 뜨던 문제 → `inProgress` prop으로 해결
 3. **버그 수정: 크레딧 UI 지연** (`src/hooks/useAuth.ts`)
    - `refreshCredits(decrement)` — 즉시 로컬 차감 + 백그라운드 서버 동기화
-4. **가격 Firestore 연동** (`src/hooks/usePricing.ts` 신규, `src/lib/firestore.ts` getPricing 추가)
+4. **Scenario 가격 수정** — 2 Credits → 1 Credit
+5. **가격 Firestore 연동** (`src/hooks/usePricing.ts` 신규, `src/lib/firestore.ts` getPricing 추가)
    - menu, buy, 5개 reading 페이지 전부 `service_config/pricing` 문서에서 동적 로드
-5. **최신 커밋**: `b39733b` → GitHub push → Vercel 자동 배포 완료
+   - Firestore 필드명: `personal_fortune`, `personal_daily_fortune`, `yearly`, `compatibility`, `scenario`
+6. **공유 보상 안내 문구 추가** — "Every 3 shares = 1 free Credit · Max 1 Credit per day"
+7. **firebase.json 생성** — `firebase deploy --only firestore:rules` 실행 가능
+8. **QA 테스트 1차** — k@k.com / 123456, 크레딧 1개 사용 (Personal Fortune)
+   - 상세 리포트: `D:\snap_pillar bck\result\result_20260421_1.txt`
+9. **최신 커밋**: `6d3da14` → GitHub push → Vercel 자동 배포 완료
 
 ### 다음 세션 우선순위
-1. **[배포]** `firebase deploy --only firestore:rules` — Firebase CLI 설치 필요 (`npm install -g firebase-tools` → `firebase login`)
-2. **[확인]** Vercel 환경변수 `NEXT_PUBLIC_FIREBASE_APP_ID`, `NEXT_PUBLIC_GOOGLE_CLIENT_ID` 세팅 여부
-3. **[확인]** Personal Fortune → 브라우저 콘솔 `[AstrologyProfile] western:` 로그 → ASC "Unknown" 이면 키 이름 확인 후 수정
+1. **[버그-P1]** 랜딩 "100% Private. Never stored. Never shared." 문구 교체 (법적 리스크)
+2. **[버그-P2]** 하단 네비게이션 Credits 수치 갱신 안 됨 수정 (`BottomNav`가 useAuth 미연결)
+3. **[버그-P2]** Astrology Profile RISING 카드 "ASC" 텍스트 → 별자리 이미지 수정
+4. **[QA]** 나머지 서비스 테스트 — Daily, Yearly, Compatibility, Scenario, Today's Fortune, Library, Buy
+5. **[배포]** `firebase deploy --only firestore:rules` (`npm install -g firebase-tools` → `firebase login`)
+6. **[확인]** Vercel 환경변수 `NEXT_PUBLIC_FIREBASE_APP_ID`, `NEXT_PUBLIC_GOOGLE_CLIENT_ID`
+7. **[개선]** PersonPicker 저장 인물 1명일 때 auto-select (UX 마찰 제거)
 
 ### 핵심 파일 경로
 | 파일 | 역할 |
