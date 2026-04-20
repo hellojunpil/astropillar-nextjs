@@ -143,7 +143,7 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 - **서비스 비용**:
   - Full Reading: 무료
   - Personal Fortune / Daily / Yearly / Compatibility: 1 Credit
-  - Scenario Reading: 2 Credits
+  - Scenario Reading: 1 Credit
 - **구매**: Gumroad ($1.99=1개 `gveeli`, $8.99=5개 `idksv`)
 - **공유 보상**: 3회 공유 → 1 Credit (record_share API)
 
@@ -170,94 +170,118 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 
 ## 진행 상황
 
-### ✅ 완료
-- [x] CLAUDE.md 작성
-- [x] Next.js 프로젝트 초기화 (TypeScript + Tailwind + App Router)
-- [x] Firebase 패키지 설치
-- [x] Firebase 초기화 (`src/lib/firebase.ts`)
-- [x] 레이아웃 & 글로벌 스타일 (다크 테마, `src/app/globals.css`) — CSS @import 순서 버그 수정 완료
-- [x] 랜딩 페이지 (`/`) — 브라우저 확인 완료
-- [x] 로그인/회원가입 (`/login`) — 브라우저 확인 완료
-- [x] 메뉴 페이지 (`/menu`) — 브라우저 확인 완료
-- [x] ~~Full Reading (`/reading/full`)~~ — **종료된 서비스, 페이지 삭제됨**
-- [x] Personal Fortune (`/reading/personal-fortune`) — 1 Credit
-- [x] Personal Daily Fortune (`/reading/daily`) — 1 Credit
-- [x] Yearly Fortune (`/reading/yearly`) — 1 Credit, reading_type: yearly
-- [x] Compatibility (`/reading/compatibility`) — 1 Credit, 두 사람 입력
-- [x] Scenario Reading (`/reading/scenario`) — 2 Credits, reading_type: situation + 질문 입력 (2단계 플로우)
-- [x] Today's Fortune (`/today`) — 무료, 로그인 불필요, 별자리/띠 선택
-- [x] Credit 구매 페이지 (`/buy`) — Gumroad 연결, credit_purchase_click GA4 이벤트 추가
-- [x] Gumroad Webhook (`/api/gumroad-webhook`) — seller_id 검증 후 FastAPI 전달
-- [x] 공유 컴포넌트: `src/hooks/useAuth.ts`, `src/components/BirthForm.tsx`, `src/components/ReadingResult.tsx`, `src/components/ReadingPageShell.tsx`
-- [x] .env.local Cloud Run URL 업데이트 → `https://snap-pillar-api-944836465041.asia-northeast3.run.app`
-- [x] 공유 보상 UI — `ReadingResult.tsx`에 ShareButton 추가, `/record_share` POST 연동, "3회 공유 → 1 Credit" 안내
-- [x] GA4 설치 — `layout.tsx` Script 태그, `src/lib/gtag.ts` 유틸, reading_completed 이벤트 (5개 리딩 페이지)
-- [x] git 초기화 + 첫 커밋 (36 files, master 브랜치)
-- [x] 폰트 전체 Noto Sans로 교체 — 로고(ASTROPILLAR)만 Cormorant Garamond 유지
-- [x] 로그인 페이지 스펙 완성 — 비밀번호 확인 필드, Forgot password (Firebase 재설정 이메일), Google 신규 유저만 register_user 호출
-- [x] Credit 차감 순서 수정 — 5개 리딩 페이지 전부 리딩 완료 후 /use_pouch 호출로 변경
-- [x] Firestore 연동 전체 검증 완료 (users/{email}, pouch_count, register_user, use_pouch, get_pouch, gumroad webhook)
-- [x] register_user 버그 수정 — 에러 묵살 제거, Google OAuth isNewUser를 getAdditionalUserInfo()로 교체, 이메일 회원가입 시 cred.user.email! 직접 사용
-- [x] FastAPI CORS 수정 — `D:\snap pillar\main.py` allow_origins에 `http://localhost:3000` 추가 (로컬 개발 테스트 가능)
-- [x] 하단 내비게이션 바 (`BottomNav.tsx`) — 5탭: Home/Destiny/Daily/Library/Credits, 골드 글로우 active 효과
-- [x] Library 페이지 (`/library`) — Reading History + My Persons 탭, Firestore 연동
-- [x] Reading History 저장 — 5개 리딩 페이지 전부 saveReading() 호출
-- [x] 결과 캐싱 — getCachedReading() → 캐시 히트 시 Credit 미차감, "✓ Cached result" 배지 표시
-- [x] Person 저장 — BirthForm에 savedPersons 필 버튼 + "Save this person" 버튼
-- [x] Daily 날짜 선택 — 오늘~+7일 필 버튼 (Today/Tomorrow/요일표시)
-- [x] Scenario 버튼 — ReadingResult에 질문 입력창 + sessionStorage로 /reading/scenario 이동
-- [x] Scenario 페이지 — sessionStorage에서 birthData/question 프리필
-- [x] FreeAstroAPI 연결 확인 — FREEASTRO_BASE env var, 기본값 astro-api-1qnc.onrender.com
-- [x] OpenAI API 연결 확인 — OPENAI_API_KEY env var (Cloud Run에 세팅됨)
-- [x] git 2차 커밋 — 이번 세션 전체 변경사항 18 files (BottomNav, Library, firestore.ts 등) 커밋 완료
-- [x] 배포 절차 문서화 — CLAUDE.md에 GitHub 레포 생성/푸시 명령어, Vercel 환경변수 전체 목록, 도메인 연결 방법 기록
-- [x] TypeScript 빌드 오류 수정 — `WesternData.planets` 타입 명시 (`Record<string,string>`) → 로컬 빌드 통과 확인
-- [x] Vercel 배포 실패 원인 해결 — `npm run build` 로컬 검증 후 fix 커밋 완료
-- [x] FastAPI CORS에 `https://astropillar-nextjs.vercel.app` 추가 — `D:\snap pillar\main.py` 저장 완료 (Cloud Run 재배포 필요)
-- [x] Birth Time 드롭다운 → 2시간 범위 12슬롯으로 교체 (Unknown 포함, 00~23:00 목록 제거)
-- [x] Birth City 자동완성 완전 제거 — BirthForm + Compatibility 페이지 모두 자유 텍스트 입력창으로 교체, 입력값 있으면 버튼 활성화
-- [x] Saved Persons 드롭다운 — 저장된 인물 있으면 "Select a Person" select 표시, 선택 시 폼 자동 입력
-- [x] savePerson 에러 묵살 제거 — Firestore 저장 실패 시 Library 페이지에 에러 메시지 표시
-- [x] Birth City placeholder "e.g. New York" 으로 변경 (나라 코드 제거)
-- [x] Compatibility 페이지 전면 개편 — 수동 입력 폼 제거, Firestore saved persons 드롭다운으로 교체, 관계 선택 12종, API 플랫 필드 수정(name1/year1 등), 저장 인물 부족 시 빈 상태 + Add Person 버튼
-- [x] 랜딩 페이지 (`/`) — index.html 전체 Next.js 변환 완료: Firebase Auth 세션 유지(로그인 시 /menu 리다이렉트), 3-view SPA(v1 랜딩/v2 폼/v3 결과), 모든 스타일·애니메이션·이미지 URL 유지, GA4 이벤트 유지, window.parent 제거
-- [x] [object Object] 에러 수정 — `api.ts` detail 필드가 배열/객체일 때 JSON.stringify로 변환
-- [x] PersonPicker 컴포넌트 — 인물 카드 선택 UX, 빈 상태 + Add Person 링크, Enter manually 토글
-- [x] 리딩 페이지 UX 전면 개편 — Personal Fortune/Daily/Yearly/Scenario 모두 PersonPicker로 교체, Daily 날짜 선택 유지(headerSlot), Scenario 1단계 인물 선택 + Change 버튼
+### ✅ 완료 — 인프라 & 기반
+- ✅ CLAUDE.md 작성
+- ✅ Next.js 프로젝트 초기화 (TypeScript + Tailwind + App Router)
+- ✅ Firebase 패키지 설치 및 초기화 (`src/lib/firebase.ts`)
+- ✅ 레이아웃 & 글로벌 스타일 (다크 테마, `src/app/globals.css`)
+- ✅ GA4 설치 — `layout.tsx` Script 태그, `src/lib/gtag.ts`, reading_completed 이벤트
+- ✅ 폰트 전체 Noto Sans 교체 — 로고만 Cormorant Garamond 유지
+- ✅ 하단 내비게이션 바 (`BottomNav.tsx`) — 5탭
+- ✅ Firestore 연동 전체 검증 (pouch_count, register_user, use_pouch, get_pouch, gumroad webhook)
+- ✅ Firestore 보안 규칙 파일 생성 (`firestore.rules`)
+- ✅ git 초기화 + 커밋 (master 브랜치), GitHub 레포 연결, Vercel 자동 배포 연결
+
+### ✅ 완료 — 페이지
+- ✅ 랜딩 페이지 (`/`) — index.html 전체 Next.js 변환, Firebase Auth 세션 유지, 3-view SPA
+- ✅ 로그인/회원가입 (`/login`) — 비밀번호 확인, Forgot password, Google OAuth
+- ✅ 메뉴 페이지 (`/menu`)
+- ✅ Personal Fortune (`/reading/personal-fortune`) — 1 Credit
+- ✅ Personal Daily Fortune (`/reading/daily`) — 1 Credit, 날짜 선택
+- ✅ Yearly Fortune (`/reading/yearly`) — 1 Credit
+- ✅ Compatibility (`/reading/compatibility`) — 1 Credit, Firestore 인물 드롭다운, 관계 선택 12종
+- ✅ Scenario Reading (`/reading/scenario`) — 2 Credits, 2단계 플로우
+- ✅ Today's Fortune (`/today`) — 무료, 로그인 불필요
+- ✅ Credit 구매 (`/buy`) — Gumroad 연결
+- ✅ Library (`/library`) — Reading History + My Persons, Firestore 연동
+- ✅ /explain 페이지 — Day Stem/Elements/Planets 아코디언, 오행 canvas 차트
+- ✅ Gumroad Webhook (`/api/gumroad-webhook`)
+
+### ✅ 완료 — UX & 버그픽스
+- ✅ PersonPicker 컴포넌트 — 인물 카드 선택, 인라인 Add Person 폼, Enter manually 토글
+- ✅ ReadingResult.tsx 전면 개편 — 탭 3개(BaZi/Elements/Astrology Profile), GPT 섹션 아코디언
+- ✅ 리딩 로딩 화면 (`ReadingLoader.tsx`) — 골드 프로그레스 바, 롤링 문구 20개
+- ✅ 결과 캐싱 — getCachedReading() → 캐시 히트 시 Credit 미차감
+- ✅ 공유 보상 UI — ShareButton, `/record_share` 연동, "3회 공유 → 1 Credit"
+- ✅ Credit 차감 순서 수정 — 리딩 완료 후 /use_pouch 호출
+- ✅ API 오류 메시지 개선 — Pydantic 배열/객체 오류 시 사용자 친화적 메시지
+- ✅ register_user 버그 수정 — Google OAuth isNewUser getAdditionalUserInfo()로 교체
+- ✅ FastAPI CORS 수정 — localhost:3000, astropillar-nextjs.vercel.app 추가
+
+### ✅ 완료 — Western Astrology
+- ✅ `main.py` `_extract_western_fields` 강건화 — planet id→name, sign→sign_id→sign_name fallback, ASC angles_details→angles fallback
+- ✅ `main.py` personal_fortune 응답에 `western` 중첩 키 추가 (`sun_sign`, `moon_sign`, `ascendant`, `planets`)
+- ✅ `main.py` `fetch_natal_western` 디버그 로그 추가
+- ✅ Cloud Run 재배포 완료 (revision 00164-sml)
+- ✅ Astrology Profile 탭 전면 교체 — Big Three 큰 카드 + Inner/Outer Planets 작은 카드 4열
+- ✅ Astrology Profile "No Western chart data available." 버그 수정 — flat 필드 파싱 로직 추가
+- ✅ Astrology Profile SVG filter 완전 제거 — 별자리 이미지 원본 색상 유지
+- ✅ Astrology Profile ASC 키 탐색 강화 — `ascendant→rising→asc→ascendant_sign→western_asc`, 없으면 "Unknown", console.log 추가
+
+### ✅ 완료 — Birth Time 수정
+- ✅ Birth Time 드롭다운 → 2시간 범위 슬롯 13개로 교체
+- ✅ PersonPicker / Library Add Person 폼 Birth Time 드롭다운 추가
+- ✅ PersonPicker Birth Time 로컬 state 버그 수정 (`hour: null` 하드코딩 → pHour 반영)
+- ✅ Birth time 저장 구조 전면 개선 — `birth_time_label` 필드 추가, TIME_RANGES start 시간(hour:minute) 사용, Firestore에 범위 문자열 저장, API에 `11:30` 형식 전송
+
+### ⏳ 확인 필요
+- [ ] Personal Fortune 리딩 후 브라우저 콘솔 `[AstrologyProfile] western:` 로그 확인 → ASC 키 이름 파악
+- [ ] Cloud Run 로그 `DEBUG fetch_natal_western OK:` / `DEBUG western_fields:` 확인 → sun/moon/asc 값 검증
+
+### 📋 남은 작업
+- [ ] `firestore.rules` Firebase에 실제 배포 (`firebase deploy --only firestore:rules`)
+- [ ] FastAPI CORS에 `https://astropillar.com` 추가 후 Cloud Run 재배포
+- [ ] Vercel 환경변수 세팅 확인 (`NEXT_PUBLIC_FIREBASE_APP_ID`, `NEXT_PUBLIC_GOOGLE_CLIENT_ID`)
+
+---
+
+## 다음 세션 시작 가이드
+
+> 마지막 작업: 2026-04-19 (세션 종료 전 기록)
+
+### 직전 세션에서 완료한 것
+1. **Birth time 저장 구조 전면 개선** (`src/lib/firestore.ts`, `src/components/BirthForm.tsx`, `src/components/PersonPicker.tsx`, `src/app/library/page.tsx`)
+   - `SavedPerson` / `BirthData` 인터페이스에 `birth_time_label?: string` 추가
+   - `TIME_RANGES` 3곳 모두 midpoint → **start 시간** 으로 변경 (예: `{ hour:11, minute:30 }`)
+   - Firestore에 `"11:30 - 13:30"` 문자열 그대로 저장, 카드에도 범위 표시
+   - API 호출 시 `11:30` 형식으로 전송 (기존 `hour:minute` 조합 로직 활용)
+
+2. **Astrology Profile 탭 2가지 버그 수정** (`src/components/ReadingResult.tsx`)
+   - SVG `filter` CSS 완전 제거 → 별자리 이미지 원본 색상 유지
+   - ASC 키 탐색 강화: `ascendant → rising → asc → ascendant_sign → western_asc`
+   - 값 없으면 `"Unknown"` 표시
+   - `console.log('[AstrologyProfile] western:', ...)` 추가 → 브라우저 콘솔에서 구조 확인 가능
+
+3. **최신 커밋**: `fc44806` → GitHub push → Vercel 자동 배포 완료
+
+### 다음 세션 우선순위
+1. **[즉시]** Personal Fortune 리딩 실행 → 브라우저 콘솔에서 `[AstrologyProfile] western:` 로그 확인
+   - ASC가 "Unknown"으로 표시되면 → 로그에서 실제 키 이름 확인 후 `AstrologyProfile` 함수 수정
+   - Cloud Run 로그에서 `DEBUG western_fields:` 확인 → `western_asc` 값이 있는지 검증
+2. **[배포]** `firebase deploy --only firestore:rules` — Firestore 보안 규칙 실제 적용
+3. **[배포]** FastAPI CORS에 `https://astropillar.com` 추가 → `D:\snap pillar\main.py` 수정 → Cloud Run 재배포
+4. **[확인]** Vercel 환경변수 `NEXT_PUBLIC_FIREBASE_APP_ID`, `NEXT_PUBLIC_GOOGLE_CLIENT_ID` 세팅 여부
+
+### 핵심 파일 경로
+| 파일 | 역할 |
+|------|------|
+| `E:\My Team\astropillar\src\components\ReadingResult.tsx` | Astrology Profile UI, extractWestern() |
+| `E:\My Team\astropillar\src\components\BirthForm.tsx` | TIME_RANGES, BirthData 인터페이스 |
+| `E:\My Team\astropillar\src\components\PersonPicker.tsx` | 인물 선택 UI, Add Person 폼 |
+| `E:\My Team\astropillar\src\lib\firestore.ts` | SavedPerson 인터페이스, savePerson() |
+| `E:\My Team\astropillar\src\app\library\page.tsx` | Library My Persons 탭 |
+| `D:\snap pillar\main.py` | FastAPI 백엔드 (Cloud Run) |
+
+---
 
 ## 결과 화면 구성 (ReadingResult.tsx)
 
-결과 화면은 3개 섹션으로 구성:
-1. **四柱八字 (사주팔자)** — 년/월/일/시 각 기둥의 천간·지지 이미지 (GitHub 이미지 레포)
-   - 천간: `https://raw.githubusercontent.com/hellojunpil/astropillar_images/main/gan_[한자].png`
-   - 지지: `https://raw.githubusercontent.com/hellojunpil/astropillar_images/main/zhi_[한자].png`
-2. **Western Astrology Chart** — 태양/달/ASC 별자리 SVG 이미지
-   - 별자리 SVG: `https://raw.githubusercontent.com/hellojunpil/astropillar_images/main/r_[sign].svg`
-   - 예: `r_aries.svg`, `r_leo.svg`, `r_scorpio.svg` 등
-3. **GPT 해석문** — 섹션별 텍스트 렌더링
-
-API 응답에서 천간/지지 데이터를 `pillars.year.gan`, `pillars.year.zhi` 등 다양한 필드명으로 유연하게 추출.
-
-### ✅ 이번 세션 추가 완료
-- [x] 이모지 제거 — `ReadingPageShell.tsx` 타이틀 emoji span 삭제, `menu/page.tsx` 서비스 카드 emoji span 삭제
-- [x] Add Person 버튼 URL 수정 — `PersonPicker.tsx` `href="/library?tab=persons"`
-- [x] Library 페이지 URL 파라미터 처리 — `useSearchParams`로 `?tab=persons` 감지, Suspense 래핑
-- [x] 리딩 로딩 화면 (`ReadingLoader.tsx`) — 골드 프로그레스 바, 롤링 문구 20개 (4초 간격), 60~120초 완료 후 결과 전환, 5개 리딩 페이지 적용
-- [x] Firestore 보안 규칙 — `firestore.rules` 파일 생성 (users/{email}/** 읽기/쓰기 이메일 인증), Firebase 콘솔 또는 `firebase deploy --only firestore:rules` 배포 필요
-- [x] Personal Fortune `reading_type` 누락 수정 — `/personal_fortune` API 호출에 `reading_type: 'personal_fortune'` 추가
-- [x] Credit 차감 흐름 검증 — 5개 리딩 페이지 모두 `use_pouch` → `refreshCredits()` 순서 정상 확인
-- [x] PersonPicker 인라인 Add Person 폼 — /library 이동 없이 같은 페이지에서 인물 입력/저장/자동선택 후 바로 리딩 진행, `savePerson` ID 반환으로 변경, 5개 리딩 페이지 `userEmail`+`onPeopleChange` prop 전달
-- [x] API 오류 메시지 개선 — `api.ts` Pydantic 배열/객체 오류 시 "Something went wrong. Please try again." 표시 (모든 리딩 페이지 자동 적용)
-- [x] `/use_pouch` 파라미터 수정 — 프론트 `amount` → `reading_type` 으로 변경 (5개 리딩 페이지), 백엔드 `UsePouchRequest` 스펙 일치
-- [x] Scenario `reading_type` 수정 — `situation` → `scenario` (Firestore service_config/pricing 키 일치)
-
-### ⏳ 남은 작업
-- [ ] `firestore.rules` Firebase에 실제 배포 (`firebase deploy --only firestore:rules`)
-- [ ] GitHub 레포 연결 + Vercel 배포 (아래 "배포 절차" 참고)
-- [ ] 실제 API 응답 구조 확인 후 pillar/western 추출 로직 검증
-- [ ] Vercel 환경변수 세팅 (아래 목록 참고)
-- [ ] FastAPI CORS에 `https://astropillar.com` 확인 후 Cloud Run 재배포
-- [ ] `.env.local` `NEXT_PUBLIC_FIREBASE_APP_ID` 값 입력, `NEXT_PUBLIC_GOOGLE_CLIENT_ID` 추가
+결과 화면은 3개 탭으로 구성:
+1. **BaZi Chart** — 년/월/일/시 각 기둥의 천간·지지 이미지
+   - 천간: `gan_[한자].png`, 지지: `zhi_[한자].png` (GitHub 이미지 레포)
+2. **Astrology Profile** — Big Three(Sun/Moon/Rising) + Inner Planets + Outer Planets 카드
+   - 별자리 SVG: `r_[sign].svg` (원본 색상, filter 없음)
+3. **Reading (GPT 해석문)** — 섹션별 아코디언
 
 ---
 

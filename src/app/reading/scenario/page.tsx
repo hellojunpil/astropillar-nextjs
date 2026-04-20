@@ -66,7 +66,7 @@ export default function ScenarioPage() {
       await apiPost('/use_pouch', { email: user.email, reading_type: 'scenario' })
       const birth_date = birthDateStr(birthData.year, birthData.month, birthData.day)
       await saveReading(user.email, { reading_type: 'scenario', name: birthData.name, birth_date, birth_city: birthData.city, result: raw })
-      setResult(raw); refreshCredits(2)
+      setResult(raw); refreshCredits(1)
       gtagEvent('reading_completed', { reading_type: 'scenario' })
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Something went wrong. Please try again.')
@@ -78,7 +78,7 @@ export default function ScenarioPage() {
   if (loading) return <LoadingScreen />
 
   return (
-    <ReadingPageShell title="Scenario Reading" subtitle="Get cosmic guidance on a specific situation — ask anything" emoji="🔮" badge="2 Credits" badgeColor="#a78bfa" credits={credits} requiredCredits={2} inProgress={submitting || !!result}>
+    <ReadingPageShell title="Scenario Reading" subtitle="Get cosmic guidance on a specific situation — ask anything" emoji="🔮" badge="1 Credit" badgeColor="#a78bfa" credits={credits} requiredCredits={1} inProgress={submitting || !!result}>
       {result ? (
         <ReadingResult raw={result} onReset={() => { setResult(null); setStep('form'); setBirthData(null); setQuestion('') }} userEmail={user?.email ?? undefined} />
       ) : submitting ? (
@@ -131,7 +131,7 @@ export default function ScenarioPage() {
             </button>
             <button type="submit" disabled={!question.trim() || submitting} className="btn-gold" style={{ flex:1, opacity:(!question.trim() || submitting) ? 0.5 : 1, cursor:(!question.trim() || submitting) ? 'not-allowed' : 'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
               {submitting ? '✦ Consulting the stars...' : (
-                <>Reveal the Answer <span style={{ background:'rgba(22,33,62,0.6)', borderRadius:20, padding:'2px 10px', fontSize:12 }}>2 Credits</span></>
+                <>Reveal the Answer <span style={{ background:'rgba(22,33,62,0.6)', borderRadius:20, padding:'2px 10px', fontSize:12 }}>1 Credit</span></>
               )}
             </button>
           </div>
