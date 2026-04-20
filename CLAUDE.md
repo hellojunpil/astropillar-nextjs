@@ -190,7 +190,7 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 - ✅ Personal Daily Fortune (`/reading/daily`) — 1 Credit, 날짜 선택
 - ✅ Yearly Fortune (`/reading/yearly`) — 1 Credit
 - ✅ Compatibility (`/reading/compatibility`) — 1 Credit, Firestore 인물 드롭다운, 관계 선택 12종
-- ✅ Scenario Reading (`/reading/scenario`) — 2 Credits, 2단계 플로우
+- ✅ Scenario Reading (`/reading/scenario`) — 1 Credit, 2단계 플로우
 - ✅ Today's Fortune (`/today`) — 무료, 로그인 불필요
 - ✅ Credit 구매 (`/buy`) — Gumroad 연결
 - ✅ Library (`/library`) — Reading History + My Persons, Firestore 연동
@@ -224,43 +224,43 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 - ✅ PersonPicker Birth Time 로컬 state 버그 수정 (`hour: null` 하드코딩 → pHour 반영)
 - ✅ Birth time 저장 구조 전면 개선 — `birth_time_label` 필드 추가, TIME_RANGES start 시간(hour:minute) 사용, Firestore에 범위 문자열 저장, API에 `11:30` 형식 전송
 
+### ✅ 완료 — 크레딧 & 가격 시스템 (2026-04-21)
+- ✅ 파비콘 교체 — `favicon_ap3.png` → `src/app/icon.png`
+- ✅ `firebase.json` 생성 → `firebase deploy --only firestore:rules` 가능
+- ✅ 버그 수정: ReadingPageShell `inProgress` prop 추가 — 리딩 완료 후 credits=0 되면 "Not enough Credits" 표시되던 문제 해결 (5개 페이지 전부 적용)
+- ✅ 버그 수정: `refreshCredits(decrement)` — 즉시 로컬 차감 후 백그라운드 서버 동기화 (크레딧 UI 지연 표시 해결)
+- ✅ 가격 Firestore 연동 — `service_config/pricing` 문서에서 동적 로드 (`src/hooks/usePricing.ts`, `src/lib/firestore.ts` getPricing 추가)
+  - 연동 위치: 5개 reading 페이지 헤더 배지, Reveal 버튼, menu 서비스 카드, buy 페이지 서비스 목록
+  - 필드명: `personal_fortune`, `personal_daily_fortune`, `yearly`, `compatibility`, `scenario`
+
 ### ⏳ 확인 필요
 - [ ] Personal Fortune 리딩 후 브라우저 콘솔 `[AstrologyProfile] western:` 로그 확인 → ASC 키 이름 파악
 - [ ] Cloud Run 로그 `DEBUG fetch_natal_western OK:` / `DEBUG western_fields:` 확인 → sun/moon/asc 값 검증
 
 ### 📋 남은 작업
-- [ ] `firestore.rules` Firebase에 실제 배포 (`firebase deploy --only firestore:rules`)
-- [ ] FastAPI CORS에 `https://astropillar.com` 추가 후 Cloud Run 재배포
+- [ ] `firebase deploy --only firestore:rules` — Firebase CLI 설치 후 실행 (`npm install -g firebase-tools`)
 - [ ] Vercel 환경변수 세팅 확인 (`NEXT_PUBLIC_FIREBASE_APP_ID`, `NEXT_PUBLIC_GOOGLE_CLIENT_ID`)
 
 ---
 
 ## 다음 세션 시작 가이드
 
-> 마지막 작업: 2026-04-19 (세션 종료 전 기록)
+> 마지막 작업: 2026-04-21
 
 ### 직전 세션에서 완료한 것
-1. **Birth time 저장 구조 전면 개선** (`src/lib/firestore.ts`, `src/components/BirthForm.tsx`, `src/components/PersonPicker.tsx`, `src/app/library/page.tsx`)
-   - `SavedPerson` / `BirthData` 인터페이스에 `birth_time_label?: string` 추가
-   - `TIME_RANGES` 3곳 모두 midpoint → **start 시간** 으로 변경 (예: `{ hour:11, minute:30 }`)
-   - Firestore에 `"11:30 - 13:30"` 문자열 그대로 저장, 카드에도 범위 표시
-   - API 호출 시 `11:30` 형식으로 전송 (기존 `hour:minute` 조합 로직 활용)
-
-2. **Astrology Profile 탭 2가지 버그 수정** (`src/components/ReadingResult.tsx`)
-   - SVG `filter` CSS 완전 제거 → 별자리 이미지 원본 색상 유지
-   - ASC 키 탐색 강화: `ascendant → rising → asc → ascendant_sign → western_asc`
-   - 값 없으면 `"Unknown"` 표시
-   - `console.log('[AstrologyProfile] western:', ...)` 추가 → 브라우저 콘솔에서 구조 확인 가능
-
-3. **최신 커밋**: `fc44806` → GitHub push → Vercel 자동 배포 완료
+1. **파비콘 교체** — `favicon_ap3.png` → `src/app/icon.png`, 기존 `favicon.ico` 삭제
+2. **버그 수정: "Not enough Credits" 오작동** (`src/components/ReadingPageShell.tsx`, 5개 reading 페이지)
+   - 리딩 완료 후 credits=0 되면 결과 대신 경고 뜨던 문제 → `inProgress` prop으로 해결
+3. **버그 수정: 크레딧 UI 지연** (`src/hooks/useAuth.ts`)
+   - `refreshCredits(decrement)` — 즉시 로컬 차감 + 백그라운드 서버 동기화
+4. **가격 Firestore 연동** (`src/hooks/usePricing.ts` 신규, `src/lib/firestore.ts` getPricing 추가)
+   - menu, buy, 5개 reading 페이지 전부 `service_config/pricing` 문서에서 동적 로드
+5. **최신 커밋**: `b39733b` → GitHub push → Vercel 자동 배포 완료
 
 ### 다음 세션 우선순위
-1. **[즉시]** Personal Fortune 리딩 실행 → 브라우저 콘솔에서 `[AstrologyProfile] western:` 로그 확인
-   - ASC가 "Unknown"으로 표시되면 → 로그에서 실제 키 이름 확인 후 `AstrologyProfile` 함수 수정
-   - Cloud Run 로그에서 `DEBUG western_fields:` 확인 → `western_asc` 값이 있는지 검증
-2. **[배포]** `firebase deploy --only firestore:rules` — Firestore 보안 규칙 실제 적용
-3. **[배포]** FastAPI CORS에 `https://astropillar.com` 추가 → `D:\snap pillar\main.py` 수정 → Cloud Run 재배포
-4. **[확인]** Vercel 환경변수 `NEXT_PUBLIC_FIREBASE_APP_ID`, `NEXT_PUBLIC_GOOGLE_CLIENT_ID` 세팅 여부
+1. **[배포]** `firebase deploy --only firestore:rules` — Firebase CLI 설치 필요 (`npm install -g firebase-tools` → `firebase login`)
+2. **[확인]** Vercel 환경변수 `NEXT_PUBLIC_FIREBASE_APP_ID`, `NEXT_PUBLIC_GOOGLE_CLIENT_ID` 세팅 여부
+3. **[확인]** Personal Fortune → 브라우저 콘솔 `[AstrologyProfile] western:` 로그 → ASC "Unknown" 이면 키 이름 확인 후 수정
 
 ### 핵심 파일 경로
 | 파일 | 역할 |
