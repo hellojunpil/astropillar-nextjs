@@ -13,12 +13,13 @@ interface Props {
   badgeColor?: string
   credits: number | null
   requiredCredits: number
+  inProgress?: boolean
   children: React.ReactNode
 }
 
 export default function ReadingPageShell({
   title, subtitle, emoji, badge, badgeColor = 'var(--gold)',
-  credits, requiredCredits, children
+  credits, requiredCredits, inProgress = false, children
 }: Props) {
   const router = useRouter()
 
@@ -27,7 +28,7 @@ export default function ReadingPageShell({
     router.push('/')
   }
 
-  const notEnoughCredits = requiredCredits > 0 && credits !== null && credits < requiredCredits
+  const notEnoughCredits = !inProgress && requiredCredits > 0 && credits !== null && credits < requiredCredits
 
   return (
     <main style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 96 }}>

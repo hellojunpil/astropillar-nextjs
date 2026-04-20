@@ -63,7 +63,7 @@ export default function YearlyFortunePage() {
   if (loading) return <LoadingScreen />
 
   return (
-    <ReadingPageShell title="Yearly Fortune" subtitle={`Month-by-month guidance for ${currentYear} based on your chart`} emoji="📅" badge="1 Credit" credits={credits} requiredCredits={1}>
+    <ReadingPageShell title="Yearly Fortune" subtitle={`Month-by-month guidance for ${currentYear} based on your chart`} emoji="📅" badge="1 Credit" credits={credits} requiredCredits={1} inProgress={submitting || !!result}>
       {result ? (
         <ReadingResult raw={result} onReset={() => { setResult(null); setFromCache(false); setBirthData(null) }} userEmail={user?.email ?? undefined} fromCache={fromCache} birthData={birthData ?? undefined} />
       ) : submitting ? (

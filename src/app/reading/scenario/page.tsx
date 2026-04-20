@@ -78,7 +78,7 @@ export default function ScenarioPage() {
   if (loading) return <LoadingScreen />
 
   return (
-    <ReadingPageShell title="Scenario Reading" subtitle="Get cosmic guidance on a specific situation — ask anything" emoji="🔮" badge="2 Credits" badgeColor="#a78bfa" credits={credits} requiredCredits={2}>
+    <ReadingPageShell title="Scenario Reading" subtitle="Get cosmic guidance on a specific situation — ask anything" emoji="🔮" badge="2 Credits" badgeColor="#a78bfa" credits={credits} requiredCredits={2} inProgress={submitting || !!result}>
       {result ? (
         <ReadingResult raw={result} onReset={() => { setResult(null); setStep('form'); setBirthData(null); setQuestion('') }} userEmail={user?.email ?? undefined} />
       ) : submitting ? (

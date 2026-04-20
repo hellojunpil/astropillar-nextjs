@@ -116,7 +116,7 @@ export default function CompatibilityPage() {
   return (
     <ReadingPageShell
       title="Compatibility" subtitle="How your energy aligns with someone special — deep compatibility analysis"
-      emoji="💞" badge="1 Credit" credits={credits} requiredCredits={1}
+      emoji="💞" badge="1 Credit" credits={credits} requiredCredits={1} inProgress={submitting || !!result}
     >
       {result ? (
         <ReadingResult

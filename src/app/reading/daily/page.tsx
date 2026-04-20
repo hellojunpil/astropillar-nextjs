@@ -101,7 +101,7 @@ export default function DailyFortunePage() {
   )
 
   return (
-    <ReadingPageShell title="Personal Daily Fortune" subtitle={`Your energy for ${selectedLabel}`} emoji="☀️" badge="1 Credit" credits={credits} requiredCredits={1}>
+    <ReadingPageShell title="Personal Daily Fortune" subtitle={`Your energy for ${selectedLabel}`} emoji="☀️" badge="1 Credit" credits={credits} requiredCredits={1} inProgress={submitting || !!result}>
       {result ? (
         <ReadingResult raw={result} onReset={() => { setResult(null); setFromCache(false); setBirthData(null) }} userEmail={user?.email ?? undefined} fromCache={fromCache} birthData={birthData ?? undefined} />
       ) : submitting ? (
