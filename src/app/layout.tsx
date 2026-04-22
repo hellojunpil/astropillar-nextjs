@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Script from 'next/script'
+import Providers from '@/components/Providers'
 import './globals.css'
 
 const GA_ID = process.env.NEXT_PUBLIC_GA4_ID
@@ -33,7 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             `}</Script>
           </>
         )}
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   )

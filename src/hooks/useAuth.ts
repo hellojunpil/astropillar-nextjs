@@ -1,46 +1,17 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { onAuthStateChanged, User } from 'firebase/auth'
-import { auth } from '@/lib/firebase'
-import { apiGet } from '@/lib/api'
+import { useAuthContext } from '@/contexts/AuthContext'
 
 export function useAuth(requireAuth = true) {
   const router = useRouter()
-  const [user, setUser] = useState<User | null>(null)
-  const [credits, setCredits] = useState<number | null>(null)
-  const [loading, setLoading] = useState(true)
+  const { user, credits, loading, refreshCredits } = useAuthContext()
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (u) => {
-      if (!u) {
-        if (requireAuth) router.push('/login')
-        setLoading(false)
-        return
-      }
-      setUser(u)
-      if (u.email) {
-        try {
-          const data = await apiGet<{ pouch_count: number }>('/get_pouch', { email: u.email })
-          setCredits(data.pouch_count)
-        } catch {
-          setCredits(0)
-        }
-      }
-      setLoading(false)
-    })
-    return () => unsub()
-  }, [router, requireAuth])
-
-  function refreshCredits(decrement?: number) {
-    if (!user?.email) return
-    if (decrement !== undefined) {
-      setCredits(prev => prev !== null ? prev - decrement : null)
+    if (!loading && requireAuth && !user) {
+      router.push('/login')
     }
-    apiGet<{ pouch_count: number }>('/get_pouch', { email: user.email })
-      .then(data => setCredits(data.pouch_count))
-      .catch(() => { /* ignore */ })
-  }
+  }, [loading, requireAuth, user, router])
 
   return { user, credits, loading, refreshCredits }
 }
