@@ -275,15 +275,30 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 - Scenario Reading은 아코디언 미적용 (일반 텍스트)
 - 완료 후 전체 서비스 QA 테스트 → `D:\snap_pillar bck\result\result_20260422_1.txt` 저장
 
-**변경 항목:**
-1. **[진행중]** `main.py` - `build_personal_daily_prompt` 섹션 구조 개선 (✨ 섹션으로 통일, ⚡ Today's Energy 통합)
-2. **[대기]** `main.py` - Yearly Fortune 중복 💼 이모지 수정 (💼 Career & Study → 📊 Career & Learning, 🏥 → 🌿)
-3. **[대기]** `main.py` - 모든 시스템 프롬프트에 "18-year-old American" 가독성 규칙 추가
-4. **[대기]** `scenario/page.tsx` - `situation` → `custom_situation` 버그 수정 (질문이 백엔드에 전달 안 되는 치명적 버그)
-5. **[대기]** `ReadingResult.tsx` - Scenario Reading은 아코디언 대신 일반 텍스트로 표시
-6. **[대기]** 백엔드 Cloud Run 배포
-7. **[대기]** 프론트 Vercel 배포
-8. **[대기]** 전체 서비스 QA 테스트 + 결과 저장
+**변경 완료:**
+1. **[완료]** `main.py` - `build_personal_daily_prompt` 섹션 구조 개선 (✨ 섹션으로 통일, ⚡ Today's Energy 통합)
+2. **[완료]** `main.py` - Yearly Fortune 중복 💼 이모지 수정 (💼 Career & Study → 📊 Career & Learning, 🏥 → 🌿)
+3. **[완료]** `main.py` - 모든 시스템 프롬프트에 "18-year-old American" 가독성 규칙 추가
+4. **[완료]** `scenario/page.tsx` - `situation` → `custom_situation` 버그 수정
+5. **[완료]** `ReadingResult.tsx` - Scenario Reading은 아코디언 대신 일반 텍스트로 표시
+6. **[완료]** 백엔드 Cloud Run 배포 (revision 00168-gt7, allow-unauthenticated 재배포)
+7. **[완료]** 프론트 Vercel 배포 (commit a64cf7a)
+
+**QA 테스트 진행 중:**
+- **Personal Fortune**: 캐시 결과 확인 — 내용은 우수, 단 아코디언 "Section 1"으로 뭉침 (캐시 구버전)
+- **Personal Daily Fortune**: 결과 확인 완료 — 내용 우수 (BaZi+Western 융합, 구체적, 영어), 단 "Section 1"으로 뭉침 → 원인: GPT가 이모지 헤더 없이 인라인으로 섹션명 작성
+- **Yearly Fortune**: 대기
+- **Compatibility**: 대기
+- **Scenario Reading**: 대기
+
+**근본 원인 발견 및 수정 (2026-04-22):**
+- GPT가 "Do NOT use Markdown formatting" 규칙을 이모지 헤더에도 적용해 인라인 텍스트로 처리
+- **수정**: 모든 4개 프롬프트의 FORMATTING RULES → SECTION FORMAT으로 교체
+  - `common_system_prompt` (yearly): 헤더 목록 + 예시 명시
+  - `build_compatibility_prompt`: 헤더 목록 + 예시 명시
+  - `build_personal_fortune_prompt`: 헤더 목록 + 예시 명시
+  - `build_personal_daily_prompt`: 헤더 목록 + 예시 명시
+- 백엔드 재배포 진행 중 (revision 00169+)
 
 ### 직전 세션에서 완료한 것
 1. **파비콘 교체** — `favicon_ap3.png` → `src/app/icon.png`, 기존 `favicon.ico` 삭제
