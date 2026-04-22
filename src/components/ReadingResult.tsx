@@ -91,7 +91,7 @@ function extractWestern(data: Record<string,unknown>): WesternData | null {
   return null
 }
 
-const EMOJI_SET = '✨💼❤️💰🌿📊💡🌟⚡🏥📅🎯✅⚠️🔮🔥💫☁️'
+const EMOJI_SET = '✨💼❤️💰🌿📊💡🌟⚡🏥📅🎯✅⚠️🔮🔥💫☁️📚'
 const EMOJI_RE = new RegExp(`[${EMOJI_SET}]`)
 const SPLIT_RE = new RegExp(`\\n(?=#{1,3} |\\*\\*[A-Z\\u00C0-\\uFFFF]|[${EMOJI_SET}])`)
 
@@ -132,15 +132,16 @@ const SECTION_LABELS: Record<string,string> = {
   'career & life path': 'Career & Life Path',
   'career & money': 'Career & Money',
   'career & focus': 'Career & Focus',
+  'career & learning': 'Career & Learning',
   'money & opportunities': 'Money & Opportunities',
   'money': 'Money & Opportunities',
   'love': 'Love & Relationships',
   'love & relationships': 'Love & Relationships',
   'wealth': 'Wealth & Money',
   'wealth & money': 'Wealth & Money',
-  'health': 'Health & Energy',
+  'health': 'Health & Vitality',
   'health & vitality': 'Health & Vitality',
-  'health & energy': 'Health & Energy',
+  'health & energy': 'Health & Vitality',
   'life chapters': 'Life Chapters',
   'one thing': 'One Thing to Remember',
   'one thing to remember': 'One Thing to Remember',
@@ -150,6 +151,7 @@ const SECTION_LABELS: Record<string,string> = {
   "today's energy": "Today's Energy",
   'bottom line': 'Bottom Line',
   'working in your favor': 'What\'s Working',
+  'what\'s working': 'What\'s Working in Your Favor',
   'watch out': 'Watch Out For',
   'best timing': 'Best Timing',
   'how to make': 'How to Make It Work',
@@ -161,6 +163,7 @@ const SECTION_LABELS: Record<string,string> = {
   'at a glance': 'At a Glance',
   'monthly highlights': 'Monthly Highlights',
   'strategy': 'Your Strategy',
+  'what your chart': 'What Your Chart Says',
 }
 function normalizeTitle(t: string): string {
   const low = t.toLowerCase().replace(/[^a-z& ]/g,'').trim()
@@ -490,17 +493,32 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
         </div>
       )}
 
-      {/* ── GPT Accordion ── */}
+      {/* ── GPT Reading ── */}
       {sections.length > 0 && (
         <div style={{ marginBottom:20 }}>
-          {sections.map((s,i) => (
-            <AccordionSection
-              key={i}
-              title={s.title ? normalizeTitle(s.title) : `Section ${i+1}`}
-              content={s.content}
-              defaultOpen={i === 0}
-            />
-          ))}
+          {data.reading_type === 'situation' ? (
+            // Scenario Reading: plain flowing text, no accordion
+            sections.map((s,i) => (
+              <div key={i} style={{ marginBottom:20 }}>
+                {s.title && (
+                  <p style={{ color:'var(--gold)', fontSize:13, fontWeight:700, letterSpacing:1.2, textTransform:'uppercase', fontFamily:"'Cormorant Garamond', serif", marginBottom:10 }}>
+                    {normalizeTitle(s.title)}
+                  </p>
+                )}
+                <p style={{ color:'#ddd', fontSize:14, lineHeight:1.9, whiteSpace:'pre-wrap' }}>{s.content}</p>
+              </div>
+            ))
+          ) : (
+            // All other readings: accordion
+            sections.map((s,i) => (
+              <AccordionSection
+                key={i}
+                title={s.title ? normalizeTitle(s.title) : `Section ${i+1}`}
+                content={s.content}
+                defaultOpen={i === 0}
+              />
+            ))
+          )}
         </div>
       )}
 

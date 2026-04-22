@@ -63,7 +63,7 @@ export default function ScenarioPage() {
       const raw = await apiPost('/full_reading', {
         year: birthData.year, month: birthData.month, day: birthData.day,
         birthtime, sex: birthData.sex, city: birthData.city,
-        reading_type: 'situation', situation: question.trim(),
+        reading_type: 'situation', custom_situation: question.trim(),
         user_name: birthData.name, birth_year: birthData.year,
       })
       await apiPost('/use_pouch', { email: user.email, reading_type: 'scenario' })

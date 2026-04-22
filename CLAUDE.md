@@ -265,7 +265,25 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 
 ## 다음 세션 시작 가이드
 
-> 마지막 작업: 2026-04-21 (오전 세션)
+> 마지막 작업: 2026-04-22 (진행 중)
+
+### 🔄 현재 작업 중 (2026-04-22) — 결과 품질 전면 개선
+
+**작업 목표:**
+- Today's Fortune 제외 전 서비스 결과를 아코디언 형태로, BaZi+서양 점성술 융합, 영어, 18세 미국인 기준 쉽게 읽힘, 명확한 표현
+- Personal Daily Fortune 섹션 구조를 Personal Fortune과 동일하게 맞추기
+- Scenario Reading은 아코디언 미적용 (일반 텍스트)
+- 완료 후 전체 서비스 QA 테스트 → `D:\snap_pillar bck\result\result_20260422_1.txt` 저장
+
+**변경 항목:**
+1. **[진행중]** `main.py` - `build_personal_daily_prompt` 섹션 구조 개선 (✨ 섹션으로 통일, ⚡ Today's Energy 통합)
+2. **[대기]** `main.py` - Yearly Fortune 중복 💼 이모지 수정 (💼 Career & Study → 📊 Career & Learning, 🏥 → 🌿)
+3. **[대기]** `main.py` - 모든 시스템 프롬프트에 "18-year-old American" 가독성 규칙 추가
+4. **[대기]** `scenario/page.tsx` - `situation` → `custom_situation` 버그 수정 (질문이 백엔드에 전달 안 되는 치명적 버그)
+5. **[대기]** `ReadingResult.tsx` - Scenario Reading은 아코디언 대신 일반 텍스트로 표시
+6. **[대기]** 백엔드 Cloud Run 배포
+7. **[대기]** 프론트 Vercel 배포
+8. **[대기]** 전체 서비스 QA 테스트 + 결과 저장
 
 ### 직전 세션에서 완료한 것
 1. **파비콘 교체** — `favicon_ap3.png` → `src/app/icon.png`, 기존 `favicon.ico` 삭제
