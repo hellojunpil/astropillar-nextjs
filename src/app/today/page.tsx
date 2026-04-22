@@ -73,8 +73,21 @@ type Mode = 'horoscope' | 'chinese'
 
 interface FortuneData { [key: string]: unknown }
 
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
+const DAYS = Array.from({length: 31}, (_, i) => i + 1)
+const YEARS = Array.from({length: 100}, (_, i) => new Date().getFullYear() - i)
+
+const selectStyle: React.CSSProperties = {
+  flex: 1, background: '#0f1829', border: '1px solid var(--border)',
+  borderRadius: 12, padding: '11px 10px', color: '#fff',
+  fontSize: 14, outline: 'none', colorScheme: 'dark', cursor: 'pointer',
+  appearance: 'none' as const, WebkitAppearance: 'none' as const,
+}
+
 export default function TodayFortunePage() {
-  const [birthday, setBirthday] = useState('')
+  const [bMonth, setBMonth] = useState('')
+  const [bDay, setBDay] = useState('')
+  const [bYear, setBYear] = useState('')
   const [selected, setSelected] = useState<string | null>(null)
   const [mode, setMode] = useState<Mode | null>(null)
   const [autoHoro, setAutoHoro] = useState<string | null>(null)
@@ -84,13 +97,18 @@ export default function TodayFortunePage() {
   const [error, setError] = useState('')
   const [step, setStep] = useState<'pick' | 'result'>('pick')
 
-  function handleBirthday(val: string) {
-    setBirthday(val)
-    if (!val) { setAutoHoro(null); setAutoChinese(null); return }
-    const [y, m, d] = val.split('-').map(Number)
-    if (!y || !m || !d) return
-    setAutoHoro(getHoroscope(m, d))
-    setAutoChinese(getChineseZodiac(y))
+  function handleBirthday(m: string, d: string, y: string) {
+    const month = parseInt(m), day = parseInt(d), year = parseInt(y)
+    if (month && day) {
+      setAutoHoro(getHoroscope(month, day))
+    } else {
+      setAutoHoro(null)
+    }
+    if (year) {
+      setAutoChinese(getChineseZodiac(year))
+    } else {
+      setAutoChinese(null)
+    }
   }
 
   function selectSign(name: string, m: Mode) {
@@ -177,22 +195,23 @@ export default function TodayFortunePage() {
               <p style={{ color: 'var(--text-muted)', fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 10 }}>
                 Your Birthday
               </p>
-              <input
-                type="date"
-                value={birthday}
-                onChange={e => handleBirthday(e.target.value)}
-                style={{
-                  width: '100%', boxSizing: 'border-box',
-                  background: '#0f1829', border: '1px solid var(--border)',
-                  borderRadius: 12, padding: '12px 16px',
-                  color: birthday ? '#fff' : 'var(--text-muted)',
-                  fontSize: 15, outline: 'none',
-                  colorScheme: 'dark',
-                }}
-              />
-              {autoHoro && autoChinese && (
+              <div style={{ display: 'flex', gap: 8 }}>
+                <select value={bMonth} onChange={e => { setBMonth(e.target.value); handleBirthday(e.target.value, bDay, bYear) }} style={selectStyle}>
+                  <option value="">Month</option>
+                  {MONTHS.map((m, i) => <option key={m} value={String(i+1)}>{m}</option>)}
+                </select>
+                <select value={bDay} onChange={e => { setBDay(e.target.value); handleBirthday(bMonth, e.target.value, bYear) }} style={{...selectStyle, flex: '0 0 80px'}}>
+                  <option value="">Day</option>
+                  {DAYS.map(d => <option key={d} value={String(d)}>{d}</option>)}
+                </select>
+                <select value={bYear} onChange={e => { setBYear(e.target.value); handleBirthday(bMonth, bDay, e.target.value) }} style={{...selectStyle, flex: '0 0 96px'}}>
+                  <option value="">Year</option>
+                  {YEARS.map(y => <option key={y} value={String(y)}>{y}</option>)}
+                </select>
+              </div>
+              {(autoHoro || autoChinese) && (
                 <p style={{ color: 'var(--gold)', fontSize: 12, marginTop: 8, textAlign: 'center' }}>
-                  ✦ {autoHoro} · Year of the {autoChinese}
+                  {autoHoro && `✦ ${autoHoro}`}{autoHoro && autoChinese && ' · '}{autoChinese && `Year of the ${autoChinese}`}
                 </p>
               )}
             </div>
