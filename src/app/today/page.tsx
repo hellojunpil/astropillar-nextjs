@@ -79,7 +79,7 @@ const YEARS = Array.from({length: 100}, (_, i) => new Date().getFullYear() - i)
 
 const selectStyle: React.CSSProperties = {
   flex: 1, background: '#0f1829', border: '1px solid var(--border)',
-  borderRadius: 12, padding: '11px 10px', color: '#fff',
+  borderRadius: 12, padding: '8px 10px', color: '#fff',
   fontSize: 14, outline: 'none', colorScheme: 'dark', cursor: 'pointer',
   appearance: 'none' as const, WebkitAppearance: 'none' as const,
 }
@@ -151,13 +151,12 @@ export default function TodayFortunePage() {
         <Link href="/login" style={{ color: 'var(--text-muted)', fontSize: 13, textDecoration: 'none' }}>Sign in →</Link>
       </header>
 
-      <div style={{ maxWidth: 480, margin: '0 auto', padding: '28px 24px 0' }}>
+      <div style={{ maxWidth: 480, margin: '0 auto', padding: '12px 20px 0' }}>
 
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <p style={{ fontSize: 36, marginBottom: 10 }}>🌙</p>
-          <h1 className="font-display" style={{ color: '#fff', fontSize: 24, fontWeight: 600, marginBottom: 6 }}>Today&apos;s Fortune</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>{todayStr}</p>
-          <span style={{ display: 'inline-block', marginTop: 8, border: '1px solid #2ecc71', color: '#2ecc71', borderRadius: 20, padding: '3px 12px', fontSize: 11, fontWeight: 700 }}>
+        <div style={{ textAlign: 'center', marginBottom: 14 }}>
+          <h1 className="font-display" style={{ color: '#fff', fontSize: 22, fontWeight: 600, marginBottom: 2 }}>Today&apos;s Fortune</h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: 12 }}>{todayStr}</p>
+          <span style={{ display: 'inline-block', marginTop: 5, border: '1px solid #2ecc71', color: '#2ecc71', borderRadius: 20, padding: '2px 10px', fontSize: 10, fontWeight: 700 }}>
             FREE — No login required
           </span>
         </div>
@@ -188,11 +187,11 @@ export default function TodayFortunePage() {
             </div>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 
             {/* Birthday input */}
             <div>
-              <p style={{ color: 'var(--text-muted)', fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 10 }}>
+              <p style={{ color: 'var(--text-muted)', fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>
                 Your Birthday
               </p>
               <div style={{ display: 'flex', gap: 8 }}>
@@ -218,15 +217,15 @@ export default function TodayFortunePage() {
 
             {/* Horoscope grid */}
             <div>
-              <p style={{ color: 'var(--text-muted)', fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 14 }}>Horoscope</p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+              <p style={{ color: 'var(--text-muted)', fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8 }}>Horoscope</p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
                 {HOROSCOPE_SIGNS.map(s => {
                   const isSelected = selected === s.name && mode === 'horoscope'
                   const isAuto = autoHoro === s.name && !(selected && mode)
                   const highlight = isSelected || isAuto
                   return (
                     <button key={s.name} type="button" onClick={() => selectSign(s.name, 'horoscope')}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                       <div style={{
                         width: 96, height: 96, borderRadius: 20,
                         background: highlight ? 'rgba(201,168,76,0.12)' : 'rgba(255,255,255,0.04)',
@@ -246,15 +245,15 @@ export default function TodayFortunePage() {
 
             {/* Chinese Zodiac grid */}
             <div>
-              <p style={{ color: 'var(--text-muted)', fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 14 }}>Chinese Zodiac</p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+              <p style={{ color: 'var(--text-muted)', fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8 }}>Chinese Zodiac</p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
                 {CHINESE_SIGNS.map(s => {
                   const isSelected = selected === s.name && mode === 'chinese'
                   const isAuto = autoChinese === s.name && !(selected && mode)
                   const highlight = isSelected || isAuto
                   return (
                     <button key={s.name} type="button" onClick={() => selectSign(s.name, 'chinese')}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                       <div style={{
                         width: 96, height: 96, borderRadius: 20,
                         background: highlight ? 'rgba(167,139,250,0.12)' : 'rgba(255,255,255,0.04)',
