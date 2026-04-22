@@ -228,14 +228,14 @@ export default function TodayFortunePage() {
                     <button key={s.name} type="button" onClick={() => selectSign(s.name, 'horoscope')}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
                       <div style={{
-                        width: 80, height: 80, borderRadius: 18,
+                        width: 96, height: 96, borderRadius: 20,
                         background: highlight ? 'rgba(201,168,76,0.12)' : 'rgba(255,255,255,0.04)',
                         border: `2px solid ${isSelected ? 'var(--gold)' : isAuto ? 'rgba(201,168,76,0.5)' : 'transparent'}`,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         boxShadow: highlight ? '0 0 12px rgba(201,168,76,0.3)' : 'none',
                         transition: 'all 0.15s',
                       }}>
-                        <Image src={`${IMG}${s.img}`} alt={s.name} width={60} height={60} style={{ objectFit: 'contain' }} unoptimized />
+                        <Image src={`${IMG}${s.img}`} alt={s.name} width={72} height={72} style={{ objectFit: 'contain' }} unoptimized />
                       </div>
                       <span style={{ color: isSelected ? 'var(--gold)' : isAuto ? 'rgba(201,168,76,0.8)' : 'var(--text-muted)', fontSize: 11, fontWeight: 600 }}>{s.name}</span>
                     </button>
@@ -256,14 +256,14 @@ export default function TodayFortunePage() {
                     <button key={s.name} type="button" onClick={() => selectSign(s.name, 'chinese')}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
                       <div style={{
-                        width: 80, height: 80, borderRadius: 18,
+                        width: 96, height: 96, borderRadius: 20,
                         background: highlight ? 'rgba(167,139,250,0.12)' : 'rgba(255,255,255,0.04)',
                         border: `2px solid ${isSelected ? '#a78bfa' : isAuto ? 'rgba(167,139,250,0.5)' : 'transparent'}`,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         boxShadow: highlight ? '0 0 12px rgba(167,139,250,0.3)' : 'none',
                         transition: 'all 0.15s',
                       }}>
-                        <Image src={`${IMG}${s.img}`} alt={s.name} width={60} height={60} style={{ objectFit: 'contain' }} unoptimized />
+                        <Image src={`${IMG}${s.img}`} alt={s.name} width={72} height={72} style={{ objectFit: 'contain' }} unoptimized />
                       </div>
                       <span style={{ color: isSelected ? '#a78bfa' : isAuto ? 'rgba(167,139,250,0.8)' : 'var(--text-muted)', fontSize: 11, fontWeight: 600 }}>{s.name}</span>
                     </button>
