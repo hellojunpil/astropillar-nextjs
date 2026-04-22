@@ -246,6 +246,19 @@ function MonthlyLineChart({ label, data, color, width = 330 }: { label: string; 
 // Returns chart JSX to embed inside a specific accordion section
 function getSectionChart(sectionTitle: string, scores: Record<string, number[]>): React.ReactNode | null {
   const low = sectionTitle.toLowerCase()
+
+  // At a Glance → overall average of career/love/health/money
+  if (low.includes('glance')) {
+    const base = ['career', 'love', 'health', 'money'].filter(k => Array.isArray(scores[k]) && scores[k].length === 12)
+    if (base.length === 4) {
+      const overall = Array.from({ length: 12 }, (_, i) =>
+        Math.round(base.reduce((sum, k) => sum + scores[k][i], 0) / base.length)
+      )
+      return <div style={{ marginBottom: 14 }}><MonthlyLineChart label="Overall" data={overall} color="#C9A84C" width={330} /></div>
+    }
+    return null
+  }
+
   let keys: string[] = []
   if (low.includes('monthly')) keys = ['career', 'love', 'health', 'money']
   else if (low.includes('career') && (low.includes('money') || low.includes('finance'))) keys = ['career', 'money']
@@ -267,11 +280,10 @@ function getSectionChart(sectionTitle: string, scores: Record<string, number[]>)
     )
   }
   if (valid.length === 2) {
-    const w = 155
     return (
-      <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 14 }}>
         {valid.map(k => (
-          <MonthlyLineChart key={k} label={k.charAt(0).toUpperCase() + k.slice(1)} data={scores[k]} color={CHART_COLORS[k]} width={w} />
+          <MonthlyLineChart key={k} label={k.charAt(0).toUpperCase() + k.slice(1)} data={scores[k]} color={CHART_COLORS[k]} width={330} />
         ))}
       </div>
     )
