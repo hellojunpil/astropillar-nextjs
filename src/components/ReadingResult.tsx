@@ -91,16 +91,20 @@ function extractWestern(data: Record<string,unknown>): WesternData | null {
   return null
 }
 
+const EMOJI_SET = '✨💼❤️💰🌿📊💡🌟⚡🏥📅🎯✅⚠️🔮🔥💫☁️'
+const EMOJI_RE = new RegExp(`[${EMOJI_SET}]`)
+const SPLIT_RE = new RegExp(`\\n(?=#{1,3} |\\*\\*[A-Z\\u00C0-\\uFFFF]|[${EMOJI_SET}])`)
+
 export function parseResult(raw: unknown): Section[] {
   if (!raw) return []
   if (typeof raw === 'string') {
-    const blocks = raw.split(/\n(?=#{1,3} |\*\*[A-Z\u00C0-\uFFFF]|[✨💼❤️💰🌿📊💡])/)
+    const blocks = raw.split(SPLIT_RE)
     return blocks.map(b => {
       const hMatch = b.match(/^#{1,3} (.+?)\n([\s\S]*)/)
       const bMatch = b.match(/^\*\*(.+?)\*\*\n?([\s\S]*)/)
-      const eMatch = b.match(/^[✨💼❤️💰🌿📊💡]\s*(.+?)\n([\s\S]*)/)
-      if (hMatch) return { title: hMatch[1].replace(/\*\*/g,'').replace(/^[✨💼❤️💰🌿📊💡]\s*/,''), content: hMatch[2].trim() }
-      if (bMatch) return { title: bMatch[1].replace(/^[✨💼❤️💰🌿📊💡]\s*/,''), content: bMatch[2].trim() }
+      const eMatch = b.match(new RegExp(`^[${EMOJI_SET}]\\s*(.+?)\\n([\\s\\S]*)`))
+      if (hMatch) return { title: hMatch[1].replace(/\*\*/g,'').replace(EMOJI_RE,'').trim(), content: hMatch[2].trim() }
+      if (bMatch) return { title: bMatch[1].replace(EMOJI_RE,'').trim(), content: bMatch[2].trim() }
       if (eMatch) return { title: eMatch[1].replace(/\s*—.*$/,'').trim(), content: eMatch[2].trim() }
       return { content: b.trim() }
     }).filter(s => s.content.length > 0)
@@ -122,25 +126,48 @@ export function parseResult(raw: unknown): Section[] {
 
 // Known section title mapping for accordion labels
 const SECTION_LABELS: Record<string,string> = {
+  'who you are today': 'Who You Are Today',
   'who you are': 'Who You Are',
   'career': 'Career & Life Path',
   'career & life path': 'Career & Life Path',
+  'career & money': 'Career & Money',
+  'career & focus': 'Career & Focus',
+  'money & opportunities': 'Money & Opportunities',
+  'money': 'Money & Opportunities',
   'love': 'Love & Relationships',
   'love & relationships': 'Love & Relationships',
   'wealth': 'Wealth & Money',
   'wealth & money': 'Wealth & Money',
-  'health': 'Health & Vitality',
+  'health': 'Health & Energy',
   'health & vitality': 'Health & Vitality',
+  'health & energy': 'Health & Energy',
   'life chapters': 'Life Chapters',
   'one thing': 'One Thing to Remember',
   'one thing to remember': 'One Thing to Remember',
+  'one thing for today': 'One Thing for Today',
+  'your chart today': 'Your Chart Today',
+  'today': "Today's Energy",
+  "today's energy": "Today's Energy",
+  'bottom line': 'Bottom Line',
+  'working in your favor': 'What\'s Working',
+  'watch out': 'Watch Out For',
+  'best timing': 'Best Timing',
+  'how to make': 'How to Make It Work',
+  'how to use': 'How to Use This Today',
+  'who you': 'Who You\'re Both Dealing With',
+  'where you work': 'Where You Work Well',
+  'where it gets': 'Where It Gets Complicated',
+  'bottom line for': 'Bottom Line',
+  'at a glance': 'At a Glance',
+  'monthly highlights': 'Monthly Highlights',
+  'strategy': 'Your Strategy',
 }
 function normalizeTitle(t: string): string {
   const low = t.toLowerCase().replace(/[^a-z& ]/g,'').trim()
   for (const [key, val] of Object.entries(SECTION_LABELS)) {
     if (low.includes(key)) return val
   }
-  return t.replace(/^[✨💼❤️💰🌿📊💡]\s*/,'').replace(/\s*—.*$/,'').trim()
+  return t.replace(EMOJI_RE,'').replace(/\s*—.*$/,'').trim()
 }
 
 const PLANET_SYMBOLS: Record<string, string> = {
