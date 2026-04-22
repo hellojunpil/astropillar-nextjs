@@ -1,66 +1,93 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
-import { apiGet } from '@/lib/api'
+import Image from 'next/image'
+import { db } from '@/lib/firebase'
+import { doc, getDoc } from 'firebase/firestore'
 import BottomNav from '@/components/BottomNav'
 
-const ZODIAC_SIGNS = [
-  { name: 'Aries', emoji: '♈', dates: 'Mar 21 – Apr 19' },
-  { name: 'Taurus', emoji: '♉', dates: 'Apr 20 – May 20' },
-  { name: 'Gemini', emoji: '♊', dates: 'May 21 – Jun 20' },
-  { name: 'Cancer', emoji: '♋', dates: 'Jun 21 – Jul 22' },
-  { name: 'Leo', emoji: '♌', dates: 'Jul 23 – Aug 22' },
-  { name: 'Virgo', emoji: '♍', dates: 'Aug 23 – Sep 22' },
-  { name: 'Libra', emoji: '♎', dates: 'Sep 23 – Oct 22' },
-  { name: 'Scorpio', emoji: '♏', dates: 'Oct 23 – Nov 21' },
-  { name: 'Sagittarius', emoji: '♐', dates: 'Nov 22 – Dec 21' },
-  { name: 'Capricorn', emoji: '♑', dates: 'Dec 22 – Jan 19' },
-  { name: 'Aquarius', emoji: '♒', dates: 'Jan 20 – Feb 18' },
-  { name: 'Pisces', emoji: '♓', dates: 'Feb 19 – Mar 20' },
+const IMG = 'https://raw.githubusercontent.com/hellojunpil/astropillar_images/main/'
+
+const HOROSCOPE_SIGNS = [
+  { name: 'Aries',       img: '01_01_aries.png',       dates: 'Mar 21 – Apr 19' },
+  { name: 'Taurus',      img: '01_02_taurus.png',      dates: 'Apr 20 – May 20' },
+  { name: 'Gemini',      img: '01_03_gemini.png',      dates: 'May 21 – Jun 20' },
+  { name: 'Cancer',      img: '01_04_cancer.png',      dates: 'Jun 21 – Jul 22' },
+  { name: 'Leo',         img: '02_01_leo.png',         dates: 'Jul 23 – Aug 22' },
+  { name: 'Virgo',       img: '02_02_virgo.png',       dates: 'Aug 23 – Sep 22' },
+  { name: 'Libra',       img: '02_03_libra.png',       dates: 'Sep 23 – Oct 22' },
+  { name: 'Scorpio',     img: '02_04_scorpio.png',     dates: 'Oct 23 – Nov 21' },
+  { name: 'Sagittarius', img: '03_01_sagittarius.png', dates: 'Nov 22 – Dec 21' },
+  { name: 'Capricorn',   img: '03_02_capricorn.png',   dates: 'Dec 22 – Jan 19' },
+  { name: 'Aquarius',    img: '03_03_aquarius.png',    dates: 'Jan 20 – Feb 18' },
+  { name: 'Pisces',      img: '03_04_pisces.png',      dates: 'Feb 19 – Mar 20' },
 ]
 
 const CHINESE_SIGNS = [
-  { name: 'Rat', emoji: '🐭', years: '1924,1936,1948,1960,1972,1984,1996,2008,2020' },
-  { name: 'Ox', emoji: '🐂', years: '1925,1937,1949,1961,1973,1985,1997,2009,2021' },
-  { name: 'Tiger', emoji: '🐯', years: '1926,1938,1950,1962,1974,1986,1998,2010,2022' },
-  { name: 'Rabbit', emoji: '🐰', years: '1927,1939,1951,1963,1975,1987,1999,2011,2023' },
-  { name: 'Dragon', emoji: '🐲', years: '1928,1940,1952,1964,1976,1988,2000,2012,2024' },
-  { name: 'Snake', emoji: '🐍', years: '1929,1941,1953,1965,1977,1989,2001,2013,2025' },
-  { name: 'Horse', emoji: '🐴', years: '1930,1942,1954,1966,1978,1990,2002,2014,2026' },
-  { name: 'Goat', emoji: '🐑', years: '1931,1943,1955,1967,1979,1991,2003,2015' },
-  { name: 'Monkey', emoji: '🐒', years: '1932,1944,1956,1968,1980,1992,2004,2016' },
-  { name: 'Rooster', emoji: '🐓', years: '1933,1945,1957,1969,1981,1993,2005,2017' },
-  { name: 'Dog', emoji: '🐕', years: '1934,1946,1958,1970,1982,1994,2006,2018' },
-  { name: 'Pig', emoji: '🐷', years: '1935,1947,1959,1971,1983,1995,2007,2019' },
+  { name: 'Rat',     img: '01_01_rat.png',     years: '2008, 1996, 1984' },
+  { name: 'Ox',      img: '01_02_ox.png',      years: '2009, 1997, 1985' },
+  { name: 'Tiger',   img: '01_03_tiger.png',   years: '2010, 1998, 1986' },
+  { name: 'Rabbit',  img: '01_04_rabbit.png',  years: '2011, 1999, 1987' },
+  { name: 'Dragon',  img: '02_01_dragon.png',  years: '2012, 2000, 1988' },
+  { name: 'Snake',   img: '02_02_snake.png',   years: '2013, 2001, 1989' },
+  { name: 'Horse',   img: '02_03_horse.png',   years: '2014, 2002, 1990' },
+  { name: 'Goat',    img: '02_04_goat.png',    years: '2015, 2003, 1991' },
+  { name: 'Monkey',  img: '03_01_monkey.png',  years: '2016, 2004, 1992' },
+  { name: 'Rooster', img: '03_02_rooster.png', years: '2017, 2005, 1993' },
+  { name: 'Dog',     img: '03_03_dog.png',     years: '2018, 2006, 1994' },
+  { name: 'Pig',     img: '03_04_pig.png',     years: '2019, 2007, 1995' },
 ]
 
 interface FortuneData {
-  fortune?: string
-  message?: string
-  summary?: string
   [key: string]: unknown
+}
+
+function getTodayKey() {
+  const d = new Date()
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
 }
 
 const todayStr = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
 
+type Mode = 'horoscope' | 'chinese'
+
 export default function TodayFortunePage() {
-  const [zodiac, setZodiac] = useState<string | null>(null)
-  const [chinese, setChinese] = useState<string | null>(null)
+  const [selected, setSelected] = useState<string | null>(null)
+  const [mode, setMode] = useState<Mode | null>(null)
   const [fortune, setFortune] = useState<FortuneData | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [step, setStep] = useState<'pick' | 'result'>('pick')
 
+  function selectSign(name: string, m: Mode) {
+    if (selected === name && mode === m) {
+      setSelected(null)
+      setMode(null)
+    } else {
+      setSelected(name)
+      setMode(m)
+    }
+  }
+
   async function fetchFortune() {
-    if (!zodiac && !chinese) return
+    if (!selected || !mode) return
     setLoading(true)
     setError('')
     try {
-      const params: Record<string, string> = {}
-      if (zodiac) params.zodiac = zodiac
-      if (chinese) params.chinese = chinese
-      const data = await apiGet<FortuneData>('/daily_fortune', params)
-      setFortune(data)
+      const dateKey = getTodayKey()
+      const signKey = selected.toLowerCase()
+      const docId = mode === 'horoscope'
+        ? `${dateKey}_horoscope_${signKey}`
+        : `${dateKey}_zodiac_${signKey}`
+      const snap = await getDoc(doc(db, 'daily_fortunes', docId))
+      if (!snap.exists()) {
+        setError('No fortune available for today. Please check back later.')
+        return
+      }
+      setFortune(snap.data() as FortuneData)
       setStep('result')
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Could not load fortune. Please try again.')
@@ -69,10 +96,7 @@ export default function TodayFortunePage() {
     }
   }
 
-  const fortuneText = fortune?.fortune || fortune?.message || fortune?.summary ||
-    (typeof fortune === 'object' && fortune !== null
-      ? Object.values(fortune).find(v => typeof v === 'string' && v.length > 30) as string
-      : null)
+  const canSubmit = !!selected && !loading
 
   return (
     <main style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 96 }}>
@@ -99,7 +123,7 @@ export default function TodayFortunePage() {
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <p style={{ fontSize: 36, marginBottom: 10 }}>🌙</p>
           <h1 className="font-display" style={{ color: '#fff', fontSize: 24, fontWeight: 600, marginBottom: 6 }}>
-            Today's Fortune
+            Today&apos;s Fortune
           </h1>
           <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>{todayStr}</p>
           <span style={{
@@ -112,26 +136,23 @@ export default function TodayFortunePage() {
         {step === 'result' && fortune ? (
           <div>
             <div className="card" style={{ marginBottom: 20 }}>
-              {zodiac && <p style={{ color: 'var(--gold)', fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>
-                {ZODIAC_SIGNS.find(z => z.name === zodiac)?.emoji} {zodiac}
-                {chinese && ` · ${CHINESE_SIGNS.find(c => c.name === chinese)?.emoji} Year of the ${chinese}`}
-              </p>}
-              {fortuneText ? (
-                <p style={{ color: '#ddd', fontSize: 15, lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{fortuneText}</p>
-              ) : (
-                <div>
-                  {Object.entries(fortune).filter(([, v]) => typeof v === 'string').map(([k, v]) => (
-                    <div key={k} style={{ marginBottom: 16 }}>
-                      <p style={{ color: 'var(--gold)', fontSize: 12, marginBottom: 6, textTransform: 'capitalize' }}>{k.replace(/_/g, ' ')}</p>
-                      <p style={{ color: '#ddd', fontSize: 14, lineHeight: 1.7 }}>{v as string}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <p style={{ color: 'var(--gold)', fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>
+                {mode === 'horoscope' ? '✦ Horoscope' : '✦ Chinese Zodiac'} · {selected}
+              </p>
+              {Object.entries(fortune)
+                .filter(([, v]) => typeof v === 'string' && (v as string).length > 0)
+                .map(([k, v]) => (
+                  <div key={k} style={{ marginBottom: 16 }}>
+                    <p style={{ color: 'var(--gold)', fontSize: 11, marginBottom: 6, textTransform: 'capitalize', letterSpacing: 1 }}>
+                      {k.replace(/_/g, ' ')}
+                    </p>
+                    <p style={{ color: '#ddd', fontSize: 14, lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{v as string}</p>
+                  </div>
+                ))}
             </div>
 
             <button
-              onClick={() => { setStep('pick'); setFortune(null); setZodiac(null); setChinese(null) }}
+              onClick={() => { setStep('pick'); setFortune(null); setSelected(null); setMode(null) }}
               style={{ width: '100%', background: 'none', border: '1px solid var(--border)', color: 'var(--text-muted)', borderRadius: 50, padding: '12px', fontSize: 14, cursor: 'pointer', marginBottom: 16 }}
             >
               ← Check Another Sign
@@ -150,43 +171,49 @@ export default function TodayFortunePage() {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
 
-            {/* Western Zodiac */}
+            {/* Horoscope */}
             <div>
               <p style={{ color: 'var(--text-muted)', fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 12 }}>
-                Western Zodiac Sign
+                Horoscope
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
-                {ZODIAC_SIGNS.map(s => (
-                  <button key={s.name} type="button" onClick={() => setZodiac(zodiac === s.name ? null : s.name)} style={{
-                    background: zodiac === s.name ? 'rgba(201,168,76,0.15)' : '#0f1829',
-                    border: `1px solid ${zodiac === s.name ? 'var(--gold)' : 'var(--border)'}`,
-                    borderRadius: 10, padding: '10px 6px', cursor: 'pointer',
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                  }}>
-                    <span style={{ fontSize: 18 }}>{s.emoji}</span>
-                    <span style={{ color: zodiac === s.name ? 'var(--gold)' : '#fff', fontSize: 11, fontWeight: 600 }}>{s.name}</span>
-                  </button>
-                ))}
+                {HOROSCOPE_SIGNS.map(s => {
+                  const isSelected = selected === s.name && mode === 'horoscope'
+                  return (
+                    <button key={s.name} type="button" onClick={() => selectSign(s.name, 'horoscope')} style={{
+                      background: isSelected ? 'rgba(201,168,76,0.15)' : '#0f1829',
+                      border: `1px solid ${isSelected ? 'var(--gold)' : 'var(--border)'}`,
+                      borderRadius: 10, padding: '10px 6px', cursor: 'pointer',
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                    }}>
+                      <Image src={`${IMG}${s.img}`} alt={s.name} width={32} height={32} style={{ objectFit: 'contain' }} unoptimized />
+                      <span style={{ color: isSelected ? 'var(--gold)' : '#fff', fontSize: 11, fontWeight: 600 }}>{s.name}</span>
+                    </button>
+                  )
+                })}
               </div>
             </div>
 
             {/* Chinese Zodiac */}
             <div>
               <p style={{ color: 'var(--text-muted)', fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 12 }}>
-                Chinese Zodiac Sign <span style={{ textTransform: 'none', letterSpacing: 0, fontSize: 10 }}>(optional)</span>
+                Chinese Zodiac
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
-                {CHINESE_SIGNS.map(s => (
-                  <button key={s.name} type="button" onClick={() => setChinese(chinese === s.name ? null : s.name)} style={{
-                    background: chinese === s.name ? 'rgba(167,139,250,0.15)' : '#0f1829',
-                    border: `1px solid ${chinese === s.name ? '#a78bfa' : 'var(--border)'}`,
-                    borderRadius: 10, padding: '10px 6px', cursor: 'pointer',
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                  }}>
-                    <span style={{ fontSize: 18 }}>{s.emoji}</span>
-                    <span style={{ color: chinese === s.name ? '#a78bfa' : '#fff', fontSize: 11, fontWeight: 600 }}>{s.name}</span>
-                  </button>
-                ))}
+                {CHINESE_SIGNS.map(s => {
+                  const isSelected = selected === s.name && mode === 'chinese'
+                  return (
+                    <button key={s.name} type="button" onClick={() => selectSign(s.name, 'chinese')} style={{
+                      background: isSelected ? 'rgba(167,139,250,0.15)' : '#0f1829',
+                      border: `1px solid ${isSelected ? '#a78bfa' : 'var(--border)'}`,
+                      borderRadius: 10, padding: '10px 6px', cursor: 'pointer',
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                    }}>
+                      <Image src={`${IMG}${s.img}`} alt={s.name} width={32} height={32} style={{ objectFit: 'contain' }} unoptimized />
+                      <span style={{ color: isSelected ? '#a78bfa' : '#fff', fontSize: 11, fontWeight: 600 }}>{s.name}</span>
+                    </button>
+                  )
+                })}
               </div>
             </div>
 
@@ -194,9 +221,9 @@ export default function TodayFortunePage() {
 
             <button
               onClick={fetchFortune}
-              disabled={!zodiac || loading}
+              disabled={!canSubmit}
               className="btn-gold"
-              style={{ opacity: (!zodiac || loading) ? 0.5 : 1, cursor: (!zodiac || loading) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+              style={{ opacity: canSubmit ? 1 : 0.4, cursor: canSubmit ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
             >
               {loading ? '✦ Reading the stars...' : 'See Today\'s Fortune'}
             </button>
