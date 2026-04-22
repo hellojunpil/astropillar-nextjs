@@ -260,8 +260,7 @@ function getSectionChart(sectionTitle: string, scores: Record<string, number[]>)
   }
 
   let keys: string[] = []
-  if (low.includes('monthly')) keys = ['career', 'love', 'health', 'money']
-  else if (low.includes('career') && (low.includes('money') || low.includes('finance'))) keys = ['career', 'money']
+  if (low.includes('career') && (low.includes('money') || low.includes('finance'))) keys = ['career', 'money']
   else if (low.includes('love') || low.includes('relationship')) keys = ['love']
   else if (low.includes('health')) keys = ['health']
   else if (low.includes('wealth') || (low.includes('money') && !low.includes('career'))) keys = ['money']
