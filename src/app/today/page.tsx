@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { db } from '@/lib/firebase'
 import { doc, getDoc } from 'firebase/firestore'
+import { useAuth } from '@/hooks/useAuth'
 import BottomNav from '@/components/BottomNav'
 
 const IMG = 'https://raw.githubusercontent.com/hellojunpil/astropillar_images/main/'
@@ -85,6 +86,7 @@ const selectStyle: React.CSSProperties = {
 }
 
 export default function TodayFortunePage() {
+  const { user } = useAuth(false)
   const [bMonth, setBMonth] = useState('')
   const [bDay, setBDay] = useState('')
   const [bYear, setBYear] = useState('')
@@ -148,7 +150,10 @@ export default function TodayFortunePage() {
         <Link href="/" style={{ textDecoration: 'none' }}>
           <span className="font-display" style={{ color: 'var(--gold)', fontSize: 20, letterSpacing: 3, fontWeight: 600 }}>ASTROPILLAR</span>
         </Link>
-        <Link href="/login" style={{ color: 'var(--text-muted)', fontSize: 13, textDecoration: 'none' }}>Sign in →</Link>
+        {user
+          ? <Link href="/menu" style={{ color: 'var(--text-muted)', fontSize: 13, textDecoration: 'none' }}>{user.email?.split('@')[0]} ✦</Link>
+          : <Link href="/login" style={{ color: 'var(--text-muted)', fontSize: 13, textDecoration: 'none' }}>Sign in →</Link>
+        }
       </header>
 
       <div style={{ maxWidth: 480, margin: '0 auto', padding: '12px 20px 0' }}>
