@@ -9,37 +9,54 @@ import BottomNav from '@/components/BottomNav'
 const IMG = 'https://raw.githubusercontent.com/hellojunpil/astropillar_images/main/'
 
 const HOROSCOPE_SIGNS = [
-  { name: 'Aries',       img: '01_01_aries.png',       dates: 'Mar 21 – Apr 19' },
-  { name: 'Taurus',      img: '01_02_taurus.png',      dates: 'Apr 20 – May 20' },
-  { name: 'Gemini',      img: '01_03_gemini.png',      dates: 'May 21 – Jun 20' },
-  { name: 'Cancer',      img: '01_04_cancer.png',      dates: 'Jun 21 – Jul 22' },
-  { name: 'Leo',         img: '02_01_leo.png',         dates: 'Jul 23 – Aug 22' },
-  { name: 'Virgo',       img: '02_02_virgo.png',       dates: 'Aug 23 – Sep 22' },
-  { name: 'Libra',       img: '02_03_libra.png',       dates: 'Sep 23 – Oct 22' },
-  { name: 'Scorpio',     img: '02_04_scorpio.png',     dates: 'Oct 23 – Nov 21' },
-  { name: 'Sagittarius', img: '03_01_sagittarius.png', dates: 'Nov 22 – Dec 21' },
-  { name: 'Capricorn',   img: '03_02_capricorn.png',   dates: 'Dec 22 – Jan 19' },
-  { name: 'Aquarius',    img: '03_03_aquarius.png',    dates: 'Jan 20 – Feb 18' },
-  { name: 'Pisces',      img: '03_04_pisces.png',      dates: 'Feb 19 – Mar 20' },
+  { name: 'Aries',       img: '01_01_aries.png',       start: [3,21], end: [4,19] },
+  { name: 'Taurus',      img: '01_02_taurus.png',      start: [4,20], end: [5,20] },
+  { name: 'Gemini',      img: '01_03_gemini.png',      start: [5,21], end: [6,20] },
+  { name: 'Cancer',      img: '01_04_cancer.png',      start: [6,21], end: [7,22] },
+  { name: 'Leo',         img: '02_01_leo.png',         start: [7,23], end: [8,22] },
+  { name: 'Virgo',       img: '02_02_virgo.png',       start: [8,23], end: [9,22] },
+  { name: 'Libra',       img: '02_03_libra.png',       start: [9,23], end: [10,22] },
+  { name: 'Scorpio',     img: '02_04_scorpio.png',     start: [10,23], end: [11,21] },
+  { name: 'Sagittarius', img: '03_01_sagittarius.png', start: [11,22], end: [12,21] },
+  { name: 'Capricorn',   img: '03_02_capricorn.png',   start: [12,22], end: [1,19] },
+  { name: 'Aquarius',    img: '03_03_aquarius.png',    start: [1,20],  end: [2,18] },
+  { name: 'Pisces',      img: '03_04_pisces.png',      start: [2,19],  end: [3,20] },
 ]
 
 const CHINESE_SIGNS = [
-  { name: 'Rat',     img: '01_01_rat.png',     years: '2008, 1996, 1984' },
-  { name: 'Ox',      img: '01_02_ox.png',      years: '2009, 1997, 1985' },
-  { name: 'Tiger',   img: '01_03_tiger.png',   years: '2010, 1998, 1986' },
-  { name: 'Rabbit',  img: '01_04_rabbit.png',  years: '2011, 1999, 1987' },
-  { name: 'Dragon',  img: '02_01_dragon.png',  years: '2012, 2000, 1988' },
-  { name: 'Snake',   img: '02_02_snake.png',   years: '2013, 2001, 1989' },
-  { name: 'Horse',   img: '02_03_horse.png',   years: '2014, 2002, 1990' },
-  { name: 'Goat',    img: '02_04_goat.png',    years: '2015, 2003, 1991' },
-  { name: 'Monkey',  img: '03_01_monkey.png',  years: '2016, 2004, 1992' },
-  { name: 'Rooster', img: '03_02_rooster.png', years: '2017, 2005, 1993' },
-  { name: 'Dog',     img: '03_03_dog.png',     years: '2018, 2006, 1994' },
-  { name: 'Pig',     img: '03_04_pig.png',     years: '2019, 2007, 1995' },
+  { name: 'Rat',     img: '01_01_rat.png'     },
+  { name: 'Ox',      img: '01_02_ox.png'      },
+  { name: 'Tiger',   img: '01_03_tiger.png'   },
+  { name: 'Rabbit',  img: '01_04_rabbit.png'  },
+  { name: 'Dragon',  img: '02_01_dragon.png'  },
+  { name: 'Snake',   img: '02_02_snake.png'   },
+  { name: 'Horse',   img: '02_03_horse.png'   },
+  { name: 'Goat',    img: '02_04_goat.png'    },
+  { name: 'Monkey',  img: '03_01_monkey.png'  },
+  { name: 'Rooster', img: '03_02_rooster.png' },
+  { name: 'Dog',     img: '03_03_dog.png'     },
+  { name: 'Pig',     img: '03_04_pig.png'     },
 ]
 
-interface FortuneData {
-  [key: string]: unknown
+// base anchor: 1924 = Rat
+const CHINESE_ORDER = ['Rat','Ox','Tiger','Rabbit','Dragon','Snake','Horse','Goat','Monkey','Rooster','Dog','Pig']
+
+function getHoroscope(month: number, day: number): string {
+  for (const s of HOROSCOPE_SIGNS) {
+    const [sm, sd] = s.start
+    const [em, ed] = s.end
+    if (sm <= em) {
+      if ((month === sm && day >= sd) || (month === em && day <= ed) || (month > sm && month < em)) return s.name
+    } else {
+      // wrap around year (Capricorn: Dec22–Jan19)
+      if ((month === sm && day >= sd) || month > sm || (month === em && day <= ed) || month < em) return s.name
+    }
+  }
+  return 'Capricorn'
+}
+
+function getChineseZodiac(year: number): string {
+  return CHINESE_ORDER[((year - 1924) % 12 + 12) % 12]
 }
 
 function getTodayKey() {
@@ -54,22 +71,31 @@ const todayStr = new Date().toLocaleDateString('en-US', { weekday: 'long', month
 
 type Mode = 'horoscope' | 'chinese'
 
+interface FortuneData { [key: string]: unknown }
+
 export default function TodayFortunePage() {
+  const [birthday, setBirthday] = useState('')
   const [selected, setSelected] = useState<string | null>(null)
   const [mode, setMode] = useState<Mode | null>(null)
+  const [autoHoro, setAutoHoro] = useState<string | null>(null)
+  const [autoChinese, setAutoChinese] = useState<string | null>(null)
   const [fortune, setFortune] = useState<FortuneData | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [step, setStep] = useState<'pick' | 'result'>('pick')
 
+  function handleBirthday(val: string) {
+    setBirthday(val)
+    if (!val) { setAutoHoro(null); setAutoChinese(null); return }
+    const [y, m, d] = val.split('-').map(Number)
+    if (!y || !m || !d) return
+    setAutoHoro(getHoroscope(m, d))
+    setAutoChinese(getChineseZodiac(y))
+  }
+
   function selectSign(name: string, m: Mode) {
-    if (selected === name && mode === m) {
-      setSelected(null)
-      setMode(null)
-    } else {
-      setSelected(name)
-      setMode(m)
-    }
+    if (selected === name && mode === m) { setSelected(null); setMode(null) }
+    else { setSelected(name); setMode(m) }
   }
 
   async function fetchFortune() {
@@ -79,14 +105,9 @@ export default function TodayFortunePage() {
     try {
       const dateKey = getTodayKey()
       const signKey = selected.toLowerCase()
-      const docId = mode === 'horoscope'
-        ? `${dateKey}_horoscope_${signKey}`
-        : `${dateKey}_zodiac_${signKey}`
+      const docId = mode === 'horoscope' ? `${dateKey}_horoscope_${signKey}` : `${dateKey}_zodiac_${signKey}`
       const snap = await getDoc(doc(db, 'daily_fortunes', docId))
-      if (!snap.exists()) {
-        setError('No fortune available for today. Please check back later.')
-        return
-      }
+      if (!snap.exists()) { setError('No fortune available for today. Please check back later.'); return }
       setFortune(snap.data() as FortuneData)
       setStep('result')
     } catch (e: unknown) {
@@ -101,36 +122,26 @@ export default function TodayFortunePage() {
   return (
     <main style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 96 }}>
 
-      {/* Header */}
       <header style={{
         padding: '16px 24px', display: 'flex', justifyContent: 'space-between',
         alignItems: 'center', maxWidth: 480, margin: '0 auto',
         borderBottom: '1px solid var(--border)',
       }}>
         <Link href="/" style={{ textDecoration: 'none' }}>
-          <span className="font-display" style={{ color: 'var(--gold)', fontSize: 20, letterSpacing: 3, fontWeight: 600 }}>
-            ASTROPILLAR
-          </span>
+          <span className="font-display" style={{ color: 'var(--gold)', fontSize: 20, letterSpacing: 3, fontWeight: 600 }}>ASTROPILLAR</span>
         </Link>
-        <Link href="/login" style={{ color: 'var(--text-muted)', fontSize: 13, textDecoration: 'none' }}>
-          Sign in →
-        </Link>
+        <Link href="/login" style={{ color: 'var(--text-muted)', fontSize: 13, textDecoration: 'none' }}>Sign in →</Link>
       </header>
 
       <div style={{ maxWidth: 480, margin: '0 auto', padding: '28px 24px 0' }}>
 
-        {/* Title */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <p style={{ fontSize: 36, marginBottom: 10 }}>🌙</p>
-          <h1 className="font-display" style={{ color: '#fff', fontSize: 24, fontWeight: 600, marginBottom: 6 }}>
-            Today&apos;s Fortune
-          </h1>
+          <h1 className="font-display" style={{ color: '#fff', fontSize: 24, fontWeight: 600, marginBottom: 6 }}>Today&apos;s Fortune</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>{todayStr}</p>
-          <span style={{
-            display: 'inline-block', marginTop: 8,
-            border: '1px solid #2ecc71', color: '#2ecc71',
-            borderRadius: 20, padding: '3px 12px', fontSize: 11, fontWeight: 700,
-          }}>FREE — No login required</span>
+          <span style={{ display: 'inline-block', marginTop: 8, border: '1px solid #2ecc71', color: '#2ecc71', borderRadius: 20, padding: '3px 12px', fontSize: 11, fontWeight: 700 }}>
+            FREE — No login required
+          </span>
         </div>
 
         {step === 'result' && fortune ? (
@@ -143,74 +154,99 @@ export default function TodayFortunePage() {
                 .filter(([, v]) => typeof v === 'string' && (v as string).length > 0)
                 .map(([k, v]) => (
                   <div key={k} style={{ marginBottom: 16 }}>
-                    <p style={{ color: 'var(--gold)', fontSize: 11, marginBottom: 6, textTransform: 'capitalize', letterSpacing: 1 }}>
-                      {k.replace(/_/g, ' ')}
-                    </p>
+                    <p style={{ color: 'var(--gold)', fontSize: 11, marginBottom: 6, textTransform: 'capitalize', letterSpacing: 1 }}>{k.replace(/_/g, ' ')}</p>
                     <p style={{ color: '#ddd', fontSize: 14, lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{v as string}</p>
                   </div>
                 ))}
             </div>
-
-            <button
-              onClick={() => { setStep('pick'); setFortune(null); setSelected(null); setMode(null) }}
-              style={{ width: '100%', background: 'none', border: '1px solid var(--border)', color: 'var(--text-muted)', borderRadius: 50, padding: '12px', fontSize: 14, cursor: 'pointer', marginBottom: 16 }}
-            >
+            <button onClick={() => { setStep('pick'); setFortune(null); setSelected(null); setMode(null) }}
+              style={{ width: '100%', background: 'none', border: '1px solid var(--border)', color: 'var(--text-muted)', borderRadius: 50, padding: '12px', fontSize: 14, cursor: 'pointer', marginBottom: 16 }}>
               ← Check Another Sign
             </button>
-
             <div className="card" style={{ textAlign: 'center' }}>
               <p style={{ color: '#fff', fontWeight: 600, marginBottom: 6 }}>Want a personalized reading?</p>
-              <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 16 }}>
-                Get your full BaZi chart + Astrology reading tailored to your exact birth details.
-              </p>
-              <Link href="/login" className="btn-gold" style={{ fontSize: 14, padding: '12px 28px' }}>
-                Start for Free →
-              </Link>
+              <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 16 }}>Get your full BaZi chart + Astrology reading tailored to your exact birth details.</p>
+              <Link href="/login" className="btn-gold" style={{ fontSize: 14, padding: '12px 28px' }}>Start for Free →</Link>
             </div>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
 
-            {/* Horoscope */}
+            {/* Birthday input */}
             <div>
-              <p style={{ color: 'var(--text-muted)', fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 12 }}>
-                Horoscope
+              <p style={{ color: 'var(--text-muted)', fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 10 }}>
+                Your Birthday
               </p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+              <input
+                type="date"
+                value={birthday}
+                onChange={e => handleBirthday(e.target.value)}
+                style={{
+                  width: '100%', boxSizing: 'border-box',
+                  background: '#0f1829', border: '1px solid var(--border)',
+                  borderRadius: 12, padding: '12px 16px',
+                  color: birthday ? '#fff' : 'var(--text-muted)',
+                  fontSize: 15, outline: 'none',
+                  colorScheme: 'dark',
+                }}
+              />
+              {autoHoro && autoChinese && (
+                <p style={{ color: 'var(--gold)', fontSize: 12, marginTop: 8, textAlign: 'center' }}>
+                  ✦ {autoHoro} · Year of the {autoChinese}
+                </p>
+              )}
+            </div>
+
+            {/* Horoscope grid */}
+            <div>
+              <p style={{ color: 'var(--text-muted)', fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 14 }}>Horoscope</p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
                 {HOROSCOPE_SIGNS.map(s => {
                   const isSelected = selected === s.name && mode === 'horoscope'
+                  const isAuto = autoHoro === s.name && !(selected && mode)
+                  const highlight = isSelected || isAuto
                   return (
-                    <button key={s.name} type="button" onClick={() => selectSign(s.name, 'horoscope')} style={{
-                      background: isSelected ? 'rgba(201,168,76,0.15)' : '#0f1829',
-                      border: `1px solid ${isSelected ? 'var(--gold)' : 'var(--border)'}`,
-                      borderRadius: 10, padding: '10px 6px', cursor: 'pointer',
-                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                    }}>
-                      <Image src={`${IMG}${s.img}`} alt={s.name} width={32} height={32} style={{ objectFit: 'contain' }} unoptimized />
-                      <span style={{ color: isSelected ? 'var(--gold)' : '#fff', fontSize: 11, fontWeight: 600 }}>{s.name}</span>
+                    <button key={s.name} type="button" onClick={() => selectSign(s.name, 'horoscope')}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                      <div style={{
+                        width: 62, height: 62, borderRadius: 16,
+                        background: highlight ? 'rgba(201,168,76,0.12)' : 'rgba(255,255,255,0.04)',
+                        border: `2px solid ${isSelected ? 'var(--gold)' : isAuto ? 'rgba(201,168,76,0.5)' : 'transparent'}`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        boxShadow: highlight ? '0 0 12px rgba(201,168,76,0.3)' : 'none',
+                        transition: 'all 0.15s',
+                      }}>
+                        <Image src={`${IMG}${s.img}`} alt={s.name} width={46} height={46} style={{ objectFit: 'contain' }} unoptimized />
+                      </div>
+                      <span style={{ color: isSelected ? 'var(--gold)' : isAuto ? 'rgba(201,168,76,0.8)' : 'var(--text-muted)', fontSize: 11, fontWeight: 600 }}>{s.name}</span>
                     </button>
                   )
                 })}
               </div>
             </div>
 
-            {/* Chinese Zodiac */}
+            {/* Chinese Zodiac grid */}
             <div>
-              <p style={{ color: 'var(--text-muted)', fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 12 }}>
-                Chinese Zodiac
-              </p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+              <p style={{ color: 'var(--text-muted)', fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 14 }}>Chinese Zodiac</p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
                 {CHINESE_SIGNS.map(s => {
                   const isSelected = selected === s.name && mode === 'chinese'
+                  const isAuto = autoChinese === s.name && !(selected && mode)
+                  const highlight = isSelected || isAuto
                   return (
-                    <button key={s.name} type="button" onClick={() => selectSign(s.name, 'chinese')} style={{
-                      background: isSelected ? 'rgba(167,139,250,0.15)' : '#0f1829',
-                      border: `1px solid ${isSelected ? '#a78bfa' : 'var(--border)'}`,
-                      borderRadius: 10, padding: '10px 6px', cursor: 'pointer',
-                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                    }}>
-                      <Image src={`${IMG}${s.img}`} alt={s.name} width={32} height={32} style={{ objectFit: 'contain' }} unoptimized />
-                      <span style={{ color: isSelected ? '#a78bfa' : '#fff', fontSize: 11, fontWeight: 600 }}>{s.name}</span>
+                    <button key={s.name} type="button" onClick={() => selectSign(s.name, 'chinese')}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                      <div style={{
+                        width: 62, height: 62, borderRadius: 16,
+                        background: highlight ? 'rgba(167,139,250,0.12)' : 'rgba(255,255,255,0.04)',
+                        border: `2px solid ${isSelected ? '#a78bfa' : isAuto ? 'rgba(167,139,250,0.5)' : 'transparent'}`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        boxShadow: highlight ? '0 0 12px rgba(167,139,250,0.3)' : 'none',
+                        transition: 'all 0.15s',
+                      }}>
+                        <Image src={`${IMG}${s.img}`} alt={s.name} width={46} height={46} style={{ objectFit: 'contain' }} unoptimized />
+                      </div>
+                      <span style={{ color: isSelected ? '#a78bfa' : isAuto ? 'rgba(167,139,250,0.8)' : 'var(--text-muted)', fontSize: 11, fontWeight: 600 }}>{s.name}</span>
                     </button>
                   )
                 })}
@@ -219,13 +255,9 @@ export default function TodayFortunePage() {
 
             {error && <p style={{ color: '#ef4444', fontSize: 13, textAlign: 'center' }}>{error}</p>}
 
-            <button
-              onClick={fetchFortune}
-              disabled={!canSubmit}
-              className="btn-gold"
-              style={{ opacity: canSubmit ? 1 : 0.4, cursor: canSubmit ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
-            >
-              {loading ? '✦ Reading the stars...' : 'See Today\'s Fortune'}
+            <button onClick={fetchFortune} disabled={!canSubmit} className="btn-gold"
+              style={{ opacity: canSubmit ? 1 : 0.4, cursor: canSubmit ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              {loading ? '✦ Reading the stars...' : "See Today's Fortune"}
             </button>
 
           </div>
