@@ -184,8 +184,10 @@ const CHART_COLORS: Record<string, string> = {
   money: '#fbbf24',
 }
 
-function MonthlyLineChart({ label, data, color }: { label: string; data: number[]; color: string }) {
-  const W = 280, H = 90, PAD = { top: 10, right: 10, bottom: 22, left: 28 }
+function MonthlyLineChart({ label, data, color, width = 330 }: { label: string; data: number[]; color: string; width?: number }) {
+  const W = Math.min(width, 380)
+  const H = Math.round(W * 0.3)
+  const PAD = { top: 10, right: 8, bottom: 22, left: 26 }
   const w = W - PAD.left - PAD.right
   const h = H - PAD.top - PAD.bottom
   const min = Math.max(0, Math.min(...data) - 5)
@@ -211,55 +213,70 @@ function MonthlyLineChart({ label, data, color }: { label: string; data: number[
       return `C${px + xStep/2},${py} ${cx - xStep/2},${cy} ${cx},${cy}`
     }),
   ].join(' ')
-  const gradId = `grad_${label}`
+  const gradId = `grad_${label}_${W}`
   return (
-    <div style={{ marginBottom: 14 }}>
-      <p style={{ color: color, fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 4, fontFamily: "'Cormorant Garamond', serif" }}>{label}</p>
-      <svg width={W} height={H} style={{ display: 'block', overflow: 'visible' }}>
+    <div style={{ marginBottom: 10 }}>
+      <p style={{ color: color, fontSize: 10, fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 3, fontFamily: "'Cormorant Garamond', serif" }}>{label}</p>
+      <svg width={W} height={H} style={{ display: 'block', overflow: 'visible', maxWidth: '100%' }}>
         <defs>
           <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={color} stopOpacity="0.25" />
-            <stop offset="100%" stopColor={color} stopOpacity="0.02" />
+            <stop offset="0%" stopColor={color} stopOpacity="0.22" />
+            <stop offset="100%" stopColor={color} stopOpacity="0.01" />
           </linearGradient>
         </defs>
-        {/* Y gridlines */}
         {[0.25, 0.5, 0.75].map((frac, i) => (
           <line key={i} x1={PAD.left} x2={PAD.left + w} y1={PAD.top + h * (1 - frac)} y2={PAD.top + h * (1 - frac)} stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
         ))}
-        {/* Area fill */}
         <path d={area} fill={`url(#${gradId})`} />
-        {/* Line */}
-        <path d={line} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" />
-        {/* Dots */}
+        <path d={line} fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" />
         {pts.map((p, i) => {
           const [cx, cy] = p.split(',').map(Number)
-          return <circle key={i} cx={cx} cy={cy} r="2.5" fill={color} />
+          return <circle key={i} cx={cx} cy={cy} r="2.2" fill={color} />
         })}
-        {/* X axis labels */}
         {MONTHS_SHORT.map((m, i) => (
-          <text key={m} x={PAD.left + i * xStep} y={H - 4} textAnchor="middle" fontSize="8" fill="rgba(255,255,255,0.35)" fontFamily="'Noto Sans', sans-serif">{m}</text>
+          <text key={m} x={PAD.left + i * xStep} y={H - 3} textAnchor="middle" fontSize="7" fill="rgba(255,255,255,0.3)" fontFamily="'Noto Sans', sans-serif">{m}</text>
         ))}
-        {/* Y axis label min/max */}
-        <text x={PAD.left - 4} y={PAD.top + h} textAnchor="end" fontSize="8" fill="rgba(255,255,255,0.3)" fontFamily="'Noto Sans', sans-serif">{Math.round(min)}</text>
-        <text x={PAD.left - 4} y={PAD.top + 6} textAnchor="end" fontSize="8" fill="rgba(255,255,255,0.3)" fontFamily="'Noto Sans', sans-serif">{Math.round(max)}</text>
+        <text x={PAD.left - 3} y={PAD.top + h} textAnchor="end" fontSize="7" fill="rgba(255,255,255,0.28)" fontFamily="'Noto Sans', sans-serif">{Math.round(min)}</text>
+        <text x={PAD.left - 3} y={PAD.top + 6} textAnchor="end" fontSize="7" fill="rgba(255,255,255,0.28)" fontFamily="'Noto Sans', sans-serif">{Math.round(max)}</text>
       </svg>
     </div>
   )
 }
 
-function MonthlyTrendsCard({ scores }: { scores: Record<string, number[]> }) {
-  const entries = (['career','love','health','money'] as const).filter(k => Array.isArray(scores[k]) && scores[k].length === 12)
-  if (!entries.length) return null
-  return (
-    <div style={{ background: 'rgba(167,139,250,0.04)', border: '1px solid rgba(167,139,250,0.15)', borderRadius: 12, padding: '16px 18px', marginBottom: 20 }}>
-      <p style={{ color: 'var(--gold)', fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 16, fontFamily: "'Cormorant Garamond', serif" }}>Monthly Trends</p>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 20px' }}>
-        {entries.map(k => (
-          <MonthlyLineChart key={k} label={k.charAt(0).toUpperCase() + k.slice(1)} data={scores[k]} color={CHART_COLORS[k]} />
+// Returns chart JSX to embed inside a specific accordion section
+function getSectionChart(sectionTitle: string, scores: Record<string, number[]>): React.ReactNode | null {
+  const low = sectionTitle.toLowerCase()
+  let keys: string[] = []
+  if (low.includes('monthly')) keys = ['career', 'love', 'health', 'money']
+  else if (low.includes('career') && (low.includes('money') || low.includes('finance'))) keys = ['career', 'money']
+  else if (low.includes('love') || low.includes('relationship')) keys = ['love']
+  else if (low.includes('health')) keys = ['health']
+  else if (low.includes('wealth') || (low.includes('money') && !low.includes('career'))) keys = ['money']
+  else if (low.includes('career')) keys = ['career']
+  const valid = keys.filter(k => Array.isArray(scores[k]) && scores[k].length === 12)
+  if (!valid.length) return null
+  if (valid.length === 4) {
+    // 2×2 grid for Monthly Highlights
+    const w = 152
+    return (
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0px 8px', marginBottom: 14, padding: '10px 0 4px' }}>
+        {valid.map(k => (
+          <MonthlyLineChart key={k} label={k.charAt(0).toUpperCase() + k.slice(1)} data={scores[k]} color={CHART_COLORS[k]} width={w} />
         ))}
       </div>
-    </div>
-  )
+    )
+  }
+  if (valid.length === 2) {
+    const w = 155
+    return (
+      <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+        {valid.map(k => (
+          <MonthlyLineChart key={k} label={k.charAt(0).toUpperCase() + k.slice(1)} data={scores[k]} color={CHART_COLORS[k]} width={w} />
+        ))}
+      </div>
+    )
+  }
+  return <div style={{ marginBottom: 14 }}><MonthlyLineChart label={valid[0].charAt(0).toUpperCase() + valid[0].slice(1)} data={scores[valid[0]]} color={CHART_COLORS[valid[0]]} width={330} /></div>
 }
 
 const PLANET_SYMBOLS: Record<string, string> = {
@@ -450,7 +467,7 @@ function ScenarioButton({ birthData }: { birthData: BirthData }) {
 }
 
 // ─── Accordion section ────────────────────────────────────────────────────────
-function AccordionSection({ title, content, defaultOpen }: { title: string; content: string; defaultOpen?: boolean }) {
+function AccordionSection({ title, content, defaultOpen, chartContent }: { title: string; content: string; defaultOpen?: boolean; chartContent?: React.ReactNode }) {
   const [open, setOpen] = useState(defaultOpen ?? false)
   return (
     <div style={{ border:'1px solid rgba(201,168,76,0.2)', borderRadius:14, overflow:'hidden', marginBottom:10 }}>
@@ -464,6 +481,7 @@ function AccordionSection({ title, content, defaultOpen }: { title: string; cont
       </button>
       {open && (
         <div style={{ padding:'16px 18px', background:'var(--card)', borderTop:'1px solid rgba(201,168,76,0.12)' }}>
+          {chartContent}
           <p style={{ color:'#ddd', fontSize:14, lineHeight:1.9, whiteSpace:'pre-wrap' }}>{content}</p>
         </div>
       )}
@@ -582,11 +600,6 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
         </div>
       )}
 
-      {/* ── Monthly Trends (Yearly Reading only) ── */}
-      {data.reading_type === 'yearly' && data.monthly_scores != null && (
-        <MonthlyTrendsCard scores={data.monthly_scores as Record<string, number[]>} />
-      )}
-
       {/* ── GPT Reading ── */}
       {sections.length > 0 && (
         <div style={{ marginBottom:20 }}>
@@ -604,14 +617,22 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
             ))
           ) : (
             // All other readings: accordion
-            sections.map((s,i) => (
-              <AccordionSection
-                key={i}
-                title={s.title ? normalizeTitle(s.title) : `Section ${i+1}`}
-                content={s.content}
-                defaultOpen={i === 0}
-              />
-            ))
+            sections.map((s,i) => {
+              const normTitle = s.title ? normalizeTitle(s.title) : `Section ${i+1}`
+              const monthlyScores = (data.reading_type === 'yearly' && data.monthly_scores != null)
+                ? data.monthly_scores as Record<string, number[]>
+                : null
+              const chart = monthlyScores ? getSectionChart(normTitle, monthlyScores) : null
+              return (
+                <AccordionSection
+                  key={i}
+                  title={normTitle}
+                  content={s.content}
+                  defaultOpen={i === 0}
+                  chartContent={chart}
+                />
+              )
+            })
           )}
         </div>
       )}
