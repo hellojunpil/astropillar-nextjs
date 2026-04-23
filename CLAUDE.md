@@ -294,9 +294,9 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 
 ## 다음 세션 시작 가이드
 
-> 마지막 작업: 2026-04-23 세션56 (진행 중)
+> 마지막 작업: 2026-04-23 세션57 완료
 
-### 🔄 세션56 진행 중 — 현재 상태 (2026-04-23)
+### ✅ 세션57 완료 — 2026-04-23
 
 **완료된 작업:**
 1. **[완료]** 일간 표현 10개 전면 교체 — `get_day_master_label()` 함수 새 매핑 적용
@@ -344,9 +344,12 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
    - 상세 리포트: `D:\snap_pillar bck\result\result_20260422_1.txt`
 
 ### 다음 세션 우선순위
-1. **[버그-P1]** 랜딩 "100% Private. Never stored. Never shared." 문구 교체 (법적 리스크) ← 광고 집행 전 필수
-2. **[버그-P2]** Astrology Profile RISING 카드 "ASC" 텍스트 → 별자리 이미지 수정
-3. **[UX]** 폰트 개선 — 리딩 본문 Lora(세리프)로 교체 검토
+1. **[버그-P1]** Daily Fortune "Section 1" 파싱 버그 — GPT가 첫 헤더 전에 날짜 인트로 출력 → 백엔드 프롬프트 수정 필요
+2. **[버그-P2]** Daily Fortune AM/PM 바 차트 이중 표시 — 메인 카드 + "Who You Are Today" 아코디언 안에 중복 렌더링 → ReadingResult.tsx 조건부 숨김 처리
+3. **[버그-P3]** 랜딩 "100% Private. Never stored. Never shared." 문구 교체 (법적 리스크) ← 광고 집행 전 필수
+4. **[버그-P4]** Astrology Profile RISING 카드 "ASC" 텍스트 → 별자리 이미지 수정
+5. **[UX]** Scenario Reading 단일 장문 서사 → 4섹션 아코디언 분리 검토 (Short Answer / In-Depth / Timing / Action Steps)
+6. **[UX]** 폰트 개선 — 리딩 본문 Lora(세리프)로 교체 검토
 4. **[배포]** `firebase deploy --only firestore:rules`
 5. **[개선]** PersonPicker 저장 인물 1명일 때 auto-select
 6. **[비즈]** 크레딧 소모량 조정 검토 — Personal Fortune/Scenario/Compatibility 2크레딧, Yearly 3크레딧
