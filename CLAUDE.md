@@ -39,7 +39,7 @@ NEXT_PUBLIC_GUMROAD_URL_1=https://junpil.gumroad.com/l/gveeli
 NEXT_PUBLIC_GUMROAD_URL_5=https://junpil.gumroad.com/l/idksv
 GUMROAD_SELLER_ID=0DwFvQOjnySBKZVYvOzIJg==
 
-# GA4
+# GA4 (전 페이지 추적 중 — layout.tsx 전역 삽입, 개별 페이지 커스텀 이벤트 발송)
 NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 ```
 
