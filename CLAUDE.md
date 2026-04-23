@@ -325,6 +325,10 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 - [x] Compatibility (qewr + parkjp) — 완료
 - [x] Scenario Reading (qewr) — 완료
 - [x] QA 보고서 작성 → `D:\snap_pillar bck\result\result_20260423_1.txt` ✅ 완료
+- [x] Daily Fortune P1 버그 수정 — 날짜줄 헤더 안으로 이동 (Cloud Run revision 00180-wsl)
+- [x] QA Round 2 (test01) — Personal + Daily 신규 테스트, 보고서: `result_20260423_2.txt`
+  - P1 수정 확인 ✅
+  - 신규 발견: Personal Fortune 레이더 차트 저점 문제 (7 Killings 차트에서 전 영역 20~30점대)
 
 ### 직전 세션에서 완료한 것 (2026-04-22)
 1. **Section 1 아코디언 버그 수정** — 모든 프롬프트에 "Do NOT output any text before first header" + FIRST LINE 인스트럭션 첫 섹션 안으로 이동
@@ -344,8 +348,9 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
    - 상세 리포트: `D:\snap_pillar bck\result\result_20260422_1.txt`
 
 ### 다음 세션 우선순위
-1. **[버그-P1]** Daily Fortune "Section 1" 파싱 버그 — GPT가 첫 헤더 전에 날짜 인트로 출력 → 백엔드 프롬프트 수정 필요
-2. **[버그-P2]** Daily Fortune AM/PM 바 차트 이중 표시 — 메인 카드 + "Who You Are Today" 아코디언 안에 중복 렌더링 → ReadingResult.tsx 조건부 숨김 처리
+1. **[완료]** Daily Fortune "Section 1" 파싱 버그 — 날짜줄을 첫 헤더 안으로 이동 (revision 00180-wsl)
+2. **[버그-P2]** Daily Fortune AM/PM 바 차트 이중 표시 — 메인 카드 + "Who You Are Today" 내부 중복 렌더링 → ReadingResult.tsx 조건부 숨김 처리
+3. **[버그-P3 신규]** Personal Fortune 레이더 차트 저점 — 7 Killings 차트(test01)에서 전 영역 20~30점대. SCORES_JSON 최솟값 하한선(min 35) 규칙 추가 필요
 3. **[버그-P3]** 랜딩 "100% Private. Never stored. Never shared." 문구 교체 (법적 리스크) ← 광고 집행 전 필수
 4. **[버그-P4]** Astrology Profile RISING 카드 "ASC" 텍스트 → 별자리 이미지 수정
 5. **[UX]** Scenario Reading 단일 장문 서사 → 4섹션 아코디언 분리 검토 (Short Answer / In-Depth / Timing / Action Steps)
