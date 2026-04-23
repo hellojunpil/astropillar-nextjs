@@ -350,7 +350,7 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 ### 다음 세션 우선순위
 1. **[완료]** Daily Fortune "Section 1" 파싱 버그 — 날짜줄을 첫 헤더 안으로 이동 (revision 00180-wsl)
 2. **[완료]** Daily Fortune AM/PM 바 차트 이중 표시 수정 — "Who You Are Today" 섹션 내 중복 차트 코드 제거 (`ReadingResult.tsx` 11줄 삭제, 커밋 e808fda)
-3. **[완료]** Personal Fortune 레이더 차트 최솟값 하한선 추가 — SCORES_JSON 프롬프트에 "No individual score may fall below 35" 규칙 추가 (`main.py`, Cloud Run 배포 중)
+3. **[완료]** Personal Fortune 레이더 차트 최솟값 하한선 추가 — SCORES_JSON 프롬프트에 "No individual score may fall below 35" 규칙 추가 (`main.py`, Cloud Run revision 00182-b7v)
 3. **[버그-P3]** 랜딩 "100% Private. Never stored. Never shared." 문구 교체 (법적 리스크) ← 광고 집행 전 필수
 4. **[버그-P4]** Astrology Profile RISING 카드 "ASC" 텍스트 → 별자리 이미지 수정
 5. **[UX]** Scenario Reading 단일 장문 서사 → 4섹션 아코디언 분리 검토 (Short Answer / In-Depth / Timing / Action Steps)
