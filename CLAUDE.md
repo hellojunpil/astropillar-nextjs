@@ -85,7 +85,7 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 | `/reading/daily` | Personal Daily Fortune | ✅ | 1 Credit |
 | `/reading/yearly` | Yearly Fortune | ✅ | 1 Credit |
 | `/reading/compatibility` | Compatibility (궁합) | ✅ | 1 Credit |
-| `/reading/scenario` | Scenario Reading | ✅ | 2 Credits |
+| `/reading/scenario` | Scenario Reading | ✅ | 1 Credit |
 | `/today` | Today's Fortune (별자리+띠) | ❌ | 무료 |
 | `/buy` | Credit 구매 (Gumroad 연결) | ✅ | — |
 
@@ -237,19 +237,48 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 - ✅ k@k.com 계정으로 전체 서비스 Playwright 자동 테스트 완료
 - ✅ 상세 리포트: `D:\snap_pillar bck\result\result_20260421_1.txt`
 
-**발견된 버그 (우선순위):**
-- [P1] 랜딩 "100% Private. Never stored. Never shared." — 실제 동작과 불일치, 교체 필요
-- [P2] 하단 네비게이션 Credits 수치가 리딩 후 갱신 안 됨 (헤더와 불일치)
-- [P2] Astrology Profile RISING 카드 — 별자리 이미지 대신 "ASC" 텍스트 표시
-- [P3] PersonPicker 저장 인물 auto-select 안 됨 (클릭 1번 추가 마찰)
-- [P3] Scenario Reading이 메뉴 카드에 없음 (결과 화면에서만 접근 가능)
+### ✅ 완료 — 결과 품질 전면 개선 + QA 2차 + Scenario 융합 업그레이드 (2026-04-22)
 
-**콘텐츠 퀄리티:** Personal Fortune 결과 $1.99 대비 OVER-DELIVER 수준. 더 받아도 됨.
+**작업 완료:**
+1. **[완료]** SECTION FORMAT 전면 교체 — 모든 프롬프트에서 "Do NOT output any text before the first header" 추가
+2. **[완료]** FIRST LINE 인스트럭션 제거 — 인트로 문장을 첫 번째 섹션 설명 안으로 이동 (5개 프롬프트 전부)
+3. **[완료]** Compatibility SECTION FORMAT에 누락된 🔥 Where You Work Well Together 헤더 추가
+4. **[완료]** Yearly Fortune — Monthly Highlights 섹션 내 4개 SVG 라인 차트 (2×2 그리드)
+5. **[완료]** 차트 ≤390px 폭 제한, 아코디언 섹션 안에 포함
+6. **[완료]** normalizeTitle 키 길이 내림차순 정렬 — 구체적 키 우선 매칭
+7. **[완료]** Cloud Run 배포: revision 00173-xkc (compatibility fix), revision 00174-bkv (all prompts)
+8. **[완료]** QA 테스트 전체 완료 → `D:\snap_pillar bck\result\result_20260422_1.txt`
+9. **[완료]** Standalone Scenario Reading — BaZi+Western 완전 융합 업그레이드 (revision 00175-hdk)
+   - `/full_reading` 엔드포인트: 모든 situation 리딩에서 Western natal 데이터 fetch
+   - `build_gpt_prompt()` else 블록: western_data 있으면 "one fused eye" context_intro 생성
+   - `use_western` 플래그: `source == "basic" and western_data is not None` 조건 추가
+   - 결과: standalone 시나리오도 Sun/Moon/Rising/행성/Saturn return/Jupiter transit 전부 융합
 
-**전환율 개선 TOP 3:**
-1. 공유용 "Cosmic Identity Card" 이미지 생성 기능 — 가장 강력한 바이럴 드라이버
-2. 랜딩 → 폼 사이 리뷰/사회증거 뷰 복원
-3. 로그인 페이지에 "1 Free Credit on signup" 뱃지 추가
+**QA 최종 결과 (전 서비스 $1.99 기준):**
+- Personal Daily Fortune: ✅ PASS — BaZi+Western 10/10, 가독성 10/10
+- Yearly Fortune: ✅ PASS — 차트 포함, Monthly Highlights 정상
+- Compatibility: ✅ PASS — 내용 10/10, Section 1 버그 수정 완료
+- Scenario Reading: ✅ PASS — BaZi+Western 10/10 (업그레이드 완료), 가독성 10/10
+- Personal Fortune: ✅ PASS — 내용 10/10, Section 1 버그 수정 완료
+- **전체 서비스 5/5 PASS — 모두 10/10, $1.99 대비 3~4배 가치 over-deliver**
+
+**가격 분석 ($1.99/크레딧 기준):**
+- Personal Fortune ($1.99) → 실제 가치 $6~8 (4배 저평가)
+- Scenario Reading ($1.99) → 실제 가치 $5~7 (3.5배 저평가)
+- Compatibility ($1.99) → 실제 가치 $5~6 (3배 저평가)
+- Yearly Fortune ($3.98) → 실제 가치 $10~15 (3~4배 저평가)
+- Personal Daily ($1.99) → 실제 가치 $1.99~2.50 (적정, 단 매일 과금 구조 재검토 필요)
+- **향후 크레딧 소모량 조정 검토**: Personal Fortune/Scenario/Compatibility → 2크레딧, Yearly → 3크레딧
+
+**미수정 버그:**
+- [P1] 랜딩 "100% Private. Never stored. Never shared." — 교체 필요
+- ~~[P2] 하단 네비게이션 Credits 수치 갱신 안 됨~~ ✅ 수정 완료 (커밋 1d9c82f)
+- [P2] Astrology Profile RISING 카드 "ASC" 텍스트 → 별자리 이미지
+- [P3] PersonPicker 저장 인물 auto-select 안 됨
+
+**향후 개선 사항 (버그 아님):**
+- 각 섹션 상단 TL;DR 콜아웃 박스 추가
+- Personal Daily — 구독 모델 검토 ($9.99/월 무제한 Daily)
 
 ### ⏳ 확인 필요
 - [ ] ASC 이미지 로드 실패 원인 — `r_cancer.svg` 파일 존재 여부 및 키 파싱 확인
@@ -257,7 +286,7 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 ### 📋 남은 작업
 - [ ] `firebase deploy --only firestore:rules` — Firebase CLI 설치 후 실행 (`npm install -g firebase-tools`)
 - [ ] Vercel 환경변수 세팅 확인 (`NEXT_PUBLIC_FIREBASE_APP_ID`, `NEXT_PUBLIC_GOOGLE_CLIENT_ID`)
-- [ ] 하단 네비게이션 Credits 갱신 버그 수정
+- [x] 하단 네비게이션 Credits 갱신 버그 수정 ✅ (AuthContext로 전역 상태 공유, 커밋 1d9c82f)
 - [ ] "Never stored." 문구 교체
 - [ ] PersonPicker 저장 인물 1명일 때 auto-select
 
@@ -265,65 +294,50 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 
 ## 다음 세션 시작 가이드
 
-> 마지막 작업: 2026-04-22 (진행 중)
+> 마지막 작업: 2026-04-23 세션56 (진행 중)
 
-### 🔄 현재 작업 중 (2026-04-22) — 결과 품질 전면 개선
+### 🔄 세션56 진행 중 — 현재 상태 (2026-04-23)
 
-**작업 목표:**
-- Today's Fortune 제외 전 서비스 결과를 아코디언 형태로, BaZi+서양 점성술 융합, 영어, 18세 미국인 기준 쉽게 읽힘, 명확한 표현
-- Personal Daily Fortune 섹션 구조를 Personal Fortune과 동일하게 맞추기
-- Scenario Reading은 아코디언 미적용 (일반 텍스트)
-- 완료 후 전체 서비스 QA 테스트 → `D:\snap_pillar bck\result\result_20260422_1.txt` 저장
+**완료된 작업:**
+1. **[완료]** 일간 표현 10개 전면 교체 — `get_day_master_label()` 함수 새 매핑 적용
+   - 甲→Bold Wood, 乙→Graceful Wood, 丙→Blazing Fire, 丁→Glowing Fire, 戊→Steady Earth, 己→Grounded Earth, 庚→Forged Metal, 辛→Pure Metal, 壬→Vast Water, 癸→Still Water
+   - 모든 프롬프트 예시 "Fierce Metal" → "Forged Metal", "Flowing Wood" → "Graceful Wood" 등 전부 교체
+2. **[완료]** Personal Fortune 그래프 추가 — 육각 RadarChart(Love/Career/Wealth/Health/Vitality/Life) + LuckCycleBarChart
+   - SCORES_JSON 지시어 프롬프트에 추가 + 백엔드 파싱 로직 추가
+3. **[완료]** Personal Daily Fortune 그래프 추가 — 육각 RadarChart + AmPmBarChart(오전/오후)
+   - SCORES_JSON 지시어 프롬프트에 추가 + 백엔드 파싱 로직 추가
+4. **[완료]** Yearly SCORES_JSON 일관성 규칙 추가 — 텍스트 긍정 → 점수 높게, 부정 → 낮게 강제
+5. **[완료]** 일간 표현 Bold 처리 (프론트엔드) — `RichText` 컴포넌트로 10개 표현 골드 bold 렌더링
+6. **[완료]** 별자리 카드 뉴스 엑셀 12개 — A열 일간 표현 전면 교체 (120개 셀)
 
-**변경 완료:**
-1. **[완료]** `main.py` - `build_personal_daily_prompt` 섹션 구조 개선 (✨ 섹션으로 통일, ⚡ Today's Energy 통합)
-2. **[완료]** `main.py` - Yearly Fortune 중복 💼 이모지 수정 (💼 Career & Study → 📊 Career & Learning, 🏥 → 🌿)
-3. **[완료]** `main.py` - 모든 시스템 프롬프트에 "18-year-old American" 가독성 규칙 추가
-4. **[완료]** `scenario/page.tsx` - `situation` → `custom_situation` 버그 수정
-5. **[완료]** `ReadingResult.tsx` - Scenario Reading은 아코디언 대신 일반 텍스트로 표시
-6. **[완료]** 백엔드 Cloud Run 배포 (revision 00168-gt7, allow-unauthenticated 재배포)
-7. **[완료]** 프론트 Vercel 배포 (commit a64cf7a)
+**남은 작업:**
+- [ ] Cloud Run 재배포 (`gcloud run deploy snap-pillar-api --source . --region asia-northeast3 --allow-unauthenticated`)
+- [ ] Next.js git push → Vercel 자동 배포 확인
 
-**QA 테스트 진행 중:**
-- **Personal Fortune**: 캐시 결과 확인 — 내용은 우수, 단 아코디언 "Section 1"으로 뭉침 (캐시 구버전)
-- **Personal Daily Fortune**: 결과 확인 완료 — 내용 우수 (BaZi+Western 융합, 구체적, 영어), 단 "Section 1"으로 뭉침 → 원인: GPT가 이모지 헤더 없이 인라인으로 섹션명 작성
-- **Yearly Fortune**: 대기
-- **Compatibility**: 대기
-- **Scenario Reading**: 대기
-
-**근본 원인 발견 및 수정 (2026-04-22):**
-- GPT가 "Do NOT use Markdown formatting" 규칙을 이모지 헤더에도 적용해 인라인 텍스트로 처리
-- **수정**: 모든 4개 프롬프트의 FORMATTING RULES → SECTION FORMAT으로 교체
-  - `common_system_prompt` (yearly): 헤더 목록 + 예시 명시
-  - `build_compatibility_prompt`: 헤더 목록 + 예시 명시
-  - `build_personal_fortune_prompt`: 헤더 목록 + 예시 명시
-  - `build_personal_daily_prompt`: 헤더 목록 + 예시 명시
-- 백엔드 재배포 진행 중 (revision 00169+)
-
-### 직전 세션에서 완료한 것
-1. **파비콘 교체** — `favicon_ap3.png` → `src/app/icon.png`, 기존 `favicon.ico` 삭제
-2. **버그 수정: "Not enough Credits" 오작동** (`src/components/ReadingPageShell.tsx`, 5개 reading 페이지)
-   - 리딩 완료 후 credits=0 되면 결과 대신 경고 뜨던 문제 → `inProgress` prop으로 해결
-3. **버그 수정: 크레딧 UI 지연** (`src/hooks/useAuth.ts`)
-   - `refreshCredits(decrement)` — 즉시 로컬 차감 + 백그라운드 서버 동기화
-4. **Scenario 가격 수정** — 2 Credits → 1 Credit
-5. **가격 Firestore 연동** (`src/hooks/usePricing.ts` 신규, `src/lib/firestore.ts` getPricing 추가)
-   - menu, buy, 5개 reading 페이지 전부 `service_config/pricing` 문서에서 동적 로드
-   - Firestore 필드명: `personal_fortune`, `personal_daily_fortune`, `yearly`, `compatibility`, `scenario`
-6. **공유 보상 안내 문구 추가** — "Every 3 shares = 1 free Credit · Max 1 Credit per day"
-7. **firebase.json 생성** — `firebase deploy --only firestore:rules` 실행 가능
-8. **QA 테스트 1차** — k@k.com / 123456, 크레딧 1개 사용 (Personal Fortune)
-   - 상세 리포트: `D:\snap_pillar bck\result\result_20260421_1.txt`
-9. **최신 커밋**: `6d3da14` → GitHub push → Vercel 자동 배포 완료
+### 직전 세션에서 완료한 것 (2026-04-22)
+1. **Section 1 아코디언 버그 수정** — 모든 프롬프트에 "Do NOT output any text before first header" + FIRST LINE 인스트럭션 첫 섹션 안으로 이동
+2. **Compatibility SECTION FORMAT 누락 헤더 추가** — 🔥 Where You Work Well Together
+3. **Scenario Reading BaZi+Western 완전 융합** (revision 00175-hdk)
+4. **하단 네비게이션 Credits 갱신 버그 수정** — AuthContext 도입, 전역 상태 공유 (커밋 1d9c82f)
+5. **Yearly Fortune 차트 레이아웃 개선** (커밋 c4c106e)
+   - Career & Money: 가로 → 세로 배치 (Career 위, Money 아래), 각 330px 풀사이즈
+   - At a Glance: 총운(Overall) 차트 추가 — career/love/health/money 평균, 골드색
+6. **프롬프트 Fierce/Flowing 명칭 통일** — "Geng Metal" → "Fierce Metal", "Gui Water" → "Flowing Water" (revision 00176-76j)
+7. **융합 구조 전면 강화 + 비율 규칙** (revision 00177-xfp)
+   - "Option B" (BaZi 먼저 → Western → 결론) 병렬 구조 허용 조항 완전 삭제
+   - 모든 프롬프트에 구체적 ❌/✅ 예시 추가: "Fierce Metal with Scorpio Sun" 형식 강제
+   - **콘텐츠 비율 규칙**: 명리학 30% + 점성술 30% + 융합 결론 40% — 5개 서비스 전부 적용
+   - 적용 범위: situation_system_prompt / personal_fortune / yearly_western_block / western_fusion_rules / anti_parallel
+8. **QA 전체 완료** — 5개 서비스 모두 PASS, 10/10
+   - 상세 리포트: `D:\snap_pillar bck\result\result_20260422_1.txt`
 
 ### 다음 세션 우선순위
-1. **[버그-P1]** 랜딩 "100% Private. Never stored. Never shared." 문구 교체 (법적 리스크)
-2. **[버그-P2]** 하단 네비게이션 Credits 수치 갱신 안 됨 수정 (`BottomNav`가 useAuth 미연결)
-3. **[버그-P2]** Astrology Profile RISING 카드 "ASC" 텍스트 → 별자리 이미지 수정
-4. **[QA]** 나머지 서비스 테스트 — Daily, Yearly, Compatibility, Scenario, Today's Fortune, Library, Buy
-5. **[배포]** `firebase deploy --only firestore:rules` (`npm install -g firebase-tools` → `firebase login`)
-6. **[확인]** Vercel 환경변수 `NEXT_PUBLIC_FIREBASE_APP_ID`, `NEXT_PUBLIC_GOOGLE_CLIENT_ID`
-7. **[개선]** PersonPicker 저장 인물 1명일 때 auto-select (UX 마찰 제거)
+1. **[버그-P1]** 랜딩 "100% Private. Never stored. Never shared." 문구 교체 (법적 리스크) ← 광고 집행 전 필수
+2. **[버그-P2]** Astrology Profile RISING 카드 "ASC" 텍스트 → 별자리 이미지 수정
+3. **[UX]** 폰트 개선 — 리딩 본문 Lora(세리프)로 교체 검토
+4. **[배포]** `firebase deploy --only firestore:rules`
+5. **[개선]** PersonPicker 저장 인물 1명일 때 auto-select
+6. **[비즈]** 크레딧 소모량 조정 검토 — Personal Fortune/Scenario/Compatibility 2크레딧, Yearly 3크레딧
 
 ### 핵심 파일 경로
 | 파일 | 역할 |

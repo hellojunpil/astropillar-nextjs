@@ -175,6 +175,135 @@ function normalizeTitle(t: string): string {
   return t.replace(EMOJI_RE,'').replace(/\s*—.*$/,'').trim()
 }
 
+// ── Day Master Labels for bold rendering ────────────────────────────
+const DAY_MASTER_LABELS = [
+  'Bold Wood','Graceful Wood','Blazing Fire','Glowing Fire','Steady Earth',
+  'Grounded Earth','Forged Metal','Pure Metal','Vast Water','Still Water',
+]
+const DM_LABEL_RE = new RegExp(`(${DAY_MASTER_LABELS.join('|')})`, 'g')
+
+function RichText({ text }: { text: string }) {
+  const parts = text.split(DM_LABEL_RE)
+  return (
+    <p style={{ color:'#ddd', fontSize:14, lineHeight:1.9, whiteSpace:'pre-wrap', margin:0 }}>
+      {parts.map((part, i) =>
+        DAY_MASTER_LABELS.includes(part)
+          ? <strong key={i} style={{ color:'var(--gold)', fontWeight:700 }}>{part}</strong>
+          : part
+      )}
+    </p>
+  )
+}
+
+// ── Radar (Hexagonal) Chart ──────────────────────────────────────────
+const RADAR_AXES = ['Love','Career','Wealth','Health','Vitality','Life']
+const RADAR_KEYS = ['love','career','wealth','health','vitality','life']
+const RADAR_COLORS = ['#f472b6','#a78bfa','#fbbf24','#34d399','#60a5fa','#C9A84C']
+
+function RadarChart({ scores }: { scores: Record<string, number> }) {
+  const N = RADAR_AXES.length
+  const R = 72, CX = 105, CY = 105, W = 210, H = 210
+  const pt = (i: number, val: number): [number, number] => {
+    const angle = (i * 2 * Math.PI / N) - Math.PI / 2
+    const r = (val / 100) * R
+    return [CX + r * Math.cos(angle), CY + r * Math.sin(angle)]
+  }
+  const axisPts = RADAR_AXES.map((_, i) => pt(i, 100))
+  const dataPts = RADAR_KEYS.map((k, i) => pt(i, scores[k] ?? 50))
+  const poly = (pts: [number,number][]) => pts.map(([x,y]) => `${x},${y}`).join(' ')
+  const gridLevels = [0.25, 0.5, 0.75, 1.0]
+  return (
+    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', marginBottom:4 }}>
+      <svg width={W} height={H} style={{ maxWidth:'100%', overflow:'visible' }}>
+        {gridLevels.map((lv, li) => (
+          <polygon key={li} points={poly(RADAR_AXES.map((_,i) => pt(i, lv*100)))}
+            fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="1" />
+        ))}
+        {axisPts.map(([x,y], i) => (
+          <line key={i} x1={CX} y1={CY} x2={x} y2={y} stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+        ))}
+        <polygon points={poly(dataPts)} fill="rgba(201,168,76,0.15)" stroke="#C9A84C" strokeWidth="1.8" />
+        {dataPts.map(([x,y], i) => (
+          <circle key={i} cx={x} cy={y} r="3" fill={RADAR_COLORS[i]} />
+        ))}
+        {RADAR_AXES.map((label, i) => {
+          const [x, y] = pt(i, 112)
+          const anchor = x < CX - 4 ? 'end' : x > CX + 4 ? 'start' : 'middle'
+          const score = Math.round(scores[RADAR_KEYS[i]] ?? 50)
+          return (
+            <g key={i}>
+              <text x={x} y={y - 1} textAnchor={anchor} fontSize="8" fill={RADAR_COLORS[i]}
+                fontWeight="700" letterSpacing="0.8" fontFamily="'Noto Sans', sans-serif">{label.toUpperCase()}</text>
+              <text x={x} y={y + 9} textAnchor={anchor} fontSize="8" fill="rgba(255,255,255,0.55)"
+                fontFamily="'Noto Sans', sans-serif">{score}</text>
+            </g>
+          )
+        })}
+      </svg>
+    </div>
+  )
+}
+
+// ── Luck Cycle Bar Chart ─────────────────────────────────────────────
+function LuckCycleBarChart({ cycles }: { cycles: Array<{period:string, score:number}> }) {
+  if (!cycles?.length) return null
+  const BAR_W = 38, GAP = 10, H = 80, PAD = 14
+  const W = cycles.length * (BAR_W + GAP) + PAD * 2
+  return (
+    <div style={{ marginBottom:14 }}>
+      <p style={{ color:'#a78bfa', fontSize:10, fontWeight:700, letterSpacing:1.5, textTransform:'uppercase', marginBottom:4, fontFamily:"'Cormorant Garamond', serif" }}>Fortune by Luck Cycle</p>
+      <svg width={Math.min(W, 380)} height={H + 32} style={{ maxWidth:'100%', overflow:'visible' }}>
+        {cycles.map((c, i) => {
+          const barH = Math.max(4, (c.score / 100) * H)
+          const x = PAD + i * (BAR_W + GAP)
+          const [start, end] = c.period.split('-')
+          return (
+            <g key={i}>
+              <rect x={x} y={H - barH} width={BAR_W} height={barH}
+                fill="rgba(167,139,250,0.2)" stroke="#a78bfa" strokeWidth="1" rx="3" />
+              <text x={x + BAR_W/2} y={H - barH - 4} textAnchor="middle" fontSize="9"
+                fill="#a78bfa" fontWeight="700" fontFamily="'Noto Sans', sans-serif">{c.score}</text>
+              <text x={x + BAR_W/2} y={H + 12} textAnchor="middle" fontSize="8"
+                fill="rgba(255,255,255,0.45)" fontFamily="'Noto Sans', sans-serif">{start}</text>
+              <text x={x + BAR_W/2} y={H + 22} textAnchor="middle" fontSize="7"
+                fill="rgba(255,255,255,0.3)" fontFamily="'Noto Sans', sans-serif">~{end?.slice(-2)}</text>
+            </g>
+          )
+        })}
+      </svg>
+    </div>
+  )
+}
+
+// ── AM/PM Bar Chart ──────────────────────────────────────────────────
+function AmPmBarChart({ am, pm }: { am:number, pm:number }) {
+  const colors = { am:'#fbbf24', pm:'#818cf8' }
+  const H = 72, BAR_W = 52, GAP = 22
+  return (
+    <div style={{ marginBottom:14 }}>
+      <p style={{ color:'var(--text-muted)', fontSize:10, fontWeight:700, letterSpacing:1.5, textTransform:'uppercase', marginBottom:4, fontFamily:"'Cormorant Garamond', serif" }}>Today&apos;s Energy</p>
+      <svg width={BAR_W*2 + GAP + 24} height={H + 28} style={{ overflow:'visible' }}>
+        {(['am','pm'] as const).map((slot, i) => {
+          const score = slot === 'am' ? am : pm
+          const color = colors[slot]
+          const barH = Math.max(4, (score / 100) * H)
+          const x = 12 + i * (BAR_W + GAP)
+          return (
+            <g key={slot}>
+              <rect x={x} y={H - barH} width={BAR_W} height={barH}
+                fill={`${color}25`} stroke={color} strokeWidth="1.5" rx="4" />
+              <text x={x + BAR_W/2} y={H - barH - 4} textAnchor="middle" fontSize="11"
+                fill={color} fontWeight="700" fontFamily="'Noto Sans', sans-serif">{score}</text>
+              <text x={x + BAR_W/2} y={H + 14} textAnchor="middle" fontSize="11"
+                fill={color} fontWeight="600" fontFamily="'Noto Sans', sans-serif">{slot.toUpperCase()}</text>
+            </g>
+          )
+        })}
+      </svg>
+    </div>
+  )
+}
+
 // ── Monthly Line Chart ──────────────────────────────────────────────
 const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 const CHART_COLORS: Record<string, string> = {
@@ -493,7 +622,7 @@ function AccordionSection({ title, content, defaultOpen, chartContent }: { title
       {open && (
         <div style={{ padding:'16px 18px', background:'var(--card)', borderTop:'1px solid rgba(201,168,76,0.12)' }}>
           {chartContent}
-          <p style={{ color:'#ddd', fontSize:14, lineHeight:1.9, whiteSpace:'pre-wrap' }}>{content}</p>
+          <RichText text={content} />
         </div>
       )}
     </div>
@@ -611,6 +740,25 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
         </div>
       )}
 
+      {/* ── Overall Radar Chart (Personal Fortune / Daily) ── */}
+      {(data.reading_type === 'personal_fortune' || data.reading_type === 'personal_daily_fortune') &&
+        data.overall_scores != null && (
+        <div className="card" style={{ marginBottom:16, padding:'16px 16px 8px' }}>
+          <p style={{ color:'var(--gold)', fontSize:11, fontWeight:700, letterSpacing:2, textTransform:'uppercase', textAlign:'center', marginBottom:2, fontFamily:"'Cormorant Garamond', serif" }}>
+            {data.reading_type === 'personal_daily_fortune' ? "Today's Fortune" : 'Lifetime Fortune'}
+          </p>
+          <RadarChart scores={data.overall_scores as Record<string,number>} />
+          {data.reading_type === 'personal_daily_fortune' && data.am_pm_scores != null && (
+            <div style={{ display:'flex', justifyContent:'center', marginTop:4 }}>
+              <AmPmBarChart
+                am={(data.am_pm_scores as Record<string,number>).am ?? 70}
+                pm={(data.am_pm_scores as Record<string,number>).pm ?? 70}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ── GPT Reading ── */}
       {sections.length > 0 && (
         <div style={{ marginBottom:20 }}>
@@ -623,7 +771,7 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
                     {normalizeTitle(s.title)}
                   </p>
                 )}
-                <p style={{ color:'#ddd', fontSize:14, lineHeight:1.9, whiteSpace:'pre-wrap' }}>{s.content}</p>
+                <RichText text={s.content} />
               </div>
             ))
           ) : (
@@ -633,7 +781,27 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
               const monthlyScores = (data.reading_type === 'yearly' && data.monthly_scores != null)
                 ? data.monthly_scores as Record<string, number[]>
                 : null
-              const chart = monthlyScores ? getSectionChart(normTitle, monthlyScores) : null
+              let chart: React.ReactNode = monthlyScores ? getSectionChart(normTitle, monthlyScores) : null
+
+              // Personal Fortune: luck cycle bar chart inside "Life Chapters" section
+              if (!chart && data.reading_type === 'personal_fortune' && data.luck_cycles != null) {
+                const low = normTitle.toLowerCase()
+                if (low.includes('life chapter') || low.includes('luck cycle')) {
+                  chart = <LuckCycleBarChart cycles={data.luck_cycles as Array<{period:string,score:number}>} />
+                }
+              }
+
+              // Personal Daily: AM/PM bar inside "Who You Are Today" section
+              if (!chart && data.reading_type === 'personal_daily_fortune' && data.am_pm_scores != null) {
+                const low = normTitle.toLowerCase()
+                if (low.includes('who you are today') || low.includes('who you are')) {
+                  chart = <AmPmBarChart
+                    am={(data.am_pm_scores as Record<string,number>).am ?? 70}
+                    pm={(data.am_pm_scores as Record<string,number>).pm ?? 70}
+                  />
+                }
+              }
+
               return (
                 <AccordionSection
                   key={i}
