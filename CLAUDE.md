@@ -348,16 +348,35 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
    - 상세 리포트: `D:\snap_pillar bck\result\result_20260422_1.txt`
 
 ### 다음 세션 우선순위
-1. **[완료]** Daily Fortune "Section 1" 파싱 버그 — 날짜줄을 첫 헤더 안으로 이동 (revision 00180-wsl)
-2. **[완료]** Daily Fortune AM/PM 바 차트 이중 표시 수정 — "Who You Are Today" 섹션 내 중복 차트 코드 제거 (`ReadingResult.tsx` 11줄 삭제, 커밋 e808fda)
-3. **[완료]** Personal Fortune 레이더 차트 최솟값 하한선 추가 — SCORES_JSON 프롬프트에 "No individual score may fall below 35" 규칙 추가 (`main.py`, Cloud Run revision 00182-b7v)
-3. **[버그-P3]** 랜딩 "100% Private. Never stored. Never shared." 문구 교체 (법적 리스크) ← 광고 집행 전 필수
-4. **[버그-P4]** Astrology Profile RISING 카드 "ASC" 텍스트 → 별자리 이미지 수정
-5. **[UX]** Scenario Reading 단일 장문 서사 → 4섹션 아코디언 분리 검토 (Short Answer / In-Depth / Timing / Action Steps)
-6. **[UX]** 폰트 개선 — 리딩 본문 Lora(세리프)로 교체 검토
-4. **[배포]** `firebase deploy --only firestore:rules`
-5. **[개선]** PersonPicker 저장 인물 1명일 때 auto-select
-6. **[비즈]** 크레딧 소모량 조정 검토 — Personal Fortune/Scenario/Compatibility 2크레딧, Yearly 3크레딧
+
+**버그 수정 (완료된 것 포함)**
+1. **[완료]** Daily Fortune "Section 1" 파싱 버그 — 날짜줄 첫 헤더 안으로 이동 (revision 00180-wsl)
+2. **[완료]** Daily Fortune AM/PM 바 차트 이중 표시 — `ReadingResult.tsx` 11줄 삭제 (커밋 e808fda)
+3. **[완료]** Personal Fortune 레이더 차트 최솟값 35 하한선 — SCORES_JSON 프롬프트 수정 (revision 00182-b7v)
+4. **[버그]** 랜딩 "100% Private. Never stored. Never shared." 문구 교체 (법적 리스크) ← 광고 집행 전 필수
+5. **[버그]** Astrology Profile RISING 카드 "ASC" 텍스트 → 별자리 이미지 수정
+
+**UX 개선**
+6. **[UX]** Scenario Reading 단일 장문 서사 → 4섹션 아코디언 분리 (Short Answer / In-Depth / Timing / Action Steps)
+7. **[UX]** 폰트 개선 — 리딩 본문 Lora(세리프)로 교체 검토
+8. **[개선]** PersonPicker 저장 인물 1명일 때 auto-select
+
+**전환율 개선 (로그인 컨버전) — 2026-04-23 분석**
+현재 문제:
+- "Read My Stars & Fate — Free" CTA → Today's Fortune (로그인 없이 이용) → 가입 없이 이탈
+- 랜딩에 실제 리딩 결과물 미리보기 없음 (비주얼만 있고 콘텐츠 없음)
+- 플로팅 버블("My toxic trait", "When will I meet them?")이 클릭 불가 — 감정 훅 낭비
+- "Sign In" 버튼만 있고 신규 유저용 "Sign Up" 진입점 없음
+
+우선순위별 개선안:
+- **①[최우선]** 플로팅 버블 클릭 → "Enter your birth info" → 생년월일 입력 → 가입 → 답 바로 표시 (욕구 최고점에서 전환)
+- **②** 스크롤 시 실제 Personal Fortune 결과 일부를 블러 처리 + "Sign up to read yours" 오버레이
+- **③** Today's Fortune 무료 이용 시 생년월일 입력 = 계정 생성으로 연결 (가입 마찰 최소화)
+- **④** CTA 문구 변경: "✦ Read My Stars & Fate — Free" → "✦ Reveal My Chart — Free" + 아래에 `No credit card · Takes 30 seconds`
+
+**기타**
+9. **[배포]** `firebase deploy --only firestore:rules`
+10. **[비즈]** 크레딧 소모량 조정 검토 — Personal Fortune/Scenario/Compatibility 2크레딧, Yearly 3크레딧
 
 ### 핵심 파일 경로
 | 파일 | 역할 |
