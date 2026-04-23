@@ -832,17 +832,6 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
                 }
               }
 
-              // Personal Daily: AM/PM bar inside "Who You Are Today" section
-              if (!chart && data.reading_type === 'personal_daily_fortune' && data.am_pm_scores != null) {
-                const low = normTitle.toLowerCase()
-                if (low.includes('who you are today') || low.includes('who you are')) {
-                  chart = <AmPmBarChart
-                    am={(data.am_pm_scores as Record<string,number>).am ?? 70}
-                    pm={(data.am_pm_scores as Record<string,number>).pm ?? 70}
-                  />
-                }
-              }
-
               return (
                 <AccordionSection
                   key={i}
