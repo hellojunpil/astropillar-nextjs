@@ -92,8 +92,42 @@ function extractWestern(data: Record<string,unknown>): WesternData | null {
 }
 
 const EMOJI_SET = '✨💼❤️💰🌿📊💡🌟⚡🏥📅🎯✅⚠️🔮🔥💫☁️📚'
-const EMOJI_RE = new RegExp(`[${EMOJI_SET}]`)
-const SPLIT_RE = new RegExp(`\\n(?=#{1,3} |\\*\\*[A-Z\\u00C0-\\uFFFF]|[${EMOJI_SET}])`)
+const EMOJI_RE = new RegExp(`[${EMOJI_SET}]`, 'u')
+const SPLIT_RE = new RegExp(`\\n(?=#{1,3} |\\*\\*[A-Z\\u00C0-\\uFFFF]|[${EMOJI_SET}])`, 'u')
+
+// ── Chinese character annotations ────────────────────────────────────
+const GAN_LABELS: Record<string, string> = {
+  '甲':'Bold Wood','乙':'Graceful Wood','丙':'Blazing Fire','丁':'Glowing Fire',
+  '戊':'Steady Earth','己':'Grounded Earth','庚':'Forged Metal','辛':'Pure Metal',
+  '壬':'Vast Water','癸':'Still Water',
+}
+const ZHI_LABELS: Record<string, string> = {
+  '子':'Rat','丑':'Ox','寅':'Tiger','卯':'Rabbit','辰':'Dragon','巳':'Snake',
+  '午':'Horse','未':'Goat','申':'Monkey','酉':'Rooster','戌':'Dog','亥':'Pig',
+}
+const CHINESE_ANNOTATIONS: Record<string, string> = {
+  ...GAN_LABELS, ...ZHI_LABELS,
+  '比肩':'Friend Star','劫財':'Rival Star','食神':'Creative Star',
+  '傷官':'Expression Star','偏財':'Indirect Wealth','正財':'Direct Wealth',
+  '偏官':'Power Star','正官':'Direct Officer','偏印':'Shadow Wisdom','正印':'Pure Wisdom',
+  '年柱':'Year Pillar','月柱':'Month Pillar','日柱':'Day Pillar','時柱':'Hour Pillar',
+  '木':'Wood','火':'Fire','土':'Earth','金':'Metal','水':'Water',
+  '天干':'Sky Element','地支':'Earth Sign','大運':'Major Luck Cycle',
+  '流年':'Annual Luck','格局':'Chart Pattern','用神':'Guiding Star',
+  '空亡':'Void','陰':'Yin','陽':'Yang',
+}
+// Sort entries longest-first to avoid partial matches
+const ANNOTATION_ENTRIES = Object.entries(CHINESE_ANNOTATIONS).sort((a,b) => b[0].length - a[0].length)
+
+function annotateChineseChars(text: string): string {
+  let result = text
+  for (const [char, eng] of ANNOTATION_ENTRIES) {
+    // Only replace if not already followed by " (..."
+    const re = new RegExp(`${char}(?! \\()`, 'g')
+    result = result.replace(re, `${char} (${eng})`)
+  }
+  return result
+}
 
 export function parseResult(raw: unknown): Section[] {
   if (!raw) return []
@@ -102,7 +136,7 @@ export function parseResult(raw: unknown): Section[] {
     return blocks.map(b => {
       const hMatch = b.match(/^#{1,3} (.+?)\n([\s\S]*)/)
       const bMatch = b.match(/^\*\*(.+?)\*\*\n?([\s\S]*)/)
-      const eMatch = b.match(new RegExp(`^[${EMOJI_SET}]\\s*(.+?)\\n([\\s\\S]*)`))
+      const eMatch = b.match(new RegExp(`^[${EMOJI_SET}]\\s*(.+?)\\n([\\s\\S]*)`, 'u'))
       if (hMatch) return { title: hMatch[1].replace(/\*\*/g,'').replace(EMOJI_RE,'').trim(), content: hMatch[2].trim() }
       if (bMatch) return { title: bMatch[1].replace(EMOJI_RE,'').trim(), content: bMatch[2].trim() }
       if (eMatch) return { title: eMatch[1].replace(/\s*—.*$/,'').trim(), content: eMatch[2].trim() }
@@ -183,7 +217,8 @@ const DAY_MASTER_LABELS = [
 const DM_LABEL_RE = new RegExp(`(${DAY_MASTER_LABELS.join('|')})`, 'g')
 
 function RichText({ text }: { text: string }) {
-  const parts = text.split(DM_LABEL_RE)
+  const annotated = annotateChineseChars(text)
+  const parts = annotated.split(DM_LABEL_RE)
   return (
     <p style={{ color:'#ddd', fontSize:14, lineHeight:1.9, whiteSpace:'pre-wrap', margin:0 }}>
       {parts.map((part, i) =>
@@ -684,10 +719,16 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
                 <>
                   <div style={{ display:'grid', gridTemplateColumns:`repeat(${pillars.length},1fr)`, gap:10, marginBottom:16 }}>
                     {pillars.map((p,i) => (
-                      <div key={i} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6 }}>
+                      <div key={i} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
                         <p style={{ color:'var(--text-muted)', fontSize:9, letterSpacing:1.5, textTransform:'uppercase' }}>{PILLAR_LABELS[i]}</p>
                         <Image src={ganImg(p.gan)} alt={p.gan} width={56} height={56} unoptimized style={{ borderRadius:8 }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
+                        <p style={{ color:'rgba(201,168,76,0.75)', fontSize:8, textAlign:'center', lineHeight:1.3 }}>
+                          {p.gan}{GAN_LABELS[p.gan] ? ` (${GAN_LABELS[p.gan]})` : ''}
+                        </p>
                         <Image src={zhiImg(p.zhi)} alt={p.zhi} width={56} height={56} unoptimized style={{ borderRadius:8 }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
+                        <p style={{ color:'rgba(170,170,170,0.7)', fontSize:8, textAlign:'center', lineHeight:1.3 }}>
+                          {p.zhi}{ZHI_LABELS[p.zhi] ? ` (${ZHI_LABELS[p.zhi]})` : ''}
+                        </p>
                       </div>
                     ))}
                   </div>

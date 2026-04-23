@@ -200,7 +200,7 @@ export default function LandingPage() {
           {/* Background image */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="https://raw.githubusercontent.com/hellojunpil/astropillar_images/main/p_1_main.webp"
+            src="/home.png"
             alt=""
             style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', objectPosition:'center 25%', zIndex:1 }}
           />
