@@ -310,9 +310,21 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 5. **[완료]** 일간 표현 Bold 처리 (프론트엔드) — `RichText` 컴포넌트로 10개 표현 골드 bold 렌더링
 6. **[완료]** 별자리 카드 뉴스 엑셀 12개 — A열 일간 표현 전면 교체 (120개 셀)
 
-**남은 작업:**
-- [ ] Cloud Run 재배포 (`gcloud run deploy snap-pillar-api --source . --region asia-northeast3 --allow-unauthenticated`)
-- [ ] Next.js git push → Vercel 자동 배포 확인
+7. **[완료]** QA 수정사항 (2026-04-23 세션56 추가작업):
+   - Compatibility 페이지 — 인라인 Add Person 폼 추가 (Library 이동 없이 직접 추가 가능)
+   - Yearly 아코디언 버그 수정 — SPLIT_RE/eMatch에 `u` 플래그 추가 (non-BMP 이모지 파싱 실패 → 단일 Section 1 표시 버그 수정)
+   - 한자 영어 병기 — BaZi 차트 이미지 아래 `甲 (Bold Wood)` / `子 (Rat)` 형식 라벨 추가, RichText 한자 annotation 함수 추가
+   - 랜딩 페이지 이미지 교체 — p_1_main.webp → home.png (로컬 파일)
+
+8. **[완료]** Yearly 섹션명 중복 수정 — "Career & Learning" → "Growth & Learning" (Cloud Run revision 00178-dz9)
+
+**세션57 QA 진행상황 (2026-04-23):**
+- [x] Personal Fortune (qewr) — 완료 (이전 세션)
+- [x] Daily Fortune (qewr) — 완료 (이전 세션)
+- [x] Yearly Fortune (qewr) — 완료, "Career & Learning" 중복 버그 발견 및 수정
+- [x] Compatibility (qewr + parkjp) — 완료
+- [x] Scenario Reading (qewr) — 완료
+- [x] QA 보고서 작성 → `D:\snap_pillar bck\result\result_20260423_1.txt` ✅ 완료
 
 ### 직전 세션에서 완료한 것 (2026-04-22)
 1. **Section 1 아코디언 버그 수정** — 모든 프롬프트에 "Do NOT output any text before first header" + FIRST LINE 인스트럭션 첫 섹션 안으로 이동
