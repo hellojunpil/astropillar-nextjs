@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { apiPost } from '@/lib/api'
 import { BirthData } from './BirthForm'
+import { usePricing } from '@/hooks/usePricing'
 
 const GH = 'https://raw.githubusercontent.com/hellojunpil/astropillar_images/main/'
 
@@ -742,6 +743,8 @@ function ShareButton({ userEmail }: { userEmail: string }) {
 
 function ScenarioButton({ birthData }: { birthData: BirthData }) {
   const router = useRouter()
+  const pricing = usePricing()
+  const scenarioCost = pricing.scenario
   const [open, setOpen] = useState(false)
   const [question, setQuestion] = useState('')
   function handleGo() {
@@ -766,7 +769,7 @@ function ScenarioButton({ birthData }: { birthData: BirthData }) {
       <div style={{ display:'flex', gap:8 }}>
         <button onClick={()=>setOpen(false)} style={{ flex:1, background:'none', border:'1px solid var(--border)', borderRadius:50, color:'var(--text-muted)', fontSize:13, padding:10, cursor:'pointer' }}>Cancel</button>
         <button onClick={handleGo} disabled={!question.trim()} style={{ flex:2, background:'#a78bfa', border:'none', borderRadius:50, color:'#fff', fontSize:14, fontWeight:700, padding:10, cursor:'pointer', opacity:!question.trim()?0.5:1 }}>
-          Analyze <span style={{ background:'rgba(22,33,62,0.4)', borderRadius:20, padding:'2px 8px', fontSize:12 }}>2 Credits</span>
+          Analyze <span style={{ background:'rgba(22,33,62,0.4)', borderRadius:20, padding:'2px 8px', fontSize:12 }}>{scenarioCost} {scenarioCost === 1 ? 'Credit' : 'Credits'}</span>
         </button>
       </div>
     </div>
