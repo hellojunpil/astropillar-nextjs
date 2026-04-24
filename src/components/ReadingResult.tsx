@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { apiPost } from '@/lib/api'
 import { BirthData } from './BirthForm'
@@ -335,6 +335,138 @@ function AmPmBarChart({ am, pm }: { am:number, pm:number }) {
           )
         })}
       </svg>
+    </div>
+  )
+}
+
+// ── Wu Xing (Five Elements) Relationship Chart ───────────────────────
+function WuXingChart({ soulElement, wood, fire, earth, metal, water }: {
+  soulElement: string; wood: number; fire: number; earth: number; metal: number; water: number
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    const W = canvas.width, H = canvas.height
+    const cx = W / 2, cy = H / 2
+    const R = 110
+
+    const elements = [
+      { name: 'Wood',  hanja: '木', color: '#4CAF50', score: wood  },
+      { name: 'Fire',  hanja: '火', color: '#F44336', score: fire  },
+      { name: 'Earth', hanja: '土', color: '#FF9800', score: earth },
+      { name: 'Metal', hanja: '金', color: '#9E9E9E', score: metal },
+      { name: 'Water', hanja: '水', color: '#2196F3', score: water },
+    ]
+
+    const positions = elements.map((_, i) => {
+      const angle = (i * 2 * Math.PI / 5) - Math.PI / 2
+      return { x: cx + R * Math.cos(angle), y: cy + R * Math.sin(angle) }
+    })
+
+    const totalScore = (wood + fire + earth + metal + water) || 1
+    const nodeRadius = (score: number) => 18 + (score / totalScore) * 70
+
+    const drawArrow = (fromIdx: number, toIdx: number, color: string, isDashed: boolean) => {
+      const from = positions[fromIdx], to = positions[toIdx]
+      const rFrom = nodeRadius(elements[fromIdx].score), rTo = nodeRadius(elements[toIdx].score)
+      const angle = Math.atan2(to.y - from.y, to.x - from.x)
+      const startX = from.x + rFrom * Math.cos(angle), startY = from.y + rFrom * Math.sin(angle)
+      const endX = to.x - (rTo + 5) * Math.cos(angle), endY = to.y - (rTo + 5) * Math.sin(angle)
+
+      ctx.beginPath()
+      ctx.setLineDash(isDashed ? [5, 4] : [])
+      ctx.strokeStyle = color
+      ctx.lineWidth = isDashed ? 1.5 : 2
+      ctx.globalAlpha = 0.75
+      ctx.moveTo(startX, startY)
+      ctx.lineTo(endX, endY)
+      ctx.stroke()
+
+      ctx.globalAlpha = 0.9
+      ctx.setLineDash([])
+      ctx.beginPath()
+      ctx.fillStyle = color
+      ctx.save()
+      ctx.translate(endX, endY)
+      ctx.rotate(angle)
+      ctx.moveTo(0, 0)
+      ctx.lineTo(-8, 4)
+      ctx.lineTo(-8, -4)
+      ctx.closePath()
+      ctx.fill()
+      ctx.restore()
+      ctx.globalAlpha = 1
+    }
+
+    ctx.clearRect(0, 0, W, H)
+
+    ctx.beginPath()
+    positions.forEach((p, i) => { if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y) })
+    ctx.closePath()
+    ctx.strokeStyle = 'rgba(200,168,76,0.15)'
+    ctx.lineWidth = 1
+    ctx.setLineDash([3, 4])
+    ctx.stroke()
+    ctx.setLineDash([])
+
+    ;[0, 1, 2, 3, 4].forEach(i => drawArrow(i, (i + 1) % 5, '#4CAF50', false))
+    ;([[0,2],[2,4],[4,1],[1,3],[3,0]] as [number,number][]).forEach(([a, b]) => drawArrow(a, b, '#F44336', true))
+
+    elements.forEach((el, i) => {
+      const p = positions[i]
+      const r = nodeRadius(el.score)
+
+      const grd = ctx.createRadialGradient(p.x, p.y, r * 0.3, p.x, p.y, r * 1.5)
+      grd.addColorStop(0, el.color + '40')
+      grd.addColorStop(1, 'transparent')
+      ctx.beginPath()
+      ctx.arc(p.x, p.y, r * 1.5, 0, Math.PI * 2)
+      ctx.fillStyle = grd
+      ctx.fill()
+
+      ctx.beginPath()
+      ctx.arc(p.x, p.y, r, 0, Math.PI * 2)
+      ctx.fillStyle = '#16213E'
+      ctx.fill()
+      ctx.strokeStyle = el.color
+      ctx.lineWidth = 2
+      ctx.stroke()
+
+      ctx.fillStyle = el.color
+      ctx.font = `bold ${Math.round(r * 0.75)}px serif`
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText(el.hanja, p.x, p.y - r * 0.1)
+
+      ctx.fillStyle = '#D7D7D9'
+      ctx.font = `${Math.round(r * 0.32)}px Arial`
+      ctx.fillText(el.name, p.x, p.y + r * 0.52)
+
+      if (el.name === soulElement) {
+        ctx.fillStyle = '#FFD700'
+        ctx.font = `bold ${Math.round(r * 0.32)}px Arial`
+        ctx.fillText('★ You', p.x, p.y + r + 12)
+      }
+    })
+  }, [soulElement, wood, fire, earth, metal, water])
+
+  return (
+    <div style={{ width: '100%', maxWidth: 320, margin: '0 auto' }}>
+      <canvas ref={canvasRef} width={320} height={320} style={{ width: '100%', height: 'auto', display: 'block' }} />
+      <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginTop: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'Arial', fontSize: 11, color: '#D7D7D9' }}>
+          <div style={{ width: 20, height: 2, borderRadius: 2, background: '#4CAF50' }} />
+          Nourishes
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'Arial', fontSize: 11, color: '#D7D7D9' }}>
+          <div style={{ width: 20, height: 2, borderRadius: 2, background: '#F44336' }} />
+          Restrains
+        </div>
+      </div>
     </div>
   )
 }
@@ -686,6 +818,13 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
   const explainUrl = `/explain?day_gan=${dayGanKey}&element=${dayElement}&sun=${sunSign}`
   const hasExplainData = dayGanKey || dayElement || sunSign
 
+  const woodScore  = (data.wood_points  as number) || 0
+  const fireScore  = (data.fire_points  as number) || 0
+  const earthScore = (data.earth_points as number) || 0
+  const metalScore = (data.metal_points as number) || 0
+  const waterScore = (data.water_points as number) || 0
+  const soulElement = dayElement ? dayElement.charAt(0).toUpperCase() + dayElement.slice(1) : ''
+
   const TABS = [
     { key:'bazi', label:'BaZi Chart' },
     { key:'elements', label:'Elements' },
@@ -762,6 +901,16 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
                     </div>
                     <p style={{ color:'var(--text-muted)', fontSize:13, lineHeight:1.7, fontStyle:'italic' }}>{ELEMENT_DESC[dayElement]}</p>
                   </div>
+
+                  {/* Wu Xing Relationship Chart */}
+                  <div style={{ background:'rgba(22,33,62,0.5)', border:'1px solid rgba(201,168,76,0.15)', borderRadius:12, padding:'16px 12px 12px' }}>
+                    <p style={{ color:'var(--text-muted)', fontSize:10, letterSpacing:2, textTransform:'uppercase', marginBottom:12, textAlign:'center' }}>Five Elements · Relationships</p>
+                    <WuXingChart
+                      soulElement={soulElement}
+                      wood={woodScore} fire={fireScore} earth={earthScore} metal={metalScore} water={waterScore}
+                    />
+                  </div>
+
                   {hasExplainData && (
                     <Link href={explainUrl} style={{ textAlign:'center', background:'rgba(201,168,76,0.08)', border:'1px solid rgba(201,168,76,0.3)', borderRadius:10, padding:'10px 16px', color:'var(--gold)', fontSize:13, textDecoration:'none', display:'block' }}>
                       Explore all Five Elements →
