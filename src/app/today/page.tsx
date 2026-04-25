@@ -216,14 +216,22 @@ export default function TodayFortunePage() {
               <p style={{ color: 'var(--gold)', fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>
                 {mode === 'horoscope' ? '✦ Horoscope' : '✦ Chinese Zodiac'} · {selected}
               </p>
-              {Object.entries(fortune)
-                .filter(([, v]) => typeof v === 'string' && (v as string).length > 0)
-                .map(([k, v]) => (
-                  <div key={k} style={{ marginBottom: 16 }}>
-                    <p style={{ color: 'var(--gold)', fontSize: 11, marginBottom: 6, textTransform: 'capitalize', letterSpacing: 1 }}>{k.replace(/_/g, ' ')}</p>
-                    <p style={{ color: '#ddd', fontSize: 14, lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{v as string}</p>
-                  </div>
-                ))}
+              {fortune.intro && (
+                <p style={{ color: 'var(--text-muted)', fontSize: 13, fontStyle: 'italic', marginBottom: 16, lineHeight: 1.7 }}>
+                  {fortune.intro as string}
+                </p>
+              )}
+              {fortune.fortune && (
+                <p style={{ color: '#ddd', fontSize: 14, lineHeight: 1.9, marginBottom: 16, whiteSpace: 'pre-wrap' }}>
+                  {(fortune.fortune as string).replace(/^\[[\w\s]+\]\s*/i, '')}
+                </p>
+              )}
+              {fortune.tip && (
+                <div style={{ background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.25)', borderRadius: 10, padding: '10px 14px' }}>
+                  <p style={{ color: 'var(--gold)', fontSize: 11, letterSpacing: 1, marginBottom: 4 }}>TIP FOR TODAY</p>
+                  <p style={{ color: '#ddd', fontSize: 13, lineHeight: 1.7 }}>{fortune.tip as string}</p>
+                </div>
+              )}
             </div>
             <button onClick={() => { setStep('pick'); setFortune(null); setSelected(null); setMode(null) }}
               style={{ width: '100%', background: 'none', border: '1px solid var(--border)', color: 'var(--text-muted)', borderRadius: 50, padding: '12px', fontSize: 14, cursor: 'pointer', marginBottom: 16 }}>
