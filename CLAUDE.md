@@ -294,7 +294,48 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 
 ## 다음 세션 시작 가이드
 
-> 마지막 작업: 2026-04-23 세션57 완료
+> 마지막 작업: 2026-04-25 세션59 진행 중
+
+### ⏳ 세션59 진행 중 — 2026-04-25
+
+**작업 목록 (10개):**
+1. ✅ **Daily V3 업그레이드**: `/api/v2/` → `/api/v3/horoscope/daily/personal` + V3 필드 파싱
+2. ✅ **RISING 버그**: `symbol="ASC"` → `ZODIAC_SYMBOL[ascSign] ?? '↑'` 교체 완료
+3. ✅ **BaZi Synastry**: `fetch_bazi_synastry()` + `build_compatibility_prompt` synastry_data 파라미터 추가
+4. ✅ **BaZi Flow + Yearly 그래프 차별화**: `fetch_bazi_flow()` 추가, `build_gpt_prompt` 연동, SCORES_JSON 차별화 지시 추가
+5. ✅ **Moon Phase → Today's Fortune**: `/moon_phase` GET 엔드포인트 + today/page.tsx 달 위상 카드 추가
+6. ⏳ **SVG Chart**: `/api/v1/natal/chart/` → Personal Fortune/Daily/Yearly 차트 뷰어
+7. ✅ **Lifespan Chart**: `fetch_lifespan()` + `LifespanChart` 컴포넌트 (2줄 레이아웃), LuckCycleBarChart 폴백 유지
+8. ✅ **추가a**: SPLIT_RE `\\n+` 수정 + `\r\n` 정규화 (parseResult 내)
+9. ✅ **추가b**: "Your Sign" (별자리×일간) BaZi Chart 탭 내부 표시
+10. ⏳ **최종 테스트**: astropillar.com k@k.com 로그인 후 전 서비스 테스트
+
+---
+
+> 마지막 작업: 2026-04-24 세션58 완료
+
+### ✅ 세션58 완료 — 2026-04-24
+
+**완료된 작업:**
+1. **[완료]** Elements 탭 — 오행 관계 차트(WuXingChart) 추가 (커밋 14cd90e)
+   - 캔버스 기반 오각형 차트: 상생(초록 실선) / 상극(빨강 점선) 화살표
+   - 노드 크기 `wood_points` / `fire_points` 등 API 점수에 비례 (없으면 균등)
+   - Day Master element에 ★ You 골드 마커 표시
+   - "Five Elements · Relationships" 레이블로 Day Master 카드 아래 배치
+
+2. **[완료]** 프롬프트 30/30/40 규칙 전수 적용 — 5개 서비스 27개 섹션 전부 (Cloud Run revision 00184-4xj)
+   - 적용 방식: 각 섹션 설명 끝에 `SECTION RATIO` 지시어 추가
+   - Personal Fortune: ✨Who You Are / 💼Career / ❤️Love / 💰Wealth / 🌿Health / 📊Life Chapters (6개)
+   - Personal Daily: system prompt CONTENT RATIO RULE + ✨Who You Are Today / 💼Career / ❤️Love / 💰Money / 🌿Health (6개)
+   - Yearly Fortune: ✨at a Glance / 💼Career&Money / ❤️Love / 🌿Health / 📊Growth / 📅Monthly Highlights / 💡Strategy (7개)
+   - Scenario Reading (use_western): 🎯What / ✅Working / ⚠️Watch Out / 📅Timing / 💡How / 🔮Bottom Line (6개)
+   - Compatibility: FUSION REMINDER + ✨Who / 🔥Works Well / ⚡Complicated / 💫Bottom Line (5개)
+   - **규칙**: ~30% BaZi + ~30% Western + ~40% 두 시스템만 합쳤을 때 보이는 융합 진실. 병렬 서술 절대 금지.
+
+3. **[완료]** Scenario 버튼 크레딧 수치 Firebase 연동 (커밋 ee48564)
+   - `ScenarioButton` 내 `usePricing()` 훅 추가
+   - 하드코딩 "2 Credits" → `service_config/pricing.scenario` 동적 로드
+   - 1이면 "Credit" (단수), 복수면 "Credits" 자동 표기
 
 ### ✅ 세션57 완료 — 2026-04-23
 
@@ -349,17 +390,14 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 
 ### 다음 세션 우선순위
 
-**버그 수정 (완료된 것 포함)**
-1. **[완료]** Daily Fortune "Section 1" 파싱 버그 — 날짜줄 첫 헤더 안으로 이동 (revision 00180-wsl)
-2. **[완료]** Daily Fortune AM/PM 바 차트 이중 표시 — `ReadingResult.tsx` 11줄 삭제 (커밋 e808fda)
-3. **[완료]** Personal Fortune 레이더 차트 최솟값 35 하한선 — SCORES_JSON 프롬프트 수정 (revision 00182-b7v)
-4. **[버그]** 랜딩 "100% Private. Never stored. Never shared." 문구 교체 (법적 리스크) ← 광고 집행 전 필수
-5. **[버그]** Astrology Profile RISING 카드 "ASC" 텍스트 → 별자리 이미지 수정
+**버그 수정**
+1. **[버그]** 랜딩 "100% Private. Never stored. Never shared." 문구 교체 (법적 리스크) ← 광고 집행 전 필수
+2. **[버그]** Astrology Profile RISING 카드 "ASC" 텍스트 → 별자리 이미지 수정
 
 **UX 개선**
-6. **[UX]** Scenario Reading 단일 장문 서사 → 4섹션 아코디언 분리 (Short Answer / In-Depth / Timing / Action Steps)
-7. **[UX]** 폰트 개선 — 리딩 본문 Lora(세리프)로 교체 검토
-8. **[개선]** PersonPicker 저장 인물 1명일 때 auto-select
+3. **[UX]** Scenario Reading 단일 장문 서사 → 4섹션 아코디언 분리 (Short Answer / In-Depth / Timing / Action Steps)
+4. **[UX]** 폰트 개선 — 리딩 본문 Lora(세리프)로 교체 검토
+5. **[개선]** PersonPicker 저장 인물 1명일 때 auto-select
 
 **전환율 개선 (로그인 컨버전) — 2026-04-23 분석**
 현재 문제:
@@ -375,8 +413,8 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 - **④** CTA 문구 변경: "✦ Read My Stars & Fate — Free" → "✦ Reveal My Chart — Free" + 아래에 `No credit card · Takes 30 seconds`
 
 **기타**
-9. **[배포]** `firebase deploy --only firestore:rules`
-10. **[비즈]** 크레딧 소모량 조정 검토 — Personal Fortune/Scenario/Compatibility 2크레딧, Yearly 3크레딧
+6. **[배포]** `firebase deploy --only firestore:rules`
+7. **[비즈]** 크레딧 소모량 조정 검토 — Personal Fortune/Scenario/Compatibility 2크레딧, Yearly 3크레딧
 
 ### 핵심 파일 경로
 | 파일 | 역할 |
@@ -395,9 +433,13 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 결과 화면은 3개 탭으로 구성:
 1. **BaZi Chart** — 년/월/일/시 각 기둥의 천간·지지 이미지
    - 천간: `gan_[한자].png`, 지지: `zhi_[한자].png` (GitHub 이미지 레포)
-2. **Astrology Profile** — Big Three(Sun/Moon/Rising) + Inner Planets + Outer Planets 카드
+2. **Elements** — Day Master 카드 + 오행 관계 차트(WuXingChart)
+   - Day Master 원소 설명 카드 (색상/한자/설명)
+   - WuXingChart: 오각형 + 상생(초록 실선) / 상극(빨강 점선) 화살표, ★ You 마커
+   - API `*_points` 필드로 노드 크기 비례 표시
+3. **Astrology Profile** — Big Three(Sun/Moon/Rising) + Inner Planets + Outer Planets 카드
    - 별자리 SVG: `r_[sign].svg` (원본 색상, filter 없음)
-3. **Reading (GPT 해석문)** — 섹션별 아코디언
+4. **Reading (GPT 해석문)** — 섹션별 아코디언
 
 ---
 

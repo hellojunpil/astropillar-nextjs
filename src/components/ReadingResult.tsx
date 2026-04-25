@@ -94,7 +94,8 @@ function extractWestern(data: Record<string,unknown>): WesternData | null {
 
 const EMOJI_SET = '✨💼❤️💰🌿📊💡🌟⚡🏥📅🎯✅⚠️🔮🔥💫☁️📚'
 const EMOJI_RE = new RegExp(`[${EMOJI_SET}]`, 'u')
-const SPLIT_RE = new RegExp(`\\n(?=#{1,3} |\\*\\*[A-Z\\u00C0-\\uFFFF]|[${EMOJI_SET}])`, 'u')
+// \n+ handles both single and double newlines before section headers (fixes intermittent Yearly split bug)
+const SPLIT_RE = new RegExp(`\\n+(?=#{1,3} |\\*\\*[A-Z\\u00C0-\\uFFFF]|[${EMOJI_SET}])`, 'u')
 
 // ── Chinese character annotations ────────────────────────────────────
 const GAN_LABELS: Record<string, string> = {
@@ -133,7 +134,7 @@ function annotateChineseChars(text: string): string {
 export function parseResult(raw: unknown): Section[] {
   if (!raw) return []
   if (typeof raw === 'string') {
-    const blocks = raw.split(SPLIT_RE)
+    const blocks = raw.replace(/\r\n/g, '\n').split(SPLIT_RE)
     return blocks.map(b => {
       const hMatch = b.match(/^#{1,3} (.+?)\n([\s\S]*)/)
       const bMatch = b.match(/^\*\*(.+?)\*\*\n?([\s\S]*)/)
@@ -280,7 +281,77 @@ function RadarChart({ scores }: { scores: Record<string, number> }) {
   )
 }
 
-// ── Luck Cycle Bar Chart ─────────────────────────────────────────────
+// ── Lifespan Chart (0~120 에너지 커브, 2-row layout) — replaces LuckCycleBarChart ──
+function LifespanChart({ points }: { points: Array<{age:number, energy:number}> }) {
+  if (!points?.length) return null
+
+  const ROW1 = points.filter(p => p.age <= 60)
+  const ROW2 = points.filter(p => p.age > 60)
+
+  function renderRow(data: typeof points, label: string) {
+    if (!data.length) return null
+    const W = 340, H = 70, PAD = { top:8, right:6, bottom:20, left:22 }
+    const w = W - PAD.left - PAD.right
+    const h = H - PAD.top - PAD.bottom
+    const ages = data.map(p => p.age)
+    const minAge = Math.min(...ages), maxAge = Math.max(...ages)
+    const xScale = (age: number) => PAD.left + ((age - minAge) / (maxAge - minAge || 1)) * w
+    const yScale = (e: number) => PAD.top + h - (e / 100) * h
+    const pts = data.map(p => `${xScale(p.age)},${yScale(p.energy)}`)
+    const areaPath = pts.length > 1
+      ? `M${pts[0]} ${pts.slice(1).map((p, i) => {
+          const [px, py] = pts[i].split(',').map(Number)
+          const [cx, cy] = p.split(',').map(Number)
+          const mx = (px + cx) / 2
+          return `C${mx},${py} ${mx},${cy} ${cx},${cy}`
+        }).join(' ')} L${PAD.left+w},${PAD.top+h} L${PAD.left},${PAD.top+h} Z`
+      : ''
+    const linePath = pts.length > 1
+      ? `M${pts[0]} ${pts.slice(1).map((p, i) => {
+          const [px, py] = pts[i].split(',').map(Number)
+          const [cx, cy] = p.split(',').map(Number)
+          const mx = (px + cx) / 2
+          return `C${mx},${py} ${mx},${cy} ${cx},${cy}`
+        }).join(' ')}`
+      : ''
+    const gradId = `lifespan_${label.replace(/\s/g,'')}`
+    return (
+      <div key={label}>
+        <p style={{ color:'rgba(201,168,76,0.6)', fontSize:9, letterSpacing:1.5, textTransform:'uppercase', marginBottom:2 }}>Ages {label}</p>
+        <svg width={W} height={H} style={{ maxWidth:'100%', display:'block', overflow:'visible' }}>
+          <defs>
+            <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#a78bfa" stopOpacity="0.28" />
+              <stop offset="100%" stopColor="#a78bfa" stopOpacity="0.02" />
+            </linearGradient>
+          </defs>
+          {[0.25,0.5,0.75].map((f,i) => (
+            <line key={i} x1={PAD.left} x2={PAD.left+w} y1={PAD.top+h*(1-f)} y2={PAD.top+h*(1-f)} stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+          ))}
+          {areaPath && <path d={areaPath} fill={`url(#${gradId})`} />}
+          {linePath && <path d={linePath} fill="none" stroke="#a78bfa" strokeWidth="1.8" strokeLinecap="round" />}
+          {data.filter((_,i) => i % Math.ceil(data.length/8) === 0 || data.indexOf(_) === data.length-1).map(p => (
+            <text key={p.age} x={xScale(p.age)} y={H-3} textAnchor="middle" fontSize="7" fill="rgba(255,255,255,0.3)" fontFamily="'Noto Sans', sans-serif">{p.age}</text>
+          ))}
+          <text x={PAD.left-2} y={PAD.top+h} textAnchor="end" fontSize="7" fill="rgba(255,255,255,0.28)" fontFamily="'Noto Sans', sans-serif">0</text>
+          <text x={PAD.left-2} y={PAD.top+5} textAnchor="end" fontSize="7" fill="rgba(255,255,255,0.28)" fontFamily="'Noto Sans', sans-serif">100</text>
+        </svg>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ marginBottom:14 }}>
+      <p style={{ color:'#a78bfa', fontSize:10, fontWeight:700, letterSpacing:1.5, textTransform:'uppercase', marginBottom:8, fontFamily:"'Cormorant Garamond', serif" }}>Fortune by Life Chapters</p>
+      <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+        {renderRow(ROW1, '0 – 60')}
+        {renderRow(ROW2, '61 – 120')}
+      </div>
+    </div>
+  )
+}
+
+// ── Luck Cycle Bar Chart (kept as fallback if lifespan data absent) ─
 function LuckCycleBarChart({ cycles }: { cycles: Array<{period:string, score:number}> }) {
   if (!cycles?.length) return null
   const BAR_W = 38, GAP = 10, H = 80, PAD = 14
@@ -667,7 +738,7 @@ function AstrologyProfile({ western, data }: { western: WesternData | null; data
       <div style={{ display:'flex', gap:8, width:'100%' }}>
         <PlanetCardBig planet="Sun"    symbol="☀"  sign={sunSign} />
         <PlanetCardBig planet="Moon"   symbol="☽"  sign={moonSign} />
-        <PlanetCardBig planet="Rising" symbol="ASC" sign={ascSign} />
+        <PlanetCardBig planet="Rising" symbol={ZODIAC_SYMBOL[ascSign.toLowerCase().replace(/\s/g,'')] ?? '↑'} sign={ascSign} />
       </div>
       <div style={{ display:'flex', gap:8, marginTop:10 }}>
         {['Your core identity — the self you were born to express','Your inner world — emotions and what makes you feel safe','How the world sees you — your outer mask and first impression'].map((t,i) => (
@@ -738,6 +809,50 @@ function ShareButton({ userEmail }: { userEmail: string }) {
       {msg && <p style={{ color:'#aaa', fontSize:12, textAlign:'center' }}>{msg}</p>}
       <p style={{ color:'var(--text-muted)', fontSize:11, textAlign:'center' }}>Every 3 shares = 1 free Credit · Max 1 Credit per day</p>
     </div>
+  )
+}
+
+function NatalChartViewer({ birthData }: { birthData: BirthData }) {
+  const [svg, setSvg] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [open, setOpen] = useState(false)
+
+  async function loadChart() {
+    if (svg) { setOpen(true); return }
+    setLoading(true)
+    try {
+      const hourVal = birthData.hour ?? 12
+      const minVal = birthData.minute ?? 0
+      const birthtimeStr = `${hourVal}:${String(minVal).padStart(2,'0')}`
+      const res = await apiPost<{ ok: boolean; svg?: string }>('/natal_chart_svg', {
+        year: birthData.year, month: birthData.month, day: birthData.day,
+        birthtime: birthtimeStr,
+        sex: birthData.sex || 'M',
+        city: birthData.city || '',
+      })
+      if (res.ok && res.svg) { setSvg(res.svg); setOpen(true) }
+    } catch { /* silently fail */ }
+    finally { setLoading(false) }
+  }
+
+  return (
+    <>
+      <button onClick={loadChart} disabled={loading} style={{ width:'100%', background:'rgba(201,168,76,0.08)', border:'1px solid rgba(201,168,76,0.4)', color:'var(--gold)', borderRadius:50, padding:12, fontSize:14, cursor:loading?'not-allowed':'pointer', opacity:loading?0.7:1 }}>
+        {loading ? '✦ Loading chart...' : '🔭 View Birth Chart'}
+      </button>
+      {open && svg && (
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.88)', zIndex:9999, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:16 }}
+          onClick={() => setOpen(false)}>
+          <div style={{ background:'#fff', borderRadius:12, maxWidth:480, maxHeight:'85vh', overflow:'auto', padding:8 }}
+            onClick={e => e.stopPropagation()}>
+            <div dangerouslySetInnerHTML={{ __html: svg }} style={{ width:'100%' }} />
+          </div>
+          <button onClick={() => setOpen(false)} style={{ marginTop:16, color:'#fff', background:'none', border:'1px solid rgba(255,255,255,0.3)', borderRadius:50, padding:'8px 24px', cursor:'pointer', fontSize:14 }}>
+            Close
+          </button>
+        </div>
+      )}
+    </>
   )
 }
 
@@ -834,6 +949,14 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
     { key:'astrology', label:'Astrology Profile' },
   ] as const
 
+  // Your Sign: western_sun × day_master_label (e.g. ♏ Scorpio × Forged Metal)
+  const yourSignSun = ((data.western_sun as string) ?? western?.sun_sign ?? '').toLowerCase().replace(/\s/g,'')
+  const yourSignLabel = (data.day_master_label as string) ?? ''
+  const yourSignSymbol = ZODIAC_SYMBOL[yourSignSun] ?? ''
+  const yourSignText = yourSignSun && yourSignLabel
+    ? `${yourSignSymbol} ${yourSignSun.charAt(0).toUpperCase()}${yourSignSun.slice(1)} × ${yourSignLabel}`
+    : null
+
   const tabStyle = (active: boolean): React.CSSProperties => ({
     flex:1, padding:'9px 0', borderRadius:8, border:'none', cursor:'pointer',
     fontSize:12, fontWeight:600, background: active ? 'var(--gold)' : 'transparent',
@@ -874,6 +997,14 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
                       </div>
                     ))}
                   </div>
+                  {yourSignText && (
+                    <div style={{ textAlign:'center', marginBottom:12 }}>
+                      <span style={{ fontSize:9, color:'var(--text-muted)', letterSpacing:1.5, textTransform:'uppercase' }}>Your Sign</span>
+                      <p style={{ color:'var(--gold)', fontSize:13, fontWeight:700, marginTop:4, fontFamily:"'Cormorant Garamond', serif", letterSpacing:0.5 }}>
+                        {yourSignText}
+                      </p>
+                    </div>
+                  )}
                   {hasExplainData && (
                     <Link href={explainUrl} style={{ display:'block', textAlign:'center', background:'rgba(201,168,76,0.08)', border:'1px solid rgba(201,168,76,0.3)', borderRadius:10, padding:'10px 16px', color:'var(--gold)', fontSize:13, textDecoration:'none' }}>
                       What does this mean? →
@@ -976,11 +1107,15 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
                 : null
               let chart: React.ReactNode = monthlyScores ? getSectionChart(normTitle, monthlyScores) : null
 
-              // Personal Fortune: luck cycle bar chart inside "Life Chapters" section
-              if (!chart && data.reading_type === 'personal_fortune' && data.luck_cycles != null) {
+              // Personal Fortune: lifespan chart (or luck cycle fallback) inside "Life Chapters" section
+              if (!chart && data.reading_type === 'personal_fortune') {
                 const low = normTitle.toLowerCase()
                 if (low.includes('life chapter') || low.includes('luck cycle')) {
-                  chart = <LuckCycleBarChart cycles={data.luck_cycles as Array<{period:string,score:number}>} />
+                  if (data.lifespan_points != null) {
+                    chart = <LifespanChart points={data.lifespan_points as Array<{age:number,energy:number}>} />
+                  } else if (data.luck_cycles != null) {
+                    chart = <LuckCycleBarChart cycles={data.luck_cycles as Array<{period:string,score:number}>} />
+                  }
                 }
               }
 
@@ -1005,6 +1140,7 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
             <span style={{ color:'#2ecc71', fontSize:12 }}>✓ Cached result — no Credit charged</span>
           </div>
         )}
+        {birthData && <NatalChartViewer birthData={birthData} />}
         {birthData && <ScenarioButton birthData={birthData} />}
         {userEmail && <ShareButton userEmail={userEmail} />}
         <button onClick={onReset} style={{ background:'none', border:'1px solid var(--border)', color:'var(--text-muted)', borderRadius:50, padding:12, fontSize:14, cursor:'pointer' }}>

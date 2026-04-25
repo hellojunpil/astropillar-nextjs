@@ -1,11 +1,12 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { db } from '@/lib/firebase'
 import { doc, getDoc } from 'firebase/firestore'
 import { useAuth } from '@/hooks/useAuth'
 import BottomNav from '@/components/BottomNav'
+import { apiGet } from '@/lib/api'
 
 const IMG = 'https://raw.githubusercontent.com/hellojunpil/astropillar_images/main/'
 
@@ -85,6 +86,25 @@ const selectStyle: React.CSSProperties = {
   appearance: 'none' as const, WebkitAppearance: 'none' as const,
 }
 
+const MOON_PHASE_EMOJIS: Record<string, string> = {
+  'new moon': '🌑',
+  'waxing crescent': '🌒',
+  'first quarter': '🌓',
+  'waxing gibbous': '🌔',
+  'full moon': '🌕',
+  'waning gibbous': '🌖',
+  'third quarter': '🌗',
+  'last quarter': '🌗',
+  'waning crescent': '🌘',
+}
+
+interface MoonPhaseData {
+  phase?: string
+  illumination?: number | null
+  moon_age?: number | null
+  next_full_moon?: string | null
+}
+
 export default function TodayFortunePage() {
   const { user } = useAuth(false)
   const [bMonth, setBMonth] = useState('')
@@ -98,6 +118,13 @@ export default function TodayFortunePage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [step, setStep] = useState<'pick' | 'result'>('pick')
+  const [moonPhase, setMoonPhase] = useState<MoonPhaseData | null>(null)
+
+  useEffect(() => {
+    apiGet<MoonPhaseData>('/moon_phase')
+      .then(data => setMoonPhase(data))
+      .catch(() => {})
+  }, [])
 
   function handleBirthday(m: string, d: string, y: string) {
     const month = parseInt(m), day = parseInt(d), year = parseInt(y)
@@ -165,6 +192,23 @@ export default function TodayFortunePage() {
             FREE — No login required
           </span>
         </div>
+
+        {/* Moon Phase Card */}
+        {moonPhase?.phase && (
+          <div style={{ background: 'rgba(22,33,62,0.7)', border: '1px solid rgba(167,139,250,0.25)', borderRadius: 16, padding: '12px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 14 }}>
+            <span style={{ fontSize: 32, lineHeight: 1 }}>
+              {moonPhase.phase ? (MOON_PHASE_EMOJIS[moonPhase.phase.toLowerCase()] ?? '🌙') : '🌙'}
+            </span>
+            <div style={{ flex: 1 }}>
+              <p style={{ color: '#a78bfa', fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 3 }}>Moon Phase</p>
+              <p style={{ color: '#fff', fontSize: 14, fontWeight: 700, marginBottom: 2 }}>{moonPhase.phase}</p>
+              <p style={{ color: 'var(--text-muted)', fontSize: 11 }}>
+                {moonPhase.illumination != null ? `${Math.round(moonPhase.illumination)}% illuminated` : ''}
+                {moonPhase.moon_age != null ? ` · Day ${Math.round(moonPhase.moon_age)} of cycle` : ''}
+              </p>
+            </div>
+          </div>
+        )}
 
         {step === 'result' && fortune ? (
           <div>
