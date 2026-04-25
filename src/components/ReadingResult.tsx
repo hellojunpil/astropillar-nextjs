@@ -92,7 +92,35 @@ function extractWestern(data: Record<string,unknown>): WesternData | null {
   return null
 }
 
-const EMOJI_SET = '✨💼❤️💰🌿📊💡🌟⚡🏥📅🎯✅⚠️🔮🔥💫☁️📚'
+function extractPersonPillars(data: Record<string,unknown>, prefix: string): Pillar[] | null {
+  const pillars: Pillar[] = []
+  for (const key of PILLAR_KEYS) {
+    const gan = (data[`${prefix}_${key}_gan`] ?? '') as string
+    const zhi = (data[`${prefix}_${key}_zhi`] ?? '') as string
+    if (gan && zhi) pillars.push({ gan, zhi })
+  }
+  return pillars.length >= 2 ? pillars : null
+}
+
+function extractPersonWestern(data: Record<string,unknown>, prefix: string): WesternData | null {
+  const sun  = (data[`${prefix}_western_sun`]  as string) || ''
+  const moon = (data[`${prefix}_western_moon`] as string) || ''
+  const asc  = (data[`${prefix}_western_asc`]  as string) || ''
+  if (!sun && !moon && !asc) return null
+  const planets: Record<string,string> = {}
+  for (const planet of ['mercury','venus','mars','jupiter','saturn','uranus','neptune','pluto']) {
+    const val = data[`${prefix}_western_${planet}`] as string | undefined
+    if (val) planets[planet] = val
+  }
+  return {
+    sun_sign:   sun  || undefined,
+    moon_sign:  moon || undefined,
+    ascendant:  asc  || undefined,
+    planets: Object.keys(planets).length > 0 ? planets : undefined,
+  }
+}
+
+const EMOJI_SET = '✨💼❤️💰🌿📊💡🌟⚡🏥📅🎯✅⚠️🔮🔥💫☁️📚💬🌱'
 const EMOJI_RE = new RegExp(`[${EMOJI_SET}]`, 'u')
 // \n+ handles both single and double newlines before section headers (fixes intermittent Yearly split bug)
 const SPLIT_RE = new RegExp(`\\n+(?=#{1,3} |\\*\\*[A-Z\\u00C0-\\uFFFF]|[${EMOJI_SET}])`, 'u')
@@ -193,9 +221,14 @@ const SECTION_LABELS: Record<string,string> = {
   'how to make': 'How to Make It Work',
   'how to use': 'How to Use This Today',
   'who you': 'Who You\'re Both Dealing With',
+  'how you communicate': 'How You Communicate',
   'where you work': 'Where You Work Well',
   'where it gets': 'Where It Gets Complicated',
+  'how you grow': 'How You Grow Together',
   'bottom line for': 'Bottom Line',
+  'short answer': 'Short Answer',
+  'in-depth analysis': 'In-Depth Analysis',
+  'action steps': 'Action Steps',
   'at a glance': 'At a Glance',
   'monthly highlights': 'Monthly Highlights',
   'strategy': 'Your Strategy',
@@ -599,7 +632,18 @@ function MonthlyLineChart({ label, data, color, width = 330 }: { label: string; 
         <path d={line} fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" />
         {pts.map((p, i) => {
           const [cx, cy] = p.split(',').map(Number)
-          return <circle key={i} cx={cx} cy={cy} r="2.2" fill={color} />
+          const isHigh = data[i] === Math.max(...data)
+          const isLow = data[i] === Math.min(...data)
+          const showLabel = isHigh || isLow || i === 0 || i === 11
+          return (
+            <g key={i}>
+              <circle cx={cx} cy={cy} r={isHigh || isLow ? 3 : 2.2} fill={color} />
+              {showLabel && (
+                <text x={cx} y={cy - 5} textAnchor="middle" fontSize="7.5" fill={color}
+                  fontWeight="700" fontFamily="'Noto Sans', sans-serif">{data[i]}</text>
+              )}
+            </g>
+          )
         })}
         {MONTHS_SHORT.map((m, i) => (
           <text key={m} x={PAD.left + i * xStep} y={H - 3} textAnchor="middle" fontSize="7" fill="rgba(255,255,255,0.3)" fontFamily="'Noto Sans', sans-serif">{m}</text>
@@ -656,6 +700,55 @@ function getSectionChart(sectionTitle: string, scores: Record<string, number[]>)
     )
   }
   return <div style={{ marginBottom: 14 }}><MonthlyLineChart label={valid[0].charAt(0).toUpperCase() + valid[0].slice(1)} data={scores[valid[0]]} color={CHART_COLORS[valid[0]]} width={330} /></div>
+}
+
+// ── Compatibility Radar Chart (dynamic labels from COMPAT_SCORES) ────
+function CompatibilityRadarChart({ scores }: { scores: Record<string, {label:string; score:number} | number> }) {
+  const dims = (['dim1','dim2','dim3','dim4','dim5','dim6'] as const)
+    .map(k => scores[k])
+    .filter((d): d is {label:string; score:number} => typeof d === 'object' && d !== null)
+  if (dims.length < 3) return null
+  const N = dims.length
+  const R = 72, CX = 105, CY = 105, W = 210, H = 210
+  const pt = (i: number, val: number): [number, number] => {
+    const angle = (i * 2 * Math.PI / N) - Math.PI / 2
+    const r = (val / 100) * R
+    return [CX + r * Math.cos(angle), CY + r * Math.sin(angle)]
+  }
+  const axisPts = dims.map((_, i) => pt(i, 100))
+  const dataPts = dims.map((d, i) => pt(i, d.score))
+  const poly = (pts: [number,number][]) => pts.map(([x,y]) => `${x},${y}`).join(' ')
+  const COLORS = ['#f472b6','#a78bfa','#fbbf24','#34d399','#60a5fa','#C9A84C']
+  const gridLevels = [0.25, 0.5, 0.75, 1.0]
+  return (
+    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', marginBottom:4 }}>
+      <svg width={W} height={H} style={{ maxWidth:'100%', overflow:'visible' }}>
+        {gridLevels.map((lv, li) => (
+          <polygon key={li} points={poly(dims.map((_,i) => pt(i, lv*100)))}
+            fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="1" />
+        ))}
+        {axisPts.map(([x,y], i) => (
+          <line key={i} x1={CX} y1={CY} x2={x} y2={y} stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+        ))}
+        <polygon points={poly(dataPts)} fill="rgba(201,168,76,0.15)" stroke="#C9A84C" strokeWidth="1.8" />
+        {dataPts.map(([x,y], i) => (
+          <circle key={i} cx={x} cy={y} r="3" fill={COLORS[i % COLORS.length]} />
+        ))}
+        {dims.map((d, i) => {
+          const [x, y] = pt(i, 118)
+          const anchor = x < CX - 4 ? 'end' : x > CX + 4 ? 'start' : 'middle'
+          return (
+            <g key={i}>
+              <text x={x} y={y - 1} textAnchor={anchor} fontSize="7.5" fill={COLORS[i % COLORS.length]}
+                fontWeight="700" letterSpacing="0.8" fontFamily="'Noto Sans', sans-serif">{d.label.toUpperCase()}</text>
+              <text x={x} y={y + 9} textAnchor={anchor} fontSize="8" fill="rgba(255,255,255,0.55)"
+                fontFamily="'Noto Sans', sans-serif">{d.score}</text>
+            </g>
+          )
+        })}
+      </svg>
+    </div>
+  )
 }
 
 const PLANET_SYMBOLS: Record<string, string> = {
@@ -921,6 +1014,7 @@ interface Props {
 
 export default function ReadingResult({ raw, onReset, userEmail, fromCache, birthData }: Props) {
   const [chartTab, setChartTab] = useState<'bazi'|'elements'|'astrology'>('bazi')
+  const [personTab, setPersonTab] = useState<'p1'|'p2'>('p1')
 
   const data = (typeof raw === 'object' && raw !== null) ? raw as Record<string,unknown> : {}
   const pillars = extractPillars(data)
@@ -943,16 +1037,54 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
   const waterScore = (data.water_points as number) || 0
   const soulElement = dayElement ? dayElement.charAt(0).toUpperCase() + dayElement.slice(1) : ''
 
+  // Your Sign: western_sun × day_master_label (e.g. Scorpio × Forged Metal)
+  const yourSignSun = ((data.western_sun as string) ?? western?.sun_sign ?? '').toLowerCase().replace(/\s/g,'')
+  const yourSignLabel = (data.day_master_label as string) ?? ''
+  const yourSignName = yourSignSun ? yourSignSun.charAt(0).toUpperCase() + yourSignSun.slice(1) : ''
+
+  // ── Compatibility: person-specific data ──────────────────────────────
+  const isCompatibility = data.reading_type === 'compatibility'
+  const p1Pillars = isCompatibility ? extractPersonPillars(data, 'person1') : null
+  const p1Western = isCompatibility ? extractPersonWestern(data, 'person1') : null
+  const p2Pillars = isCompatibility ? extractPersonPillars(data, 'person2') : null
+  const p2Western = isCompatibility ? extractPersonWestern(data, 'person2') : null
+
+  const activePillars   = isCompatibility ? (personTab === 'p1' ? p1Pillars : p2Pillars) : pillars
+  const activeWestern   = isCompatibility ? (personTab === 'p1' ? p1Western : p2Western) : western
+  const activeDayPillar = activePillars?.[2] ?? null
+  const activeDayGanKey = activeDayPillar ? (GAN_TO_KEY[activeDayPillar.gan] ?? '') : ''
+  const activeDayElement = activeDayPillar ? (GAN_TO_ELEMENT[activeDayPillar.gan] ?? '') : ''
+  const activeSoulElement = activeDayElement ? activeDayElement.charAt(0).toUpperCase() + activeDayElement.slice(1) : ''
+
+  const getElem = (pfx: string, el: string) => ((data[`${pfx}_${el}_points`] as number) || 0)
+  const activePfx = personTab === 'p1' ? 'person1' : 'person2'
+  const activeWoodScore  = isCompatibility ? getElem(activePfx, 'wood')  : woodScore
+  const activeFireScore  = isCompatibility ? getElem(activePfx, 'fire')  : fireScore
+  const activeEarthScore = isCompatibility ? getElem(activePfx, 'earth') : earthScore
+  const activeMetalScore = isCompatibility ? getElem(activePfx, 'metal') : metalScore
+  const activeWaterScore = isCompatibility ? getElem(activePfx, 'water') : waterScore
+
+  const activeYourSignSun = isCompatibility
+    ? ((data[`${activePfx}_western_sun`] as string) ?? '').toLowerCase().replace(/\s/g,'')
+    : yourSignSun
+  const activeYourSignLabel = isCompatibility
+    ? ((data[`${activePfx}_day_master_label`] as string) ?? '')
+    : yourSignLabel
+  const activeYourSignName = activeYourSignSun ? activeYourSignSun.charAt(0).toUpperCase() + activeYourSignSun.slice(1) : ''
+
+  // COMPAT_SCORES
+  const compatScores = data.compatibility_scores as Record<string, {label:string; score:number} | number> | undefined
+  const overallCompatScore = compatScores ? (compatScores.overall as number ?? null) : null
+
+  // Person names for switcher labels
+  const p1Name = (data.person1_name ?? data.name ?? '') as string
+  const p2Name = (data.person2_name ?? data.partner_name ?? '') as string
+
   const TABS = [
     { key:'bazi', label:'BaZi Chart' },
     { key:'elements', label:'Elements' },
     { key:'astrology', label:'Astrology Profile' },
   ] as const
-
-  // Your Sign: western_sun × day_master_label (e.g. Scorpio × Forged Metal)
-  const yourSignSun = ((data.western_sun as string) ?? western?.sun_sign ?? '').toLowerCase().replace(/\s/g,'')
-  const yourSignLabel = (data.day_master_label as string) ?? ''
-  const yourSignName = yourSignSun ? yourSignSun.charAt(0).toUpperCase() + yourSignSun.slice(1) : ''
 
   const tabStyle = (active: boolean): React.CSSProperties => ({
     flex:1, padding:'9px 0', borderRadius:8, border:'none', cursor:'pointer',
@@ -962,9 +1094,41 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
 
   return (
     <div>
+      {/* ── Compatibility Score Card ── */}
+      {isCompatibility && compatScores && (
+        <div className="card" style={{ marginBottom:20, padding:'16px 16px 12px' }}>
+          {overallCompatScore !== null && (
+            <div style={{ textAlign:'center', marginBottom:10 }}>
+              <p style={{ color:'rgba(201,168,76,0.65)', fontSize:9, letterSpacing:2, textTransform:'uppercase', fontWeight:700, marginBottom:6 }}>Compatibility Score</p>
+              <p style={{ fontSize:42, fontWeight:800, color:'#C9A84C', fontFamily:"'Cormorant Garamond', serif", lineHeight:1, margin:0 }}>
+                {overallCompatScore} <span style={{ fontSize:18, color:'rgba(201,168,76,0.45)', fontWeight:400 }}>/ 100</span>
+              </p>
+            </div>
+          )}
+          <CompatibilityRadarChart scores={compatScores} />
+        </div>
+      )}
+
       {/* ── Chart Tabs ── */}
-      {(pillars || western) && (
+      {(activePillars || activeWestern || isCompatibility) && (
         <div className="card" style={{ marginBottom:20, padding:'16px' }}>
+          {/* Person Switcher (Compatibility only) */}
+          {isCompatibility && (
+            <div style={{ display:'flex', gap:6, marginBottom:14 }}>
+              {(['p1','p2'] as const).map(p => (
+                <button key={p} onClick={() => setPersonTab(p)} style={{
+                  flex:1, padding:'8px 0', borderRadius:50,
+                  border: personTab === p ? 'none' : '1px solid rgba(201,168,76,0.3)',
+                  cursor:'pointer', fontSize:12, fontWeight:600,
+                  background: personTab === p ? 'var(--gold)' : 'transparent',
+                  color: personTab === p ? '#16213E' : 'var(--text-muted)',
+                }}>
+                  {p === 'p1' ? `You${p1Name ? ` (${p1Name})` : ''}` : `Partner${p2Name ? ` (${p2Name})` : ''}`}
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Tab switcher */}
           <div style={{ display:'flex', background:'#0a0a1a', borderRadius:10, padding:4, marginBottom:16 }}>
             {TABS.map(t => (
@@ -977,10 +1141,10 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
           {/* BaZi Chart */}
           {chartTab === 'bazi' && (
             <div>
-              {pillars && pillars.length >= 2 ? (
+              {activePillars && activePillars.length >= 2 ? (
                 <>
-                  <div style={{ display:'grid', gridTemplateColumns:`repeat(${pillars.length},1fr)`, gap:10, marginBottom:16 }}>
-                    {pillars.map((p,i) => (
+                  <div style={{ display:'grid', gridTemplateColumns:`repeat(${activePillars.length},1fr)`, gap:10, marginBottom:16 }}>
+                    {activePillars.map((p,i) => (
                       <div key={i} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
                         <p style={{ color:'var(--text-muted)', fontSize:9, letterSpacing:1.5, textTransform:'uppercase' }}>{PILLAR_LABELS[i]}</p>
                         <Image src={ganImg(p.gan)} alt={p.gan} width={56} height={56} unoptimized style={{ borderRadius:8 }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
@@ -994,14 +1158,21 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
                       </div>
                     ))}
                   </div>
-                  {yourSignName && yourSignLabel && (
-                    <div style={{ textAlign:'center', marginBottom:12 }}>
-                      <span style={{ fontSize:9, color:'var(--text-muted)', letterSpacing:1.5, textTransform:'uppercase' }}>Your Sign</span>
-                      <p style={{ color:'var(--gold)', fontSize:13, fontWeight:700, marginTop:4, letterSpacing:0.5 }}>
-                        {yourSignName}
-                        <span style={{ fontFamily:'sans-serif', margin:'0 6px' }}>&times;</span>
-                        {yourSignLabel}
-                      </p>
+                  {activeYourSignName && activeYourSignLabel && (
+                    <div style={{ display:'flex', justifyContent:'center', marginBottom:14 }}>
+                      <div style={{
+                        display:'inline-flex', flexDirection:'column', alignItems:'center', gap:4,
+                        background:'linear-gradient(135deg,rgba(201,168,76,0.14) 0%,rgba(201,168,76,0.06) 100%)',
+                        border:'1px solid rgba(201,168,76,0.45)',
+                        borderRadius:50, padding:'8px 20px',
+                      }}>
+                        <span style={{ fontSize:9, color:'rgba(201,168,76,0.65)', letterSpacing:2, textTransform:'uppercase', fontWeight:700 }}>Your Sign</span>
+                        <span style={{ color:'#fff', fontSize:15, fontWeight:700, fontFamily:'sans-serif', letterSpacing:0.3 }}>
+                          {activeYourSignName}
+                          <span style={{ color:'rgba(201,168,76,0.5)', margin:'0 8px', fontWeight:400 }}>·</span>
+                          {activeYourSignLabel}
+                        </span>
+                      </div>
                     </div>
                   )}
                   {hasExplainData && (
@@ -1019,28 +1190,28 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
           {/* Elements */}
           {chartTab === 'elements' && (
             <div>
-              {dayElement ? (
+              {activeDayElement ? (
                 <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-                  <div style={{ background:'rgba(201,168,76,0.04)', border:`1px solid ${ELEMENT_COLOR[dayElement]}40`, borderRadius:12, padding:'16px' }}>
+                  <div style={{ background:'rgba(201,168,76,0.04)', border:`1px solid ${ELEMENT_COLOR[activeDayElement]}40`, borderRadius:12, padding:'16px' }}>
                     <p style={{ color:'var(--text-muted)', fontSize:10, letterSpacing:2, textTransform:'uppercase', marginBottom:8 }}>Day Master Element</p>
                     <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:10 }}>
-                      <div style={{ width:44, height:44, borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', background:`${ELEMENT_COLOR[dayElement]}18`, border:`1.5px solid ${ELEMENT_COLOR[dayElement]}`, color:ELEMENT_COLOR[dayElement], fontSize:20, fontWeight:700 }}>
-                        {dayPillar?.gan}
+                      <div style={{ width:44, height:44, borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', background:`${ELEMENT_COLOR[activeDayElement]}18`, border:`1.5px solid ${ELEMENT_COLOR[activeDayElement]}`, color:ELEMENT_COLOR[activeDayElement], fontSize:20, fontWeight:700 }}>
+                        {activeDayPillar?.gan}
                       </div>
                       <div>
-                        <p style={{ color:'#fff', fontSize:16, fontWeight:700, textTransform:'capitalize' }}>{dayElement}</p>
-                        <p style={{ color:'var(--text-muted)', fontSize:12 }}>{dayGanKey ? dayGanKey.charAt(0).toUpperCase()+dayGanKey.slice(1) : ''} Day Master</p>
+                        <p style={{ color:'#fff', fontSize:16, fontWeight:700, textTransform:'capitalize' }}>{activeDayElement}</p>
+                        <p style={{ color:'var(--text-muted)', fontSize:12 }}>{activeDayGanKey ? activeDayGanKey.charAt(0).toUpperCase()+activeDayGanKey.slice(1) : ''} Day Master</p>
                       </div>
                     </div>
-                    <p style={{ color:'var(--text-muted)', fontSize:13, lineHeight:1.7, fontStyle:'italic' }}>{ELEMENT_DESC[dayElement]}</p>
+                    <p style={{ color:'var(--text-muted)', fontSize:13, lineHeight:1.7, fontStyle:'italic' }}>{ELEMENT_DESC[activeDayElement]}</p>
                   </div>
 
                   {/* Wu Xing Relationship Chart */}
                   <div style={{ background:'rgba(22,33,62,0.5)', border:'1px solid rgba(201,168,76,0.15)', borderRadius:12, padding:'16px 12px 12px' }}>
                     <p style={{ color:'var(--text-muted)', fontSize:10, letterSpacing:2, textTransform:'uppercase', marginBottom:12, textAlign:'center' }}>Five Elements · Relationships</p>
                     <WuXingChart
-                      soulElement={soulElement}
-                      wood={woodScore} fire={fireScore} earth={earthScore} metal={metalScore} water={waterScore}
+                      soulElement={activeSoulElement}
+                      wood={activeWoodScore} fire={activeFireScore} earth={activeEarthScore} metal={activeMetalScore} water={activeWaterScore}
                     />
                   </div>
 
@@ -1058,7 +1229,7 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
 
           {/* Astrology Profile */}
           {chartTab === 'astrology' && (
-            <AstrologyProfile western={western} data={data} />
+            <AstrologyProfile western={activeWestern} data={data} />
           )}
         </div>
       )}
