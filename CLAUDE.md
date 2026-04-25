@@ -294,7 +294,73 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 
 ## 다음 세션 시작 가이드
 
-> 마지막 작업: 2026-04-26 세션60 완료
+> 마지막 작업: 2026-04-26 세션62 완료
+
+### ✅ 세션62 완료 — 2026-04-26
+
+**작업 목록:**
+1. ✅ **Compatibility UI 전면 구현** — BaZi/Elements/Astrology 3탭 + You/Partner 인물 스위처 + COMPAT_SCORES 레이더 차트(6차원) + 6개 아코디언 섹션
+2. ✅ **TypeScript 빌드 에러 수정** — `today/page.tsx` FortuneData `[key: string]: unknown` → `!!fortune.xxx` boolean 코어션 (커밋 78b3a74)
+3. ✅ **Scenario Reading 아코디언 전환** — `situation` flat-text 분기 제거, 모든 reading_type AccordionSection 통일 (커밋 ea56fcd)
+4. ✅ **Scenario 섹션 파싱 fallback** — `parseScenarioFallback()` + `SCENARIO_SPLIT_RE` 신규 도입 (커밋 5152dbc)
+5. ✅ **SCENARIO_SPLIT_RE non-capturing group** — `split()` 아티팩트 제거 (커밋 a9c8bf0)
+6. ✅ **Scenario trigger 조건 수정** — `includes(t + ' ')` → `includes(t + ' ') || includes(t + '\n')` (커밋 1473278)
+7. ✅ **전체 서비스 QA** — test03(1991-07-15 ♂ London 09:30) 기준 5개 서비스 전수 검증
+
+- **테스트 리포트**: `D:\snap_pillar bck\result\result_20260426_2.txt`
+- **Cloud Run**: revision 00190-ksf (변경 없음)
+- **Credit 변화**: 145 → 140
+
+**QA 결과 요약 (세션62 — test03 기준):**
+| 서비스 | 결과 | 비고 |
+|--------|------|------|
+| Personal Fortune | ✅ PASS | BaZi/Elements/Astrology 탭, 아코디언 정상 |
+| Personal Daily | ✅ PASS | 날짜 인젝션, 아코디언 정상 |
+| Yearly Fortune | ✅ PASS | 월별 차트, 아코디언 정상 |
+| Compatibility | ✅ PASS | 레이더 차트 72/100, You/Partner 스위처, 6섹션 |
+| Scenario Reading | ✅ PASS | 4섹션 (Short Answer/In-Depth/Best Timing/Action Steps) |
+
+**수정된 버그 (5개):**
+- Bug#1: TypeScript `unknown` ReactNode 에러 → `!!` 코어션
+- Bug#2: Scenario flat-text 렌더링 → AccordionSection 통일
+- Bug#3: GPT 평문 섹션명 파싱 실패 → parseScenarioFallback 추가
+- Bug#4: SCENARIO_SPLIT_RE 캡처그룹 아티팩트 → non-capturing group
+- Bug#5: `includes(t + ' ')` 공백 체크가 `\n\n` 구분자에 실패 → `\n` 조건 추가
+
+**다음 세션 우선순위:**
+1. 🟡 [P2] **Yearly Fortune 월별 점수 숫자 표시** — 차트에 수치 직접 표기
+2. 🟡 [P3] **LifespanChart 신규 리딩 확인** (lifespan_points 포함 여부)
+3. 🟡 [P3] **PersonPicker 저장 인물 1명일 때 auto-select**
+
+---
+
+### ✅ 세션61 완료 — 2026-04-26
+
+**작업 목록:**
+1. ✅ **ANTI-METAPHOR RULE 추가** — 5개 서비스 프롬프트 전체에 Grade 9-10 제약 + 금지 예시 삽입 (revision 00188-qb2)
+2. ✅ **LANGUAGE RULE 추가** — `situation_system_prompt`에 "Output ONLY in English. Never insert words from any other language" 삽입 (Scenario Arabic 단어 주입 버그 수정, revision 00189-kxq)
+3. ✅ **Today's Fortune 메타데이터 노출 확인** — page.tsx 코드 검증 완료, intro/fortune/tip 3개만 렌더링 정상 (세션60 커밋 ea5ff4a 적용 확인)
+4. ✅ **전체 서비스 QA** — test02(1997-03-20 ♀ Chicago 11:30-13:30) 기준 6개 평가항목 한국어 결과 작성
+- **테스트 리포트**: `D:\snap_pillar bck\result\result_20260426_1.txt`
+- **Cloud Run**: revision 00189-kxq
+
+**QA 결과 요약 (세션61 — test02 기준):**
+| 서비스 | 점수 | 비고 |
+|--------|------|------|
+| Personal Fortune | ★★★★★ 9.2/10 | 가독성 개선 확인 |
+| Personal Daily | ★★★★★ 9.2/10 | AM/PM 바차트 정상 |
+| Yearly Fortune | ★★★★☆ 8.5/10 | 월별 숫자 표시 없음 |
+| Compatibility | ★★★☆☆ 7.8/10 | 그래프/BaZi탭 없음, 4섹션만 |
+| Scenario Reading | ★★★★☆ 8.8/10 | Arabic 버그 수정 완료 |
+| Today's Fortune | 🚨 재확인 | 메타데이터 노출 재확인 필요 |
+
+**다음 세션 우선순위:**
+1. 🟡 [P2] **Compatibility 개선** — 그래프 추가 + BaZi 탭 추가 + 섹션 4→6개 확장
+2. 🟡 [P2] **Yearly Fortune 월별 점수 숫자 표시** — 차트에 수치 직접 표기
+3. 🟡 [P2] **Scenario Reading 섹션 분리** — 단일 장문 → 4섹션 아코디언 (Short Answer / In-Depth / Timing / Action Steps)
+4. 🟡 [P3] **LifespanChart 신규 리딩 확인**
+
+---
 
 ### ✅ 세션60 완료 — 2026-04-26
 
