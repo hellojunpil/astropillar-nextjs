@@ -677,6 +677,7 @@ function getSectionChart(sectionTitle: string, scores: Record<string, number[]>)
   else if (low.includes('health')) keys = ['health']
   else if (low.includes('wealth') || (low.includes('money') && !low.includes('career'))) keys = ['money']
   else if (low.includes('career')) keys = ['career']
+  else if (low.includes('monthly') || low.includes('highlight')) keys = ['career', 'love', 'health', 'money']
   const valid = keys.filter(k => Array.isArray(scores[k]) && scores[k].length === 12)
   if (!valid.length) return null
   if (valid.length === 4) {
