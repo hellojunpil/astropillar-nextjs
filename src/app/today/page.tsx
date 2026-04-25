@@ -216,17 +216,17 @@ export default function TodayFortunePage() {
               <p style={{ color: 'var(--gold)', fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>
                 {mode === 'horoscope' ? '✦ Horoscope' : '✦ Chinese Zodiac'} · {selected}
               </p>
-              {fortune.intro && (
+              {!!fortune.intro && (
                 <p style={{ color: 'var(--text-muted)', fontSize: 13, fontStyle: 'italic', marginBottom: 16, lineHeight: 1.7 }}>
                   {fortune.intro as string}
                 </p>
               )}
-              {fortune.fortune && (
+              {!!fortune.fortune && (
                 <p style={{ color: '#ddd', fontSize: 14, lineHeight: 1.9, marginBottom: 16, whiteSpace: 'pre-wrap' }}>
                   {(fortune.fortune as string).replace(/^\[[\w\s]+\]\s*/i, '')}
                 </p>
               )}
-              {fortune.tip && (
+              {!!fortune.tip && (
                 <div style={{ background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.25)', borderRadius: 10, padding: '10px 14px' }}>
                   <p style={{ color: 'var(--gold)', fontSize: 11, letterSpacing: 1, marginBottom: 4 }}>TIP FOR TODAY</p>
                   <p style={{ color: '#ddd', fontSize: 13, lineHeight: 1.7 }}>{fortune.tip as string}</p>
