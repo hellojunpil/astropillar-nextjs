@@ -1257,55 +1257,40 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
       {/* ── GPT Reading ── */}
       {sections.length > 0 && (
         <div style={{ marginBottom:20 }}>
-          {data.reading_type === 'situation' ? (
-            // Scenario Reading: plain flowing text, no accordion
-            sections.map((s,i) => (
-              <div key={i} style={{ marginBottom:20 }}>
-                {s.title && (
-                  <p style={{ color:'var(--gold)', fontSize:13, fontWeight:700, letterSpacing:1.2, textTransform:'uppercase', fontFamily:"'Cormorant Garamond', serif", marginBottom:10 }}>
-                    {normalizeTitle(s.title)}
-                  </p>
-                )}
-                <RichText text={s.content} />
-              </div>
-            ))
-          ) : (
-            // All other readings: accordion
-            sections.map((s,i) => {
-              let normTitle = s.title ? normalizeTitle(s.title) : `Section ${i+1}`
-              if (data.reading_type === 'daily' && normTitle === 'Who You Are Today' && data.target_date) {
-                const d = new Date((data.target_date as string) + 'T00:00:00')
-                const label = d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })
-                normTitle = `Who You Are Today (${label})`
-              }
-              const monthlyScores = (data.reading_type === 'yearly' && data.monthly_scores != null)
-                ? data.monthly_scores as Record<string, number[]>
-                : null
-              let chart: React.ReactNode = monthlyScores ? getSectionChart(normTitle, monthlyScores) : null
+          {sections.map((s,i) => {
+            let normTitle = s.title ? normalizeTitle(s.title) : `Section ${i+1}`
+            if (data.reading_type === 'daily' && normTitle === 'Who You Are Today' && data.target_date) {
+              const d = new Date((data.target_date as string) + 'T00:00:00')
+              const label = d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })
+              normTitle = `Who You Are Today (${label})`
+            }
+            const monthlyScores = (data.reading_type === 'yearly' && data.monthly_scores != null)
+              ? data.monthly_scores as Record<string, number[]>
+              : null
+            let chart: React.ReactNode = monthlyScores ? getSectionChart(normTitle, monthlyScores) : null
 
-              // Personal Fortune: lifespan chart (or luck cycle fallback) inside "Life Chapters" section
-              if (!chart && data.reading_type === 'personal_fortune') {
-                const low = normTitle.toLowerCase()
-                if (low.includes('life chapter') || low.includes('luck cycle')) {
-                  if (data.lifespan_points != null) {
-                    chart = <LifespanChart points={data.lifespan_points as Array<{age:number,energy:number}>} />
-                  } else if (data.luck_cycles != null) {
-                    chart = <LuckCycleBarChart cycles={data.luck_cycles as Array<{period:string,score:number}>} />
-                  }
+            // Personal Fortune: lifespan chart (or luck cycle fallback) inside "Life Chapters" section
+            if (!chart && data.reading_type === 'personal_fortune') {
+              const low = normTitle.toLowerCase()
+              if (low.includes('life chapter') || low.includes('luck cycle')) {
+                if (data.lifespan_points != null) {
+                  chart = <LifespanChart points={data.lifespan_points as Array<{age:number,energy:number}>} />
+                } else if (data.luck_cycles != null) {
+                  chart = <LuckCycleBarChart cycles={data.luck_cycles as Array<{period:string,score:number}>} />
                 }
               }
+            }
 
-              return (
-                <AccordionSection
-                  key={i}
-                  title={normTitle}
-                  content={s.content}
-                  defaultOpen={i === 0}
-                  chartContent={chart}
-                />
-              )
-            })
-          )}
+            return (
+              <AccordionSection
+                key={i}
+                title={normTitle}
+                content={s.content}
+                defaultOpen={i === 0}
+                chartContent={chart}
+              />
+            )
+          })}
         </div>
       )}
 
