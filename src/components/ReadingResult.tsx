@@ -949,13 +949,10 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
     { key:'astrology', label:'Astrology Profile' },
   ] as const
 
-  // Your Sign: western_sun × day_master_label (e.g. ♏ Scorpio × Forged Metal)
+  // Your Sign: western_sun × day_master_label (e.g. Scorpio × Forged Metal)
   const yourSignSun = ((data.western_sun as string) ?? western?.sun_sign ?? '').toLowerCase().replace(/\s/g,'')
   const yourSignLabel = (data.day_master_label as string) ?? ''
-  const yourSignSymbol = ZODIAC_SYMBOL[yourSignSun] ?? ''
-  const yourSignText = yourSignSun && yourSignLabel
-    ? `${yourSignSymbol} ${yourSignSun.charAt(0).toUpperCase()}${yourSignSun.slice(1)} × ${yourSignLabel}`
-    : null
+  const yourSignName = yourSignSun ? yourSignSun.charAt(0).toUpperCase() + yourSignSun.slice(1) : ''
 
   const tabStyle = (active: boolean): React.CSSProperties => ({
     flex:1, padding:'9px 0', borderRadius:8, border:'none', cursor:'pointer',
@@ -997,11 +994,13 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
                       </div>
                     ))}
                   </div>
-                  {yourSignText && (
+                  {yourSignName && yourSignLabel && (
                     <div style={{ textAlign:'center', marginBottom:12 }}>
                       <span style={{ fontSize:9, color:'var(--text-muted)', letterSpacing:1.5, textTransform:'uppercase' }}>Your Sign</span>
-                      <p style={{ color:'var(--gold)', fontSize:13, fontWeight:700, marginTop:4, fontFamily:"'Cormorant Garamond', serif", letterSpacing:0.5 }}>
-                        {yourSignText}
+                      <p style={{ color:'var(--gold)', fontSize:13, fontWeight:700, marginTop:4, letterSpacing:0.5 }}>
+                        {yourSignName}
+                        <span style={{ fontFamily:'sans-serif', margin:'0 6px' }}>&times;</span>
+                        {yourSignLabel}
                       </p>
                     </div>
                   )}
@@ -1101,7 +1100,12 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
           ) : (
             // All other readings: accordion
             sections.map((s,i) => {
-              const normTitle = s.title ? normalizeTitle(s.title) : `Section ${i+1}`
+              let normTitle = s.title ? normalizeTitle(s.title) : `Section ${i+1}`
+              if (data.reading_type === 'daily' && normTitle === 'Who You Are Today' && data.target_date) {
+                const d = new Date((data.target_date as string) + 'T00:00:00')
+                const label = d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })
+                normTitle = `Who You Are Today (${label})`
+              }
               const monthlyScores = (data.reading_type === 'yearly' && data.monthly_scores != null)
                 ? data.monthly_scores as Record<string, number[]>
                 : null
