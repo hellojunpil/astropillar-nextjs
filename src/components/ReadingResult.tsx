@@ -190,7 +190,7 @@ export function parseResult(raw: unknown): Section[] {
     // If we got only 1-2 sections but content contains scenario section names, try scenario fallback
     if (sections.length <= 2) {
       const combined = sections.map(s => s.content).join(' ')
-      if (SCENARIO_TITLES.slice(1).some(t => combined.includes(t + ' '))) {
+      if (SCENARIO_TITLES.slice(1).some(t => combined.includes(t + ' ') || combined.includes(t + '\n'))) {
         const fallback = parseScenarioFallback(combined)
         if (fallback.length >= 3) return fallback
       }
