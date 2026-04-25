@@ -166,6 +166,18 @@ export default function TodayFortunePage() {
 
   const canSubmit = !!selected && !loading
 
+  const SCORE_ITEMS = [
+    { label: 'Love',     key: 'score_love',     color: '#f472b6' },
+    { label: 'Work',     key: 'score_work',     color: '#C9A84C' },
+    { label: 'Money',    key: 'score_money',    color: '#4ade80' },
+    { label: 'Health',   key: 'score_health',   color: '#a78bfa' },
+    { label: 'Social',   key: 'score_social',   color: '#60a5fa' },
+    { label: 'Creative', key: 'score_creative', color: '#fb923c' },
+  ] as const
+  const scores = fortune ? SCORE_ITEMS.filter(s => typeof fortune[s.key] === 'number') : []
+  const bestMatch = fortune && typeof fortune.best_match === 'string' ? fortune.best_match : null
+  const bestMatchSign = bestMatch ? HOROSCOPE_SIGNS.find(s => s.name.toLowerCase() === bestMatch.toLowerCase()) : null
+
   return (
     <main style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 96 }}>
 
@@ -212,12 +224,43 @@ export default function TodayFortunePage() {
 
         {step === 'result' && fortune ? (
           <div>
-            <div className="card" style={{ marginBottom: 20 }}>
-              <p style={{ color: 'var(--gold)', fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>
+            <div className="card" style={{ marginBottom: 12 }}>
+              <p style={{ color: 'var(--gold)', fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 14 }}>
                 {mode === 'horoscope' ? '✦ Horoscope' : '✦ Chinese Zodiac'} · {selected}
               </p>
+
+              {/* Score grid */}
+              {scores.length > 0 && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 20px', marginBottom: 18 }}>
+                  {scores.map(s => (
+                    <div key={s.key}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 }}>
+                        <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase' }}>{s.label}</span>
+                        <span style={{ color: s.color, fontSize: 13, fontWeight: 700 }}>{fortune[s.key] as number}</span>
+                      </div>
+                      <div style={{ height: 3, background: 'rgba(255,255,255,0.07)', borderRadius: 2 }}>
+                        <div style={{ height: '100%', width: `${fortune[s.key] as number}%`, background: s.color, borderRadius: 2 }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Best Match */}
+              {bestMatch && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '10px 14px', marginBottom: 18 }}>
+                  {bestMatchSign && (
+                    <Image src={`${IMG}${bestMatchSign.img}`} alt={bestMatch} width={36} height={36} style={{ objectFit: 'contain' }} unoptimized />
+                  )}
+                  <div>
+                    <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 9, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 2 }}>Best Match Today</p>
+                    <p style={{ color: '#fff', fontSize: 14, fontWeight: 700 }}>{bestMatch}</p>
+                  </div>
+                </div>
+              )}
+
               {!!fortune.intro && (
-                <p style={{ color: 'var(--text-muted)', fontSize: 13, fontStyle: 'italic', marginBottom: 16, lineHeight: 1.7 }}>
+                <p style={{ color: 'var(--text-muted)', fontSize: 13, fontStyle: 'italic', marginBottom: 14, lineHeight: 1.7 }}>
                   {fortune.intro as string}
                 </p>
               )}
