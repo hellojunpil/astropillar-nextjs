@@ -294,21 +294,50 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 
 ## 다음 세션 시작 가이드
 
-> 마지막 작업: 2026-04-25 세션59 진행 중
+> 마지막 작업: 2026-04-26 세션60 완료
 
-### ⏳ 세션59 진행 중 — 2026-04-25
+### ✅ 세션60 완료 — 2026-04-26
+
+**작업 목록:**
+1. ✅ **rrr 전체 서비스 QA**: k@k.com 계정, rrr(1992-11-08 ♀ LA 05:30-07:30) 5개 서비스 신규 테스트 완료
+2. ✅ **Today's Fortune UI 버그 수정**: 메타데이터 필드(date/generated_at/type/key) 노출 → intro/fortune/tip 3개만 렌더링 (커밋 ea5ff4a)
+3. ✅ **Your Sign 배지 수정**: 이모지 제거 + `×`를 `<span fontFamily:sans-serif>&times;</span>`으로 JSX 렌더링 — Cormorant Garamond 폰트 깨짐 해결 (커밋 4b4b077)
+4. ✅ **Personal Daily "Who You Are Today" 날짜 표시**: `data.target_date` 파싱 → `(Apr 26, 2026)` 형식으로 섹션 제목 옆 표시 (커밋 4b4b077)
+- **테스트 리포트**: `D:\snap_pillar bck\result\result_20260426_3.txt`
+- **개발계획서**: `D:\snap_pillar bck\개발계획서들\d-20260425_1.md`
+
+**다음 세션 최우선 과제:**
+1. 🟡 [내일 P1] **해석 가독성 개선** — 현재 대학생+ 수준(복잡한 은유·추상어 다수) → 25~35세 일반 독자 수준으로 프롬프트 조정
+   - 목표: Flesch-Kincaid Grade 9~10 (현재 추정 12~14)
+   - 방법: 프롬프트에 "plain English" 제약 추가, 추상 은유 금지 예시 삽입
+   - 잘 된 예시(유지): "Say less, finish more." / "Don't chase. Confirm." / "mountain with a knife in it"
+   - 개선 대상: "emotionally audited" / "late-blooming consolidation story" / "neither of you insists on being the thermostat" 류
+2. 🟡 [P2] LifespanChart 신규 리딩으로 실제 작동 확인 (lifespan_points 포함 여부)
+
+---
+
+> 마지막 작업: 2026-04-25 세션59 완료
+
+### ✅ 세션59 완료 — 2026-04-25
 
 **작업 목록 (10개):**
 1. ✅ **Daily V3 업그레이드**: `/api/v2/` → `/api/v3/horoscope/daily/personal` + V3 필드 파싱
 2. ✅ **RISING 버그**: `symbol="ASC"` → `ZODIAC_SYMBOL[ascSign] ?? '↑'` 교체 완료
 3. ✅ **BaZi Synastry**: `fetch_bazi_synastry()` + `build_compatibility_prompt` synastry_data 파라미터 추가
 4. ✅ **BaZi Flow + Yearly 그래프 차별화**: `fetch_bazi_flow()` 추가, `build_gpt_prompt` 연동, SCORES_JSON 차별화 지시 추가
-5. ✅ **Moon Phase → Today's Fortune**: `/moon_phase` GET 엔드포인트 + today/page.tsx 달 위상 카드 추가
-6. ⏳ **SVG Chart**: `/api/v1/natal/chart/` → Personal Fortune/Daily/Yearly 차트 뷰어
-7. ✅ **Lifespan Chart**: `fetch_lifespan()` + `LifespanChart` 컴포넌트 (2줄 레이아웃), LuckCycleBarChart 폴백 유지
-8. ✅ **추가a**: SPLIT_RE `\\n+` 수정 + `\r\n` 정규화 (parseResult 내)
-9. ✅ **추가b**: "Your Sign" (별자리×일간) BaZi Chart 탭 내부 표시
-10. ⏳ **최종 테스트**: astropillar.com k@k.com 로그인 후 전 서비스 테스트
+5. ⚠️ **Moon Phase → Today's Fortune**: 코드 배포 완료, BUT `/moon_phase` API upstream 405 오류 → 카드 미표시. FreeAstroAPI 엔드포인트 재확인 필요
+6. ✅ **SVG Chart**: `/natal_chart_svg` POST 엔드포인트 + `NatalChartViewer` 컴포넌트 (모달, "View Birth Chart" 버튼 확인)
+7. ✅ **Lifespan Chart**: `fetch_lifespan()` + `LifespanChart` 컴포넌트 (2줄 레이아웃), LuckCycleBarChart 폴백 유지 (캐시 결과는 폴백 사용)
+8. ✅ **추가a**: SPLIT_RE `\\n+` 수정 + `\r\n` 정규화 — 섹션 파싱 버그 완전 해결 (7개 섹션 정상 분리)
+9. ✅ **추가b**: "Your Sign" (별자리×일간) BaZi Chart 탭 내부 표시 (전 서비스 작동 확인)
+10. ✅ **최종 테스트**: astropillar.com k@k.com 로그인 후 전 서비스 테스트 완료
+- **Cloud Run**: revision 00185-mgn 배포 완료
+- **테스트 리포트**: `D:\snap_pillar bck\result\result_20260425_1.txt`
+- **개발계획서**: `D:\snap_pillar bck\개발계획서들\d-20260424_3.md`
+
+**다음 세션 최우선 과제:**
+1. 🔴 [P1] Moon Phase API 405 오류 수정 (FreeAstroAPI /api/v1/moon/phase POST 시도 또는 대체 API)
+2. 🟡 [P2] LifespanChart 신규 리딩으로 실제 작동 확인 (lifespan_points 포함 여부)
 
 ---
 
