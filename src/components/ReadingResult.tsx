@@ -161,7 +161,7 @@ function annotateChineseChars(text: string): string {
 
 // Scenario reading section titles (GPT sometimes outputs without emoji/newline headers)
 const SCENARIO_TITLES = ['Short Answer','In-Depth Analysis','Best Timing Today','Best Timing','How to Use This Today','Action Steps']
-const SCENARIO_SPLIT_RE = new RegExp(`(?<=[.!?]\\s{0,2}|\\n)(?=(${SCENARIO_TITLES.join('|')})\\s)`)
+const SCENARIO_SPLIT_RE = new RegExp(`(?<=[.!?]\\s{0,2}|\\n)(?=(?:${SCENARIO_TITLES.join('|')})\\s)`)
 
 function parseScenarioFallback(text: string): Section[] {
   // Split on known scenario section names when they appear after sentence boundaries
