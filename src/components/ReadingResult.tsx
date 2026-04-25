@@ -17,8 +17,8 @@ const ZODIAC_SVG_KEYS = [
   'libra','scorpio','sagittarius','capricorn','aquarius','pisces',
 ]
 const ZODIAC_SYMBOL: Record<string, string> = {
-  aries:'♈',taurus:'♉',gemini:'♊',cancer:'♋',leo:'♌',virgo:'♍',
-  libra:'♎',scorpio:'♏',sagittarius:'♐',capricorn:'♑',aquarius:'♒',pisces:'♓',
+  aries:'♈︎',taurus:'♉︎',gemini:'♊︎',cancer:'♋︎',leo:'♌︎',virgo:'♍︎',
+  libra:'♎︎',scorpio:'♏︎',sagittarius:'♐︎',capricorn:'♑︎',aquarius:'♒︎',pisces:'♓︎',
 }
 
 const PILLAR_LABELS = ['YEAR','MONTH','DAY','HOUR']
@@ -777,8 +777,8 @@ function CompatibilityRadarChart({ scores }: { scores: Record<string, {label:str
 }
 
 const PLANET_SYMBOLS: Record<string, string> = {
-  sun:'☀', moon:'☽', mercury:'☿', venus:'♀', mars:'♂',
-  jupiter:'♃', saturn:'♄', uranus:'♅', neptune:'♆', pluto:'♇',
+  sun:'☀︎', moon:'☽︎', mercury:'☿︎', venus:'♀︎', mars:'♂︎',
+  jupiter:'♃︎', saturn:'♄︎', uranus:'♅︎', neptune:'♆︎', pluto:'♇︎',
 }
 
 function zodiacSvg(sign: string) {
@@ -854,9 +854,9 @@ function AstrologyProfile({ western, data }: { western: WesternData | null; data
     <div>
       {/* Big Three */}
       <div style={{ display:'flex', gap:8, width:'100%' }}>
-        <PlanetCardBig planet="Sun"    symbol="☀"  sign={sunSign} />
-        <PlanetCardBig planet="Moon"   symbol="☽"  sign={moonSign} />
-        <PlanetCardBig planet="Rising" symbol={ZODIAC_SYMBOL[ascSign.toLowerCase().replace(/\s/g,'')] ?? '↑'} sign={ascSign} />
+        <PlanetCardBig planet="Sun"    symbol="☀︎"  sign={sunSign} />
+        <PlanetCardBig planet="Moon"   symbol="☽︎"  sign={moonSign} />
+        <PlanetCardBig planet="Rising" symbol="↑"   sign={ascSign} />
       </div>
       <div style={{ display:'flex', gap:8, marginTop:10 }}>
         {['Your core identity — the self you were born to express','Your inner world — emotions and what makes you feel safe','How the world sees you — your outer mask and first impression'].map((t,i) => (
