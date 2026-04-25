@@ -159,11 +159,26 @@ function annotateChineseChars(text: string): string {
   return result
 }
 
+// Scenario reading section titles (GPT sometimes outputs without emoji/newline headers)
+const SCENARIO_TITLES = ['Short Answer','In-Depth Analysis','Best Timing Today','Best Timing','How to Use This Today','Action Steps']
+const SCENARIO_SPLIT_RE = new RegExp(`(?<=[.!?]\\s{0,2}|\\n)(?=(${SCENARIO_TITLES.join('|')})\\s)`)
+
+function parseScenarioFallback(text: string): Section[] {
+  // Split on known scenario section names when they appear after sentence boundaries
+  const parts = text.split(SCENARIO_SPLIT_RE).filter(p => p && p.trim().length > 10)
+  if (parts.length < 2) return []
+  return parts.map(p => {
+    const titleMatch = p.match(new RegExp(`^(${SCENARIO_TITLES.join('|')})\\s+(\\S[\\s\\S]*)`, 'u'))
+    if (titleMatch) return { title: titleMatch[1], content: titleMatch[2].trim() }
+    return { content: p.trim() }
+  }).filter(s => s.content.length > 0)
+}
+
 export function parseResult(raw: unknown): Section[] {
   if (!raw) return []
   if (typeof raw === 'string') {
     const blocks = raw.replace(/\r\n/g, '\n').split(SPLIT_RE)
-    return blocks.map(b => {
+    const sections = blocks.map(b => {
       const hMatch = b.match(/^#{1,3} (.+?)\n([\s\S]*)/)
       const bMatch = b.match(/^\*\*(.+?)\*\*\n?([\s\S]*)/)
       const eMatch = b.match(new RegExp(`^[${EMOJI_SET}]\\s*(.+?)\\n([\\s\\S]*)`, 'u'))
@@ -172,6 +187,15 @@ export function parseResult(raw: unknown): Section[] {
       if (eMatch) return { title: eMatch[1].replace(/\s*—.*$/,'').trim(), content: eMatch[2].trim() }
       return { content: b.trim() }
     }).filter(s => s.content.length > 0)
+    // If we got only 1-2 sections but content contains scenario section names, try scenario fallback
+    if (sections.length <= 2) {
+      const combined = sections.map(s => s.content).join(' ')
+      if (SCENARIO_TITLES.slice(1).some(t => combined.includes(t + ' '))) {
+        const fallback = parseScenarioFallback(combined)
+        if (fallback.length >= 3) return fallback
+      }
+    }
+    return sections
   }
   if (Array.isArray(raw)) return raw as Section[]
   if (typeof raw === 'object' && raw !== null) {
