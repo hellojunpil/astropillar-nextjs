@@ -203,7 +203,7 @@ export default function TodayFortunePage() {
               <p style={{ color: '#a78bfa', fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 3 }}>Moon Phase</p>
               <p style={{ color: '#fff', fontSize: 14, fontWeight: 700, marginBottom: 2 }}>{moonPhase.phase}</p>
               <p style={{ color: 'var(--text-muted)', fontSize: 11 }}>
-                {moonPhase.illumination != null ? `${Math.round(moonPhase.illumination)}% illuminated` : ''}
+                {moonPhase.illumination != null ? `${Math.round(moonPhase.illumination <= 1 ? moonPhase.illumination * 100 : moonPhase.illumination)}% illuminated` : ''}
                 {moonPhase.moon_age != null ? ` · Day ${Math.round(moonPhase.moon_age)} of cycle` : ''}
               </p>
             </div>
