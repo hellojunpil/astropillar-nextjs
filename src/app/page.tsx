@@ -281,13 +281,14 @@ export default function LandingPage() {
               <label style={fieldLabelSt}>GENDER</label>
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
                 {(['M','F'] as const).map(g => (
-                  <button key={g} type="button" onClick={() => setGender(g)} style={{
-                    padding:13, borderRadius:10, cursor:'pointer', textAlign:'center', fontSize:13, fontWeight:500, fontFamily:"'Noto Sans',sans-serif", transition:'all .2s',
-                    border:`1.5px solid ${gender===g ? '#C9A84C' : 'rgba(201,168,76,.3)'}`,
-                    background: gender===g ? 'rgba(201,168,76,.15)' : 'rgba(255,255,255,.04)',
+                  <button key={g} type="button" onClick={() => setGender(g)} aria-pressed={gender===g} style={{
+                    padding:13, borderRadius:10, cursor:'pointer', textAlign:'center', fontSize:13, fontWeight:600, fontFamily:"'Noto Sans',sans-serif", transition:'all .2s',
+                    border:`2px solid ${gender===g ? '#C9A84C' : 'rgba(201,168,76,.3)'}`,
+                    background: gender===g ? 'rgba(201,168,76,.22)' : 'rgba(255,255,255,.04)',
                     color: gender===g ? '#C9A84C' : 'rgba(200,195,220,.6)',
+                    boxShadow: gender===g ? '0 0 0 1px rgba(201,168,76,.4)' : 'none',
                   }}>
-                    {g === 'M' ? '♂ Male' : '♀ Female'}
+                    {g === 'M' ? (gender==='M' ? '✓ Male' : '♂ Male') : (gender==='F' ? '✓ Female' : '♀ Female')}
                   </button>
                 ))}
               </div>
