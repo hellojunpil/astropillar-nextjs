@@ -8,6 +8,9 @@ const GA_ID = process.env.NEXT_PUBLIC_GA4_ID
 export const metadata: Metadata = {
   title: 'AstroPillar — Where the stars meet your fate',
   description: 'Discover your destiny through Eastern BaZi and Western Astrology. Free personalized readings.',
+  verification: {
+    google: '91ba17f1e5a9c408',
+  },
   openGraph: {
     title: 'AstroPillar',
     description: 'Your BaZi + Astrology reading — free.',
