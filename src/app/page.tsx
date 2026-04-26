@@ -356,7 +356,7 @@ export default function LandingPage() {
               <div style={{ fontSize:13, lineHeight:1.8, color:'rgba(200,195,220,.75)', fontWeight:300, marginBottom:14, paddingBottom:14, borderBottom:'1px solid rgba(201,168,76,.1)' }}>{result.rel}</div>
               <div style={{ fontSize:13, lineHeight:1.8, color:'rgba(200,195,220,.75)', fontWeight:300, marginBottom:20 }}>{result.money}</div>
               <div style={{ fontSize:13, color:'rgba(201,168,76,.8)', fontStyle:'italic', fontWeight:400, marginBottom:16, lineHeight:1.6 }}>Your chart is already pointing at more than this.</div>
-              <button className="ap-cta" style={{ fontSize:14, padding:14 }} onClick={() => { ga('service_view', {service_type:'unlock_full_reading'}); router.push('/login') }}>
+              <button className="ap-cta" style={{ fontSize:14, padding:14 }} onClick={() => { ga('service_view', {service_type:'unlock_full_reading'}); router.push('/login?tab=signup') }}>
                 Unlock My Full Chart — Free
               </button>
               <div style={{ textAlign:'center', marginTop:10, fontSize:11, color:'rgba(200,195,220,.35)', fontWeight:300 }}>New members get 1 FREE Credit &nbsp;·&nbsp; No credit card required</div>
@@ -387,7 +387,7 @@ export default function LandingPage() {
           </div>
           {/* Bottom CTA */}
           <div style={{ padding:'0 20px 44px' }}>
-            <button className="ap-cta" style={{ marginBottom:12 }} onClick={() => { ga('service_view', {service_type:'unlock_full_reading'}); router.push('/login') }}>
+            <button className="ap-cta" style={{ marginBottom:12 }} onClick={() => { ga('service_view', {service_type:'unlock_full_reading'}); router.push('/login?tab=signup') }}>
               ✦ &nbsp;Unlock My Full Chart — Free
             </button>
             <button onClick={() => { ga('login_attempt'); router.push('/login') }} style={{ width:'100%', padding:14, background:'transparent', border:'1.5px solid rgba(201,168,76,.4)', borderRadius:50, color:'#C9A84C', fontFamily:"'Noto Sans',sans-serif", fontSize:13, fontWeight:600, cursor:'pointer', display:'block', textAlign:'center' }}>

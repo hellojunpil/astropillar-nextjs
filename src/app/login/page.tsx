@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -14,9 +14,11 @@ import { apiPost } from '@/lib/api'
 
 type Mode = 'login' | 'signup' | 'forgot'
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter()
-  const [mode, setMode] = useState<Mode>('login')
+  const searchParams = useSearchParams()
+  const initialMode: Mode = searchParams.get('tab') === 'signup' ? 'signup' : 'login'
+  const [mode, setMode] = useState<Mode>(initialMode)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -238,5 +240,13 @@ export default function LoginPage() {
         </div>
       </div>
     </main>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginContent />
+    </Suspense>
   )
 }
