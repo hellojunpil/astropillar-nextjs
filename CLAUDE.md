@@ -294,7 +294,39 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 
 ## 다음 세션 시작 가이드
 
-> 마지막 작업: 2026-04-26 세션64 완료
+> 마지막 작업: 2026-04-26 세션65 완료
+
+### ✅ 세션65 완료 — 2026-04-26
+
+**작업 목록:**
+1. ✅ **CRO 전환 퍼널 전체 평가** — 로그아웃 상태에서 Landing → View2(Birth Form) → View3(Teaser Result) → /login 전 단계 Playwright 실측
+2. ✅ **CRO 평가 리포트 작성** — `D:\snap_pillar bck\result\result_20260426_6.txt` (4단계별 강/약점, 우선순위별 수정 권고)
+3. ✅ **/login?tab=signup 지원 추가** — useSearchParams + Suspense 래퍼, 퍼널 CTA 두 곳 링크 수정 (커밋 e2827b6)
+4. ✅ **Gender 버튼 선택 피드백 강화** — aria-pressed, ✓ 체크마크, 2px 골드 보더 + glow (커밋 b2227f9)
+
+- **Cloud Run**: 변경 없음
+- **Credit 변화**: 없음 (비회원 상태 테스트)
+
+**CRO 평가 핵심 발견:**
+| 단계 | 점수 | 핵심 이슈 |
+|------|------|-----------|
+| V1: Landing | ★★★★☆ | 소셜 프루프 부재 |
+| V2: Birth Form | ★★★★☆ | Gender 버튼 피드백 불명 (→ 수정 완료) |
+| V3: Teaser Result | ★★★★☆ | STEP 2/2 단계 불일치 |
+| /login | ★★★☆☆ | Sign In 탭 기본값 (→ 수정 완료) |
+
+**퍼널 강점:**
+- "Gemini × Fierce Earth" + "The Grounded Talker" 아이덴티티 → 강력한 차별화
+- "Unlock My Full Chart — Free" + "No credit card required" 조합
+- "Continue with Google" 원클릭 소셜 로그인
+
+**다음 세션 우선순위:**
+1. 🟡 [P2] **PersonPicker 저장 인물 1명일 때 auto-select**
+2. 🟡 [P2] **STEP 2 OF 2 → STEP 2 OF 3 표기 수정** (또는 STEP 표시 제거)
+3. 🟡 [P2] **Share CTA 위치 조정** — 회원가입 전제 명확화
+4. 🟡 [P3] **Landing Hero 소셜 프루프 강화** (별점, 리뷰 수)
+
+---
 
 ### ✅ 세션64 완료 — 2026-04-26
 
