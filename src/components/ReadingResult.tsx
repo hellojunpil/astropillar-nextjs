@@ -174,7 +174,29 @@ function parseScenarioFallback(text: string): Section[] {
   }).filter(s => s.content.length > 0)
 }
 
-export function parseResult(raw: unknown): Section[] {
+// Yearly reading keywords (GPT sometimes outputs section headers without emoji)
+const YEARLY_KEYWORDS = ['Glance','Career','Love','Relationships','Health','Vitality','Growth','Learning','Monthly','Highlights','Strategy']
+const YEARLY_SPLIT_RE = new RegExp(
+  `\\n(?=[✨💼❤🌿📊📅💡]?\\s*(?:\\d{4}\\s+)?(?:Your\\s+)?(?:${YEARLY_KEYWORDS.join('|')}))`,
+  'u'
+)
+
+function parseYearlyFallback(text: string): Section[] {
+  const parts = text.split(YEARLY_SPLIT_RE).filter(p => p && p.trim().length > 30)
+  if (parts.length < 3) return []
+  return parts.map(p => {
+    const trimmed = p.trim()
+    const firstNl = trimmed.indexOf('\n')
+    if (firstNl > 0 && firstNl < 80) {
+      const rawTitle = trimmed.substring(0, firstNl).replace(/^[✨💼❤🌿📊📅💡]\s*/, '').trim()
+      const content = trimmed.substring(firstNl + 1).trim()
+      if (content.length > 20) return { title: rawTitle, content }
+    }
+    return { content: trimmed }
+  }).filter(s => s.content.length > 0)
+}
+
+export function parseResult(raw: unknown, readingType?: string): Section[] {
   if (!raw) return []
   if (typeof raw === 'string') {
     const blocks = raw.replace(/\r\n/g, '\n').split(SPLIT_RE)
@@ -193,6 +215,14 @@ export function parseResult(raw: unknown): Section[] {
       if (SCENARIO_TITLES.slice(1).some(t => combined.includes(t + ' ') || combined.includes(t + '\n'))) {
         const fallback = parseScenarioFallback(combined)
         if (fallback.length >= 3) return fallback
+      }
+    }
+    // If yearly reading got few sections, try yearly-specific keyword fallback
+    if (sections.length <= 3 && readingType === 'yearly') {
+      const combined = sections.map(s => [s.title, s.content].filter(Boolean).join('\n')).join('\n\n')
+      if (YEARLY_KEYWORDS.some(k => combined.includes(k))) {
+        const fallback = parseYearlyFallback(combined)
+        if (fallback.length >= 4) return fallback
       }
     }
     return sections
@@ -1044,7 +1074,7 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
   const data = (typeof raw === 'object' && raw !== null) ? raw as Record<string,unknown> : {}
   const pillars = extractPillars(data)
   const western = extractWestern(data)
-  const sections = parseResult(raw)
+  const sections = parseResult(raw, data.reading_type as string | undefined)
 
   // Day master info for /explain link
   const dayPillar = pillars?.[2] ?? null
