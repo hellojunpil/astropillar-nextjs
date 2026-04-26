@@ -580,31 +580,26 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 
 ### 다음 세션 우선순위
 
+> 세션65 기준 최신화 (2026-04-26)
+
 **버그 수정**
-1. **[버그]** 랜딩 "100% Private. Never stored. Never shared." 문구 교체 (법적 리스크) ← 광고 집행 전 필수
-2. **[버그]** Astrology Profile RISING 카드 "ASC" 텍스트 → 별자리 이미지 수정
+1. **[P1]** 랜딩 "100% Private. Never stored. Never shared." 문구 교체 (법적 리스크) ← 광고 집행 전 필수
+2. **[P2]** Astrology Profile RISING 카드 "ASC" 텍스트 → 별자리 이미지 수정
 
 **UX 개선**
-3. **[UX]** Scenario Reading 단일 장문 서사 → 4섹션 아코디언 분리 (Short Answer / In-Depth / Timing / Action Steps)
-4. **[UX]** 폰트 개선 — 리딩 본문 Lora(세리프)로 교체 검토
-5. **[개선]** PersonPicker 저장 인물 1명일 때 auto-select
+3. **[P2]** PersonPicker 저장 인물 1명일 때 auto-select
+4. **[P2]** STEP 2 OF 2 표기 수정 → "STEP 2 OF 3" 또는 STEP 제거 (회원가입이 실제 3단계)
+5. **[P3]** Share CTA 위치 조정 — 회원가입 전제 명확화 ("Join free → then share to earn")
+6. **[P3]** Landing Hero 소셜 프루프 강화 (리뷰 수, 별점 추가)
+7. **[P3]** Chart Signals 생년월일 기반 구체화 (Barnum effect 최소화)
 
-**전환율 개선 (로그인 컨버전) — 2026-04-23 분석**
-현재 문제:
-- "Read My Stars & Fate — Free" CTA → Today's Fortune (로그인 없이 이용) → 가입 없이 이탈
-- 랜딩에 실제 리딩 결과물 미리보기 없음 (비주얼만 있고 콘텐츠 없음)
-- 플로팅 버블("My toxic trait", "When will I meet them?")이 클릭 불가 — 감정 훅 낭비
-- "Sign In" 버튼만 있고 신규 유저용 "Sign Up" 진입점 없음
-
-우선순위별 개선안:
-- **①[최우선]** 플로팅 버블 클릭 → "Enter your birth info" → 생년월일 입력 → 가입 → 답 바로 표시 (욕구 최고점에서 전환)
-- **②** 스크롤 시 실제 Personal Fortune 결과 일부를 블러 처리 + "Sign up to read yours" 오버레이
-- **③** Today's Fortune 무료 이용 시 생년월일 입력 = 계정 생성으로 연결 (가입 마찰 최소화)
-- **④** CTA 문구 변경: "✦ Read My Stars & Fate — Free" → "✦ Reveal My Chart — Free" + 아래에 `No credit card · Takes 30 seconds`
+**✅ 완료된 CRO 수정 (세션65)**
+- ✅ /login?tab=signup — 퍼널 CTA → Sign Up 탭 자동 활성 (커밋 e2827b6)
+- ✅ Gender 버튼 aria-pressed + ✓ 체크마크 피드백 (커밋 b2227f9)
 
 **기타**
-6. **[배포]** `firebase deploy --only firestore:rules`
-7. **[비즈]** 크레딧 소모량 조정 검토 — Personal Fortune/Scenario/Compatibility 2크레딧, Yearly 3크레딧
+8. **[배포]** `firebase deploy --only firestore:rules`
+9. **[비즈]** 크레딧 소모량 조정 검토 — Personal Fortune/Scenario/Compatibility 2크레딧, Yearly 3크레딧
 
 ### 핵심 파일 경로
 | 파일 | 역할 |
