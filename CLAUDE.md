@@ -294,7 +294,70 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 
 ## 다음 세션 시작 가이드
 
-> 마지막 작업: 2026-04-26 세션62 완료
+> 마지막 작업: 2026-04-26 세션64 완료
+
+### ✅ 세션64 완료 — 2026-04-26
+
+**작업 목록:**
+1. ✅ **Yearly Fortune 아코디언 버그 수정** — `parseYearlyFallback()` 신규 추가, `parseResult()` 시그니처에 `readingType?` 파라미터 추가, yearly 타입일 때 키워드 기반 fallback 파싱 (커밋 02f3aa8)
+2. ✅ **test06 전체 서비스 7항목 평가 QA** — test06(2001-09-05 ♀ Miami 07:30-09:30) 신규 생성 후 6개 서비스 전수 검증
+3. ✅ **평가 리포트 작성** — `D:\snap_pillar bck\result\result_20260426_5.txt` (7개 기준 항목별 채점)
+
+- **Cloud Run**: 변경 없음 (revision 00190-ksf)
+- **Credit 변화**: 128 → 122 (6개 서비스 × 1 Credit, Yearly는 2 Credit)
+
+**QA 결과 요약 (세션64 — test06 기준):**
+| 서비스 | 결과 | 평균점수 |
+|--------|------|---------|
+| Personal Fortune | ✅ PASS | 4.75/5 |
+| Personal Daily | ✅ PASS | 4.50/5 |
+| Yearly Fortune | ✅ PASS | 4.75/5 (아코디언 버그 수정 확인) |
+| Compatibility | ✅ PASS | 4.83/5 (77/100) |
+| Scenario | ✅ PASS | 5.0/5 |
+| Today's Fortune | ✅ PASS | 4.3/5 (Moon Phase 정상 확인) |
+
+**종합 품질: 4.69/5.0 (93.8%) ★★★★★**
+
+**기존 대비 주요 개선:**
+- Yearly Fortune: 8.5→9.5/10 (+1.0점, 아코디언 7섹션 완전 정상화)
+- Scenario: 9.5→9.8/10 (+0.3점)
+- Moon Phase API: 이전 405 오류 → 현재 정상 (Waxing Gibbous 70%)
+
+**다음 세션 우선순위:**
+1. 🟡 [P2] **PersonPicker 저장 인물 1명일 때 auto-select**
+2. 🟡 [P2] **Yearly Monthly Highlights 월별 수치 검증**
+3. 🟡 [P3] **Today's Fortune 중국 별자리 클릭 테스트**
+4. 🟡 [P3] **명리 용어 설명 툴팁** (Rob Wealth, 7 Killings 등)
+
+---
+
+### ✅ 세션63 완료 — 2026-04-26
+
+**작업 목록:**
+1. ✅ **Windows 이모지 렌더링 방지** — `ZODIAC_SYMBOL` / `PLANET_SYMBOLS` 모든 값에 `︎` 추가, Rising 카드 심볼 `↑`으로 교체 (커밋 4b1030a)
+2. ✅ **Firestore 스코어 완전 활용** — `today/page.tsx`에 6개 바 차트(Love/Work/Money/Health/Social/Creative) + Best Match 조디악 이미지 카드 추가 (커밋 27be960)
+3. ✅ **test04 전체 서비스 최종 QA** — 6개 서비스 6/6 PASS
+
+- **테스트 리포트**: `D:\snap_pillar bck\result\result_20260426_3.txt`
+- **Cloud Run**: 변경 없음 (revision 00190-ksf)
+- **Credit 변화**: 140 → 134 (6개 서비스 × 1 Credit, Today's Fortune은 무료)
+
+**QA 결과 요약 (세션63 — test04 기준):**
+| 서비스 | 결과 | 비고 |
+|--------|------|------|
+| Today's Fortune | ✅ PASS | 6개 스코어 바, Best Match Scorpio 조디악 카드 |
+| Personal Fortune | ✅ PASS | 7섹션, Rising ↑ 심볼 (Windows 이모지 없음) |
+| Personal Daily | ✅ PASS | 날짜 인젝션, AM/PM 바차트 |
+| Yearly Fortune | ✅ PASS | Jan-Dec Overall 라인 차트, 아코디언 정상 |
+| Compatibility | ✅ PASS | 74/100 레이더, You/Partner 스위처, 6섹션 |
+| Scenario Reading | ✅ PASS | 4섹션 (Short Answer 기본 열림 확인) |
+
+**다음 세션 우선순위:**
+1. 🟡 [P2] **Yearly Fortune 월별 점수 숫자 표시** — 차트에 수치 직접 표기
+2. 🟡 [P3] **PersonPicker 저장 인물 1명일 때 auto-select**
+3. 🟡 [P3] **LifespanChart 신규 리딩 확인** (lifespan_points 포함 여부)
+
+---
 
 ### ✅ 세션62 완료 — 2026-04-26
 
