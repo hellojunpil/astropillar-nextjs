@@ -12,10 +12,25 @@ export const metadata: Metadata = {
     google: '91ba17f1e5a9c408',
   },
   openGraph: {
-    title: 'AstroPillar',
-    description: 'Your BaZi + Astrology reading — free.',
+    title: 'AstroPillar — Where the stars meet your fate',
+    description: 'Your free BaZi + Astrology reading. Discover what your birth chart really says.',
     url: 'https://astropillar.com',
     siteName: 'AstroPillar',
+    type: 'website',
+    images: [
+      {
+        url: 'https://astropillar.com/home.png',
+        width: 1200,
+        height: 630,
+        alt: 'AstroPillar — BaZi & Astrology Reading',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'AstroPillar — Where the stars meet your fate',
+    description: 'Your free BaZi + Astrology reading. Discover what your birth chart really says.',
+    images: ['https://astropillar.com/home.png'],
   },
 }
 
