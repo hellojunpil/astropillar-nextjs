@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     type: 'website',
     images: [
       {
-        url: 'https://astropillar.com/home.png',
+        url: 'https://astropillar.com/og-image.png',
         width: 1200,
         height: 630,
         alt: 'AstroPillar — BaZi & Astrology Reading',
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'AstroPillar — Where the stars meet your fate',
     description: 'Your free BaZi + Astrology reading. Discover what your birth chart really says.',
-    images: ['https://astropillar.com/home.png'],
+    images: ['https://astropillar.com/og-image.png'],
   },
 }
 
