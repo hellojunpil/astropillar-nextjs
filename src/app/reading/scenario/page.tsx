@@ -8,7 +8,7 @@ import ReadingResult from '@/components/ReadingResult'
 import ReadingPageShell from '@/components/ReadingPageShell'
 import { apiPost } from '@/lib/api'
 import { gtagEvent } from '@/lib/gtag'
-import { saveReading, birthDateStr, getPeople, SavedPerson } from '@/lib/firestore'
+import { saveReading, createShare, birthDateStr, getPeople, SavedPerson } from '@/lib/firestore'
 import ReadingLoader from '@/components/ReadingLoader'
 
 const EXAMPLE_QUESTIONS = [
@@ -30,6 +30,7 @@ export default function ScenarioPage() {
   const [error, setError] = useState('')
   const [step, setStep] = useState<'form' | 'question'>('form')
   const [people, setPeople] = useState<SavedPerson[]>([])
+  const [shareId, setShareId] = useState<string | null>(null)
 
   useEffect(() => {
     if (user?.email) getPeople(user.email).then(setPeople)
@@ -69,6 +70,8 @@ export default function ScenarioPage() {
       await apiPost('/use_pouch', { email: user.email, reading_type: 'scenario' })
       const birth_date = birthDateStr(birthData.year, birthData.month, birthData.day)
       await saveReading(user.email, { reading_type: 'scenario', name: birthData.name, birth_date, birth_city: birthData.city, result: raw })
+      const sid = await createShare({ reading_type: 'scenario', name: birthData.name, birth_date, birth_city: birthData.city, result: raw, birth_data: birthData })
+      setShareId(sid)
       setResult(raw); refreshCredits(cost)
       gtagEvent('reading_completed', { reading_type: 'scenario' })
     } catch (e: unknown) {
@@ -83,7 +86,7 @@ export default function ScenarioPage() {
   return (
     <ReadingPageShell title="Scenario Reading" subtitle="Get cosmic guidance on a specific situation — ask anything" emoji="🔮" badge={`${cost} Credit${cost !== 1 ? 's' : ''}`} badgeColor="#a78bfa" credits={credits} requiredCredits={cost} inProgress={submitting || !!result}>
       {result ? (
-        <ReadingResult raw={result} onReset={() => { setResult(null); setStep('form'); setBirthData(null); setQuestion('') }} userEmail={user?.email ?? undefined} />
+        <ReadingResult raw={result} onReset={() => { setResult(null); setStep('form'); setBirthData(null); setQuestion(''); setShareId(null) }} userEmail={user?.email ?? undefined} shareId={shareId ?? undefined} />
       ) : submitting ? (
         <ReadingLoader onComplete={() => {}} />
       ) : step === 'form' ? (

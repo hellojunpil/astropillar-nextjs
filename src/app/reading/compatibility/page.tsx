@@ -6,7 +6,7 @@ import ReadingResult from '@/components/ReadingResult'
 import ReadingPageShell from '@/components/ReadingPageShell'
 import { apiPost } from '@/lib/api'
 import { gtagEvent } from '@/lib/gtag'
-import { saveReading, getCachedReading, getPeople, savePerson, birthDateStr, SavedPerson } from '@/lib/firestore'
+import { saveReading, createShare, getCachedReading, getPeople, savePerson, birthDateStr, SavedPerson } from '@/lib/firestore'
 import ReadingLoader from '@/components/ReadingLoader'
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
@@ -75,6 +75,7 @@ export default function CompatibilityPage() {
   const [result, setResult] = useState<unknown>(null)
   const [fromCache, setFromCache] = useState(false)
   const [error, setError] = useState('')
+  const [shareId, setShareId] = useState<string | null>(null)
 
   // Inline add person form state
   const [showAddForm, setShowAddForm] = useState(false)
@@ -131,6 +132,8 @@ export default function CompatibilityPage() {
       })
       await apiPost('/use_pouch', { email: user.email, reading_type: 'compatibility' })
       await saveReading(user.email, { reading_type: 'compatibility', name: cacheKey, birth_date: cacheDate, birth_city: cacheCity, result: raw })
+      const sid = await createShare({ reading_type: 'compatibility', name: cacheKey, birth_date: cacheDate, birth_city: cacheCity, result: raw })
+      setShareId(sid)
       setResult(raw)
       setFromCache(false)
       refreshCredits(cost)
@@ -176,9 +179,10 @@ export default function CompatibilityPage() {
       {result ? (
         <ReadingResult
           raw={result}
-          onReset={() => { setResult(null); setFromCache(false) }}
+          onReset={() => { setResult(null); setFromCache(false); setShareId(null) }}
           userEmail={user?.email ?? undefined}
           fromCache={fromCache}
+          shareId={shareId ?? undefined}
         />
       ) : submitting ? (
         <ReadingLoader onComplete={() => {}} />

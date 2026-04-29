@@ -8,7 +8,7 @@ import ReadingResult from '@/components/ReadingResult'
 import ReadingPageShell from '@/components/ReadingPageShell'
 import { apiPost } from '@/lib/api'
 import { gtagEvent } from '@/lib/gtag'
-import { saveReading, getCachedReading, savePerson, getPeople, birthDateStr, SavedPerson } from '@/lib/firestore'
+import { saveReading, createShare, getCachedReading, savePerson, getPeople, birthDateStr, SavedPerson } from '@/lib/firestore'
 import ReadingLoader from '@/components/ReadingLoader'
 
 export default function PersonalFortunePage() {
@@ -21,6 +21,7 @@ export default function PersonalFortunePage() {
   const [birthData, setBirthData] = useState<BirthData | null>(null)
   const [error, setError] = useState('')
   const [people, setPeople] = useState<SavedPerson[]>([])
+  const [shareId, setShareId] = useState<string | null>(null)
 
   useEffect(() => {
     if (user?.email) getPeople(user.email).then(setPeople)
@@ -46,6 +47,8 @@ export default function PersonalFortunePage() {
       })
       await apiPost('/use_pouch', { email: user.email, reading_type: 'personal_fortune' })
       await saveReading(user.email, { reading_type: 'personal_fortune', name: data.name, birth_date, birth_city: data.city, result: raw })
+      const sid = await createShare({ reading_type: 'personal_fortune', name: data.name, birth_date, birth_city: data.city, result: raw, birth_data: data })
+      setShareId(sid)
       setResult(raw); setFromCache(false); refreshCredits(cost)
       gtagEvent('reading_completed', { reading_type: 'personal_fortune' })
     } catch (e: unknown) {
@@ -67,7 +70,7 @@ export default function PersonalFortunePage() {
   return (
     <ReadingPageShell title="Personal Fortune" subtitle="Your lifetime destiny — career, love, life theme, and hidden potential" emoji="✨" badge={`${cost} Credit${cost !== 1 ? 's' : ''}`} credits={credits} requiredCredits={cost} inProgress={submitting || !!result}>
       {result ? (
-        <ReadingResult raw={result} onReset={() => { setResult(null); setFromCache(false); setBirthData(null) }} userEmail={user?.email ?? undefined} fromCache={fromCache} birthData={birthData ?? undefined} />
+        <ReadingResult raw={result} onReset={() => { setResult(null); setFromCache(false); setBirthData(null); setShareId(null) }} userEmail={user?.email ?? undefined} fromCache={fromCache} birthData={birthData ?? undefined} shareId={shareId ?? undefined} />
       ) : submitting ? (
         <ReadingLoader onComplete={() => {}} />
       ) : (

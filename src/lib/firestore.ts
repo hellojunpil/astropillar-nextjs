@@ -36,14 +36,47 @@ export function birthDateStr(year: number, month: number, day: number): string {
 export async function saveReading(
   email: string,
   data: Omit<ReadingRecord, 'id' | 'created_at'>
-): Promise<void> {
+): Promise<string | null> {
   try {
-    await addDoc(collection(db, 'users', email, 'readings'), {
+    const ref = await addDoc(collection(db, 'users', email, 'readings'), {
       ...data,
       created_at: serverTimestamp(),
     })
+    return ref.id
   } catch {
-    // non-fatal
+    return null
+  }
+}
+
+export interface ShareRecord {
+  reading_type: string
+  name: string
+  birth_date: string
+  birth_city: string
+  result: unknown
+  birth_data?: unknown
+  created_at?: Timestamp
+}
+
+export async function createShare(data: Omit<ShareRecord, 'created_at'>): Promise<string | null> {
+  try {
+    const ref = await addDoc(collection(db, 'shares'), {
+      ...data,
+      created_at: serverTimestamp(),
+    })
+    return ref.id
+  } catch {
+    return null
+  }
+}
+
+export async function getShare(shareId: string): Promise<ShareRecord | null> {
+  try {
+    const snap = await getDoc(doc(db, 'shares', shareId))
+    if (!snap.exists()) return null
+    return snap.data() as ShareRecord
+  } catch {
+    return null
   }
 }
 

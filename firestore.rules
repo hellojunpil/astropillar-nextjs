@@ -13,5 +13,9 @@ service cloud.firestore {
     match /transactions/{doc} {
       allow write: if true;
     }
+    match /shares/{doc} {
+      allow read: if true;
+      allow write: if true;
+    }
   }
 }

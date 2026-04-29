@@ -931,13 +931,14 @@ function ZodiacBadge({ sign }: { sign: string }) {
   )
 }
 
-function ShareButton({ userEmail }: { userEmail: string }) {
+function ShareButton({ userEmail, shareId }: { userEmail: string; shareId?: string }) {
   const [msg, setMsg] = useState('')
   const [loading, setLoading] = useState(false)
   async function handleShare() {
     if (loading) return
     setLoading(true)
-    const shareUrl = typeof window !== 'undefined' ? window.location.origin : 'https://astropillar.com'
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://astropillar.com'
+    const shareUrl = shareId ? `${origin}/share/${shareId}` : origin
     const shareData = { title:'AstroPillar — Where the stars meet your fate', text:'Get your free BaZi + Astrology reading ✨', url:shareUrl }
     try {
       if (navigator.share) { await navigator.share(shareData) }
@@ -1065,9 +1066,10 @@ function AccordionSection({ title, content, defaultOpen, chartContent }: { title
 // ─── Main component ───────────────────────────────────────────────────────────
 interface Props {
   raw: unknown; onReset: () => void; userEmail?: string; fromCache?: boolean; birthData?: BirthData
+  shareId?: string; isSharedView?: boolean
 }
 
-export default function ReadingResult({ raw, onReset, userEmail, fromCache, birthData }: Props) {
+export default function ReadingResult({ raw, onReset, userEmail, fromCache, birthData, shareId, isSharedView }: Props) {
   const [chartTab, setChartTab] = useState<'bazi'|'elements'|'astrology'>('bazi')
   const [personTab, setPersonTab] = useState<'p1'|'p2'>('p1')
 
@@ -1356,8 +1358,8 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
           </div>
         )}
         {birthData && <NatalChartViewer birthData={birthData} />}
-        {birthData && <ScenarioButton birthData={birthData} />}
-        {userEmail && <ShareButton userEmail={userEmail} />}
+        {!isSharedView && birthData && <ScenarioButton birthData={birthData} />}
+        {!isSharedView && userEmail && <ShareButton userEmail={userEmail} shareId={shareId} />}
         <button onClick={onReset} style={{ background:'none', border:'1px solid var(--border)', color:'var(--text-muted)', borderRadius:50, padding:12, fontSize:14, cursor:'pointer' }}>
           ← New Reading
         </button>
