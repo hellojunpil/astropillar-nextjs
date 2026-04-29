@@ -37,7 +37,7 @@ export default function YearlyFortunePage() {
     try {
       const birth_date = birthDateStr(data.year, data.month, data.day)
       const cached = await getCachedReading(user.email, 'yearly', data.name, birth_date, data.city)
-      if (cached) { setResult(cached.result); setFromCache(true); return }
+      if (cached) { const sid = await createShare({ reading_type: 'yearly', name: data.name, birth_date, birth_city: data.city, result: cached.result, birth_data: data }); setShareId(sid); setResult(cached.result); setFromCache(true); return }
       const birthtime = data.hour !== null
         ? `${String(data.hour).padStart(2,'0')}:${String(data.minute ?? 0).padStart(2,'0')}`
         : '12:00'

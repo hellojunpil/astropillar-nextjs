@@ -111,6 +111,8 @@ export default function CompatibilityPage() {
       const cacheCity = `${person1.birth_city}+${person2.birth_city}`
       const cached = await getCachedReading(user.email, 'compatibility', cacheKey, cacheDate, cacheCity)
       if (cached) {
+        const sid = await createShare({ reading_type: 'compatibility', name: cacheKey, birth_date: cacheDate, birth_city: cacheCity, result: cached.result })
+        setShareId(sid)
         setResult(cached.result)
         setFromCache(true)
         return
