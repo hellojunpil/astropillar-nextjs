@@ -11,7 +11,8 @@ import { gtagEvent } from '@/lib/gtag'
 import { saveReading, createShare, getCachedReading, savePerson, getPeople, birthDateStr, SavedPerson } from '@/lib/firestore'
 import ReadingLoader from '@/components/ReadingLoader'
 
-const currentYear = new Date().getFullYear()
+const _now = new Date()
+const currentYear = _now.getMonth() >= 10 ? _now.getFullYear() + 1 : _now.getFullYear()
 
 export default function YearlyFortunePage() {
   const { user, credits, loading, refreshCredits } = useAuth()
