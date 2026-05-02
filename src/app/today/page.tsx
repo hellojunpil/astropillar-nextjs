@@ -157,7 +157,7 @@ export default function TodayFortunePage() {
 
   // ── Tarot tab state ───────────────────────────────────────────
   const [tarotCard, setTarotCard] = useState<{ name: string; file: string } | null>(null)
-  const [flipped, setFlipped] = useState(false)
+  const [tarotPhase, setTarotPhase] = useState<'grid' | 'flipping' | 'revealed'>('grid')
   const [tarotLoading, setTarotLoading] = useState(false)
   const [tarotResult, setTarotResult] = useState<string | null>(null)
   const [tarotError, setTarotError] = useState('')
@@ -177,7 +177,7 @@ export default function TodayFortunePage() {
         const card = MAJOR_ARCANA.find(c => c.file === saved.cardFile)
         if (card) {
           setTarotCard(card)
-          setFlipped(true)
+          setTarotPhase('revealed')
           setTarotResult(saved.result)
           setAlreadyDrawn(true)
           apiCalledRef.current = true
@@ -211,8 +211,11 @@ export default function TodayFortunePage() {
   function selectTarotCard(card: { name: string; file: string }) {
     if (alreadyDrawn || tarotCard) return
     setTarotCard(card)
-    setTimeout(() => setFlipped(true), 80)
-    setTimeout(() => fetchTarotReading(card), 820)
+    setTarotPhase('flipping')
+    setTimeout(() => {
+      setTarotPhase('revealed')
+      fetchTarotReading(card)
+    }, 900)
   }
 
   async function fetchTarotReading(card: { name: string; file: string }) {
@@ -359,79 +362,95 @@ export default function TodayFortunePage() {
           {/* ── Daily Tarot tab ─────────────────────────────────── */}
           {activeTab === 'tarot' && (
             <div>
-              {!tarotCard ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  <div style={{ textAlign: 'center' }}>
-                    <p className="font-display" style={{ color: '#fff', fontSize: 20, fontWeight: 600, marginBottom: 4 }}>Daily Tarot</p>
-                    <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>Choose one card from the Major Arcana — one draw per day.</p>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
-                    {MAJOR_ARCANA.map(card => (
-                      <button key={card.file} onClick={() => selectTarotCard(card)} style={{
-                        background: 'none', border: 'none', padding: 0, cursor: 'pointer',
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
-                      }}>
+              {/* Grid phase: show all 22 cards face-down */}
+              <div style={{
+                opacity: tarotPhase === 'revealed' ? 0 : 1,
+                transition: 'opacity 0.4s ease',
+                pointerEvents: tarotPhase === 'revealed' ? 'none' : 'auto',
+                display: tarotPhase === 'revealed' ? 'none' : 'block',
+              }}>
+                <div style={{ textAlign: 'center', marginBottom: 16 }}>
+                  <p className="font-display" style={{ color: '#fff', fontSize: 20, fontWeight: 600, marginBottom: 4 }}>Daily Tarot</p>
+                  <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>
+                    {alreadyDrawn ? 'Come back tomorrow for a new draw.' : 'Choose one card — one draw per day.'}
+                  </p>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+                  {MAJOR_ARCANA.map(card => {
+                    const isSelected = tarotCard?.file === card.file
+                    const isFlipping = tarotPhase === 'flipping'
+                    return (
+                      <div key={card.file} style={{
+                        perspective: '600px',
+                        opacity: isFlipping && !isSelected ? 0.12 : 1,
+                        transition: 'opacity 0.35s ease',
+                        cursor: tarotCard ? 'default' : 'pointer',
+                      }} onClick={() => !tarotCard && selectTarotCard(card)}>
                         <div style={{
                           width: '100%', aspectRatio: '2/3',
-                          background: 'linear-gradient(145deg, #1a2a4a 0%, #0d1626 100%)',
-                          border: '1.5px solid rgba(201,168,76,0.4)',
-                          borderRadius: 10,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          boxShadow: '0 3px 10px rgba(0,0,0,0.4)',
-                          transition: 'border-color 0.15s, transform 0.15s',
-                        }}
-                          onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--gold)'; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)' }}
-                          onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(201,168,76,0.4)'; (e.currentTarget as HTMLDivElement).style.transform = 'none' }}
-                        >
-                          <span style={{ color: 'rgba(201,168,76,0.5)', fontSize: 18 }}>✦</span>
+                          position: 'relative',
+                          transformStyle: 'preserve-3d',
+                          transition: 'transform 0.75s ease',
+                          transform: isSelected && isFlipping ? 'rotateY(180deg)' : 'rotateY(0deg)',
+                        }}>
+                          {/* Back face */}
+                          <div style={{
+                            position: 'absolute', inset: 0, borderRadius: 8,
+                            background: 'linear-gradient(145deg, #1a2a4a 0%, #0d1626 100%)',
+                            border: `1.5px solid ${isSelected && isFlipping ? 'var(--gold)' : 'rgba(201,168,76,0.35)'}`,
+                            WebkitBackfaceVisibility: 'hidden', backfaceVisibility: 'hidden',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            boxShadow: '0 3px 8px rgba(0,0,0,0.4)',
+                            transition: 'border-color 0.15s, transform 0.15s',
+                          }}
+                            onMouseEnter={e => { if (!tarotCard) { (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--gold)'; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-3px)' }}}
+                            onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(201,168,76,0.35)'; (e.currentTarget as HTMLDivElement).style.transform = 'none' }}
+                          >
+                            <span style={{ color: 'rgba(201,168,76,0.45)', fontSize: 16 }}>✦</span>
+                          </div>
+                          {/* Front face — only load image for selected card */}
+                          <div style={{
+                            position: 'absolute', inset: 0, borderRadius: 8, overflow: 'hidden',
+                            border: '1.5px solid var(--gold)',
+                            WebkitBackfaceVisibility: 'hidden', backfaceVisibility: 'hidden',
+                            transform: 'rotateY(180deg)',
+                            boxShadow: '0 3px 8px rgba(0,0,0,0.4)',
+                          }}>
+                            {isSelected && (
+                              <Image src={`${IMG}${card.file}.webp`} alt={card.name} fill style={{ objectFit: 'cover' }} unoptimized />
+                            )}
+                          </div>
                         </div>
-                      </button>
-                    ))}
-                  </div>
+                      </div>
+                    )
+                  })}
                 </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
+              </div>
+
+              {/* Result phase: large card + interpretation */}
+              {tarotPhase === 'revealed' && tarotCard && (
+                <div style={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20,
+                  animation: 'fadeIn 0.5s ease',
+                }}>
                   {alreadyDrawn && (
-                    <p style={{ color: 'rgba(201,168,76,0.7)', fontSize: 12, textAlign: 'center' }}>
-                      Today&apos;s card — come back tomorrow for a new draw.
+                    <p style={{ color: 'rgba(201,168,76,0.6)', fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', textAlign: 'center' }}>
+                      Today&apos;s card · Come back tomorrow
                     </p>
                   )}
 
-                  {/* Flipped card */}
-                  <div style={{ width: 180, height: 300, perspective: '1000px' }}>
-                    <div style={{
-                      width: '100%', height: '100%', position: 'relative',
-                      transformStyle: 'preserve-3d',
-                      transition: 'transform 0.75s ease',
-                      transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
-                    }}>
-                      <div style={{
-                        position: 'absolute', inset: 0, borderRadius: 12,
-                        background: 'linear-gradient(145deg, #1a2a4a 0%, #0d1626 100%)',
-                        border: '2px solid var(--gold)',
-                        WebkitBackfaceVisibility: 'hidden', backfaceVisibility: 'hidden',
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                        boxShadow: '0 8px 28px rgba(0,0,0,0.5)',
-                      }}>
-                        <span style={{ fontSize: 40, color: 'var(--gold)', opacity: 0.6 }}>✦</span>
-                      </div>
-                      <div style={{
-                        position: 'absolute', inset: 0, borderRadius: 12, overflow: 'hidden',
-                        border: '2px solid var(--gold)',
-                        WebkitBackfaceVisibility: 'hidden', backfaceVisibility: 'hidden',
-                        transform: 'rotateY(180deg)',
-                        boxShadow: '0 8px 28px rgba(0,0,0,0.5)',
-                      }}>
-                        <Image src={`${IMG}${tarotCard.file}.webp`} alt={tarotCard.name} fill style={{ objectFit: 'cover' }} unoptimized />
-                      </div>
-                    </div>
+                  <div style={{ width: 200, height: 333, borderRadius: 14, overflow: 'hidden', border: '2px solid var(--gold)', boxShadow: '0 12px 40px rgba(0,0,0,0.6)', position: 'relative' }}>
+                    <Image src={`${IMG}${tarotCard.file}.webp`} alt={tarotCard.name} fill style={{ objectFit: 'cover' }} unoptimized />
                   </div>
 
-                  <p className="font-display" style={{ color: 'var(--gold)', fontSize: 18, fontWeight: 600, letterSpacing: 1, textAlign: 'center' }}>
+                  <p className="font-display" style={{ color: 'var(--gold)', fontSize: 20, fontWeight: 600, letterSpacing: 1, textAlign: 'center' }}>
                     {tarotCard.name}
                   </p>
 
-                  {tarotLoading && <p style={{ color: 'var(--gold)', fontSize: 13 }}>✦ Reading the cards...</p>}
+                  {tarotLoading && (
+                    <p style={{ color: 'var(--gold)', fontSize: 13 }}>✦ Reading the cards...</p>
+                  )}
 
                   {tarotError && (
                     <div style={{ textAlign: 'center' }}>
