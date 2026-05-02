@@ -239,6 +239,15 @@ export default function TodayFortunePage() {
     apiCalledRef.current = true
     setTarotLoading(true); setTarotError('')
     try {
+      // Firestore 캐시 우선 조회
+      const docId = `${getTodayKey()}_${card.file}`
+      const snap = await getDoc(doc(db, 'daily_tarot', docId))
+      if (snap.exists()) {
+        setTarotResult((snap.data() as { content_text: string }).content_text)
+        if (isFirstDraw) setIsFirstDraw(false)
+        return
+      }
+      // 캐시 없으면 API 폴백
       const data = await apiPost<{ content_text: string }>('/tarot/daily', {
         card_name: card.name,
         card_image_url: `${IMG}${card.file}.webp`,
