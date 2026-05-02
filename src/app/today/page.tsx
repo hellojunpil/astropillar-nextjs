@@ -214,64 +214,18 @@ export default function TodayFortunePage() {
     setShuffledCards([...MAJOR_ARCANA].sort(() => Math.random() - 0.5))
   }
 
-  async function generateShareImage(imgUrl: string, label: string): Promise<Blob | null> {
-    return new Promise((resolve) => {
-      try {
-        const size = 1080
-        const canvas = document.createElement('canvas')
-        canvas.width = size; canvas.height = size
-        const ctx = canvas.getContext('2d')
-        if (!ctx) { resolve(null); return }
-        const bg = ctx.createLinearGradient(0, 0, 0, size)
-        bg.addColorStop(0, '#0a0a1a'); bg.addColorStop(1, '#16213E')
-        ctx.fillStyle = bg; ctx.fillRect(0, 0, size, size)
-        ctx.strokeStyle = 'rgba(201,168,76,0.6)'; ctx.lineWidth = 4
-        ctx.strokeRect(30, 30, size - 60, size - 60)
-        const img = document.createElement('img') as HTMLImageElement
-        img.crossOrigin = 'anonymous'
-        img.onload = () => {
-          const isTarot = imgUrl.includes('major_arcana')
-          const w = isTarot ? 340 : 480; const h = isTarot ? 570 : 480
-          const x = (size - w) / 2; const y = isTarot ? 130 : 150
-          ctx.drawImage(img, x, y, w, h)
-          ctx.fillStyle = '#C9A84C'
-          ctx.font = `bold ${isTarot ? 54 : 48}px Georgia, serif`
-          ctx.textAlign = 'center'
-          ctx.fillText(label, size / 2, y + h + 76)
-          ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.font = '30px sans-serif'
-          ctx.fillText('AstroPillar · astropillar.com/today', size / 2, y + h + 132)
-          canvas.toBlob(blob => resolve(blob), 'image/png')
-        }
-        img.onerror = () => resolve(null)
-        img.src = imgUrl
-      } catch { resolve(null) }
-    })
-  }
-
-  async function shareReading(imgUrl: string, label: string, type: 'tarot' | 'horoscope' | 'chinese') {
-    const shareUrl = 'https://astropillar.com/today'
+  async function shareReading(label: string, type: 'tarot' | 'horoscope' | 'chinese', imgFile: string) {
+    const shareUrl = `https://astropillar.com/today/share?type=${encodeURIComponent(type)}&id=${encodeURIComponent(imgFile)}&label=${encodeURIComponent(label)}`
     const text = type === 'tarot'
       ? `✦ I drew "${label}" from the Major Arcana today — what does your card say?`
       : type === 'horoscope'
       ? `✦ My ${label} horoscope for today has been revealed ✦`
       : `✦ Year of the ${label} — today's fortune revealed ✦`
     try {
-      const blob = await generateShareImage(imgUrl, label)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const nav = navigator as any
       if (nav.share) {
-        const files: File[] = []
-        if (blob) {
-          const f = new File([blob], 'astropillar.png', { type: 'image/png' })
-          if (nav.canShare?.({ files: [f] })) files.push(f)
-        }
-        const textWithUrl = `${text}\n${shareUrl}`
-        if (files.length) {
-          // Some platforms drop url when files are present — embed URL in text instead
-          await nav.share({ title: 'AstroPillar', text: textWithUrl, files })
-        } else {
-          await nav.share({ title: 'AstroPillar', text, url: shareUrl })
-        }
+        await nav.share({ title: 'AstroPillar', text, url: shareUrl })
       } else {
         await navigator.clipboard.writeText(`${text}\n${shareUrl}`)
         setShareToast('Link copied to clipboard!')
@@ -308,7 +262,7 @@ export default function TodayFortunePage() {
     { label: 'Creative', key: 'score_creative', color: '#fb923c' },
   ] as const
 
-  function FortuneResult({ fortune, mode, onBack, shareInfo }: { fortune: FortuneData; mode: 'horoscope'|'chinese'; onBack: () => void; shareInfo?: { imgUrl: string; label: string } }) {
+  function FortuneResult({ fortune, mode, onBack, shareInfo }: { fortune: FortuneData; mode: 'horoscope'|'chinese'; onBack: () => void; shareInfo?: { label: string; imgFile: string } }) {
     const scores = SCORE_ITEMS.filter(s => typeof fortune[s.key] === 'number')
     const bestMatch = typeof fortune.best_match === 'string' ? fortune.best_match : null
     const bestMatchSign = bestMatch ? HOROSCOPE_SIGNS.find(s => s.name.toLowerCase() === bestMatch.toLowerCase()) : null
@@ -354,7 +308,7 @@ export default function TodayFortunePage() {
         {shareInfo && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
             <button
-              onClick={() => shareReading(shareInfo.imgUrl, shareInfo.label, mode)}
+              onClick={() => shareReading(shareInfo.label, mode, shareInfo.imgFile)}
               style={{ width: '100%', background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.4)', color: 'var(--gold)', borderRadius: 50, padding: '11px', fontSize: 13, cursor: 'pointer' }}>
               ↗ Share Your {mode === 'horoscope' ? 'Horoscope' : 'Fortune'}
             </button>
@@ -557,7 +511,7 @@ export default function TodayFortunePage() {
                       </p>
 
                       <button
-                        onClick={() => tarotCard && shareReading(`${IMG}${tarotCard.file}.webp`, tarotCard.name, 'tarot')}
+                        onClick={() => tarotCard && shareReading(tarotCard.name, 'tarot', `${tarotCard.file}.webp`)}
                         style={{ width: '100%', background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.4)', color: 'var(--gold)', borderRadius: 50, padding: '11px', fontSize: 13, cursor: 'pointer', letterSpacing: 0.5 }}>
                         ↗ Share Your Card
                       </button>
@@ -604,7 +558,7 @@ export default function TodayFortunePage() {
                 <FortuneResult
                   fortune={horoFortune} mode="horoscope"
                   onBack={() => { setHoroStep('pick'); setHoroFortune(null); setHoroSelected(null) }}
-                  shareInfo={horoSelected ? { imgUrl: `${IMG}${HOROSCOPE_SIGNS.find(s => s.name === horoSelected)?.img ?? ''}`, label: horoSelected } : undefined}
+                  shareInfo={horoSelected ? { label: horoSelected, imgFile: HOROSCOPE_SIGNS.find(s => s.name === horoSelected)?.img ?? '' } : undefined}
                 />
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -655,7 +609,7 @@ export default function TodayFortunePage() {
                 <FortuneResult
                   fortune={chineseFortune} mode="chinese"
                   onBack={() => { setChineseStep('pick'); setChineseFortune(null); setChineseSelected(null) }}
-                  shareInfo={chineseSelected ? { imgUrl: `${IMG}${CHINESE_SIGNS.find(s => s.name === chineseSelected)?.img ?? ''}`, label: chineseSelected } : undefined}
+                  shareInfo={chineseSelected ? { label: chineseSelected, imgFile: CHINESE_SIGNS.find(s => s.name === chineseSelected)?.img ?? '' } : undefined}
                 />
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
