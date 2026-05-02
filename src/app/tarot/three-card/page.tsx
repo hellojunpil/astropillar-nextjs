@@ -145,7 +145,7 @@ export default function ThreeCardPage() {
     setPhase('loading')
     try {
       const res = await apiPost<{ content_text: string }>('/tarot/three_card', {
-        question: question.trim() || null,
+        question: question.trim(),
         cards: slots.map(c => c?.name ?? ''),
       })
       setLoadPct(99)
@@ -231,12 +231,16 @@ export default function ThreeCardPage() {
         {phase === 'question' && !notEnough && (
           <div className="card" style={{ padding: 24 }}>
             <p style={{ color: '#fff', fontWeight: 600, fontSize: 15, marginBottom: 6 }}>What&apos;s your question?</p>
-            <p style={{ color: 'var(--text-muted)', fontSize: 12, marginBottom: 14 }}>Optional — leave blank for a general reading.</p>
+            <p style={{ color: 'var(--text-muted)', fontSize: 12, marginBottom: 14 }}>Be specific. The cards will answer exactly what you ask.</p>
             <textarea value={question} onChange={e => setQuestion(e.target.value)}
-              placeholder="e.g. How will my career change this year?" rows={3}
-              style={{ width: '100%', background: '#0f1829', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 14px', color: '#fff', fontSize: 14, resize: 'none', outline: 'none', colorScheme: 'dark', boxSizing: 'border-box' }}
+              placeholder="e.g. Should I leave my current job this year?" rows={3}
+              style={{ width: '100%', background: '#0f1829', border: `1px solid ${question.trim() ? 'var(--gold)' : 'var(--border)'}`, borderRadius: 10, padding: '12px 14px', color: '#fff', fontSize: 14, resize: 'none', outline: 'none', colorScheme: 'dark', boxSizing: 'border-box', transition: 'border-color 0.2s' }}
             />
-            <button onClick={() => setPhase('selecting')} className="btn-gold" style={{ width: '100%', marginTop: 16, fontSize: 15, padding: '14px' }}>
+            {!question.trim() && (
+              <p style={{ color: 'rgba(201,168,76,0.7)', fontSize: 11, marginTop: 8 }}>✦ A question is required to begin your reading.</p>
+            )}
+            <button onClick={() => setPhase('selecting')} disabled={!question.trim()} className="btn-gold"
+              style={{ width: '100%', marginTop: 16, fontSize: 15, padding: '14px', opacity: question.trim() ? 1 : 0.4, cursor: question.trim() ? 'pointer' : 'not-allowed' }}>
               Shuffle the Deck →
             </button>
           </div>
