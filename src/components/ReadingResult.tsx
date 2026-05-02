@@ -120,7 +120,7 @@ function extractPersonWestern(data: Record<string,unknown>, prefix: string): Wes
   }
 }
 
-const EMOJI_SET = '✨💼❤️💰🌿📊💡🌟⚡🏥📅🎯✅⚠️🔮🔥💫☁️📚💬🌱🂠✦'
+const EMOJI_SET = '✨💼❤️💰🌿📊💡🌟⚡🏥📅🎯✅⚠️🔮🔥💫☁️📚💬🌱🂠✦🌀⚔⏪💭🌊🪞🌐🌗⭐'
 const EMOJI_RE = new RegExp(`[${EMOJI_SET}]`, 'u')
 // \n+ handles both single and double newlines before section headers (fixes intermittent Yearly split bug)
 // 🂠 = tarot card-back emoji for card sections; ✦ = tarot answer section delimiter
@@ -204,7 +204,7 @@ export function parseResult(raw: unknown, readingType?: string): Section[] {
     const sections = blocks.map(b => {
       const hMatch = b.match(/^#{1,3} (.+?)\n([\s\S]*)/)
       const bMatch = b.match(/^\*\*(.+?)\*\*\n?([\s\S]*)/)
-      const eMatch = b.match(new RegExp(`^[${EMOJI_SET}]\\s*(.+?)\\n([\\s\\S]*)`, 'u'))
+      const eMatch = b.match(new RegExp(`^[${EMOJI_SET}]\\uFE0F?\\s*(.+?)\\n([\\s\\S]*)`, 'u'))
       if (hMatch) return { title: hMatch[1].replace(/\*\*/g,'').replace(EMOJI_RE,'').trim(), content: hMatch[2].trim() }
       if (bMatch) return { title: bMatch[1].replace(EMOJI_RE,'').trim(), content: bMatch[2].trim() }
       if (eMatch) return { title: eMatch[1].replace(/\s*—.*$/,'').trim(), content: eMatch[2].trim() }
