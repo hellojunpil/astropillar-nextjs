@@ -69,7 +69,7 @@ const CHINESE_ORDER = ['Rat','Ox','Tiger','Rabbit','Dragon','Snake','Horse','Goa
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
 const DAYS = Array.from({length: 31}, (_, i) => i + 1)
 const YEARS = Array.from({length: 100}, (_, i) => new Date().getFullYear() - i)
-const TAROT_STORAGE_KEY = 'tarot_daily_v1'
+const TAROT_STORAGE_KEY = 'tarot_daily_v2'
 
 const selectStyle: React.CSSProperties = {
   flex: 1, background: '#0f1829', border: '1px solid var(--border)',
