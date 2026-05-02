@@ -69,7 +69,6 @@ const CHINESE_ORDER = ['Rat','Ox','Tiger','Rabbit','Dragon','Snake','Horse','Goa
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
 const DAYS = Array.from({length: 31}, (_, i) => i + 1)
 const YEARS = Array.from({length: 100}, (_, i) => new Date().getFullYear() - i)
-const TAROT_STORAGE_KEY = 'tarot_daily_v2'
 
 const selectStyle: React.CSSProperties = {
   flex: 1, background: '#0f1829', border: '1px solid var(--border)',
@@ -161,30 +160,13 @@ export default function TodayFortunePage() {
   const [tarotLoading, setTarotLoading] = useState(false)
   const [tarotResult, setTarotResult] = useState<string | null>(null)
   const [tarotError, setTarotError] = useState('')
-  const [alreadyDrawn, setAlreadyDrawn] = useState(false)
+  const [isFirstDraw, setIsFirstDraw] = useState(true)
   const apiCalledRef = useRef(false)
 
   useEffect(() => {
     apiGet<MoonPhaseData>('/moon_phase').then(d => setMoonPhase(d)).catch(() => {})
   }, [])
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(TAROT_STORAGE_KEY)
-      if (!raw) return
-      const saved = JSON.parse(raw)
-      if (saved.date === getTodayKey() && saved.cardFile && saved.result) {
-        const card = MAJOR_ARCANA.find(c => c.file === saved.cardFile)
-        if (card) {
-          setTarotCard(card)
-          setTarotPhase('revealed')
-          setTarotResult(saved.result)
-          setAlreadyDrawn(true)
-          apiCalledRef.current = true
-        }
-      }
-    } catch { /* ignore */ }
-  }, [])
 
   async function fetchFortune(sign: string, mode: 'horoscope' | 'chinese') {
     const setLoading = mode === 'horoscope' ? setHoroLoading : setChineseLoading
@@ -209,13 +191,22 @@ export default function TodayFortunePage() {
   }
 
   function selectTarotCard(card: { name: string; file: string }) {
-    if (alreadyDrawn || tarotCard) return
+    if (tarotPhase === 'flipping') return
     setTarotCard(card)
     setTarotPhase('flipping')
     setTimeout(() => {
       setTarotPhase('revealed')
       fetchTarotReading(card)
     }, 900)
+  }
+
+  function resetTarot() {
+    setTarotCard(null)
+    setTarotPhase('grid')
+    setTarotResult(null)
+    setTarotError('')
+    setTarotLoading(false)
+    apiCalledRef.current = false
   }
 
   async function fetchTarotReading(card: { name: string; file: string }) {
@@ -228,9 +219,7 @@ export default function TodayFortunePage() {
         card_image_url: `${IMG}${card.file}.webp`,
       })
       setTarotResult(data.content_text)
-      localStorage.setItem(TAROT_STORAGE_KEY, JSON.stringify({
-        date: getTodayKey(), cardFile: card.file, cardName: card.name, result: data.content_text,
-      }))
+      if (isFirstDraw) setIsFirstDraw(false)
     } catch (e: unknown) {
       setTarotError(e instanceof Error ? e.message : 'Could not load your reading. Please try again.')
       apiCalledRef.current = false
@@ -372,7 +361,7 @@ export default function TodayFortunePage() {
                 <div style={{ textAlign: 'center', marginBottom: 16 }}>
                   <p className="font-display" style={{ color: '#fff', fontSize: 20, fontWeight: 600, marginBottom: 4 }}>Daily Tarot</p>
                   <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>
-                    {alreadyDrawn ? 'Come back tomorrow for a new draw.' : 'Choose one card — one draw per day.'}
+                    Choose one card and reveal your message.
                   </p>
                 </div>
 
@@ -434,9 +423,9 @@ export default function TodayFortunePage() {
                   display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20,
                   animation: 'fadeIn 0.5s ease',
                 }}>
-                  {alreadyDrawn && (
+                  {!isFirstDraw && (
                     <p style={{ color: 'rgba(201,168,76,0.6)', fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', textAlign: 'center' }}>
-                      Today&apos;s card · Come back tomorrow
+                      첫번째 결과가 당신의 운명입니다.
                     </p>
                   )}
 
@@ -467,6 +456,19 @@ export default function TodayFortunePage() {
                           <p style={{ color: '#ddd', fontSize: 14, lineHeight: 1.8 }}>{sec.content}</p>
                         </div>
                       ))}
+
+                      <p style={{ color: 'rgba(201,168,76,0.75)', fontSize: 13, textAlign: 'center', fontStyle: 'italic', marginTop: 4 }}>
+                        첫번째 결과가 당신의 운명입니다.
+                      </p>
+
+                      <button onClick={resetTarot} style={{
+                        width: '100%', background: 'none', border: '1px solid rgba(201,168,76,0.4)',
+                        color: 'var(--gold)', borderRadius: 50, padding: '11px', fontSize: 13,
+                        cursor: 'pointer', letterSpacing: 0.5,
+                      }}>
+                        ↺ Draw Again
+                      </button>
+
                       <div className="card" style={{ textAlign: 'center', marginTop: 4 }}>
                         <p style={{ color: '#fff', fontWeight: 600, marginBottom: 6 }}>Want a deeper reading?</p>
                         <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 14 }}>Three-Card, Relationship, or Celtic Cross spreads — full AI tarot interpretation.</p>
