@@ -236,7 +236,7 @@ export default function LandingPage() {
           </div>
 
           {/* Bottom CTA area */}
-          <div style={{ position:'absolute', bottom:76, left:0, right:0, zIndex:10, padding:'0 20px 16px', display:'flex', flexDirection:'column', alignItems:'center', background:'linear-gradient(to top,rgba(7,7,26,1) 75%,transparent 100%)' }}>
+          <div style={{ position:'absolute', bottom:86, left:0, right:0, zIndex:10, padding:'0 20px 16px', display:'flex', flexDirection:'column', alignItems:'center', background:'linear-gradient(to top,rgba(7,7,26,1) 75%,transparent 100%)' }}>
             {/* Rolling text */}
             <div style={{ height:20, overflow:'hidden', marginBottom:5, width:'100%', textAlign:'center' }}>
               <div style={{ fontSize:11, color:'rgba(200,195,220,.75)', fontWeight:300, fontStyle:'italic', lineHeight:'20px', transition:'transform 0.35s ease', transform:`translateY(-${rollingIdx * 20}px)` }}>
