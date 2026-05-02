@@ -1,64 +1,94 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
 import { usePricing } from '@/hooks/usePricing'
 import { apiPost } from '@/lib/api'
+import { saveReading } from '@/lib/firestore'
 import { FULL_DECK, TarotCard, cardImageUrl, shuffleDeck } from '@/lib/tarotDeck'
 import { parseResult } from '@/components/ReadingResult'
 import BottomNav from '@/components/BottomNav'
 
 const POSITIONS = [
-  { label: 'Past', desc: 'What shaped this' },
+  { label: 'Past',    desc: 'What shaped this' },
   { label: 'Present', desc: 'Where you are now' },
-  { label: 'Future', desc: 'Where this leads' },
-]
-const DECK_DISPLAY = 78
-const RELATIONSHIP_TYPES = [
-  'Romantic Partner', 'Crush', 'Ex-Partner', 'Spouse', 'Friend',
-  'Best Friend', 'Family Member', 'Colleague', 'Boss', 'Mentor', 'Rival', 'Stranger',
+  { label: 'Future',  desc: 'Where this leads' },
 ]
 
-type Phase = 'question' | 'selecting' | 'revealing' | 'loading' | 'result'
+type Phase = 'question' | 'selecting' | 'loading' | 'result'
 
-// Shared card back component
 function CardBack({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
-  const dims = size === 'sm' ? { w: 60, h: 90, fs: 18 } : size === 'lg' ? { w: 90, h: 135, fs: 28 } : { w: 72, h: 108, fs: 22 }
+  const dims = size === 'sm' ? { w: 44, h: 66, fs: 14 } : size === 'lg' ? { w: 90, h: 135, fs: 28 } : { w: 72, h: 108, fs: 22 }
   return (
     <div style={{
       width: dims.w, height: dims.h,
       background: 'linear-gradient(135deg, #16213E 0%, #0f1829 100%)',
-      border: '1.5px solid rgba(201,168,76,0.6)',
-      borderRadius: 8,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      flexShrink: 0,
+      border: '1.5px solid rgba(201,168,76,0.6)', borderRadius: 8,
+      display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
     }}>
       <span style={{ color: 'rgba(201,168,76,0.7)', fontSize: dims.fs, userSelect: 'none' }}>✦</span>
     </div>
   )
 }
 
-// Accordion section
 function Section({ title, content, defaultOpen }: { title: string; content: string; defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen ?? false)
   return (
     <div style={{ borderBottom: '1px solid var(--border)' }}>
-      <button
-        onClick={() => setOpen(v => !v)}
-        style={{
-          width: '100%', background: 'none', border: 'none', cursor: 'pointer',
-          padding: '14px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          textAlign: 'left',
-        }}
-      >
+      <button onClick={() => setOpen(v => !v)} style={{
+        width: '100%', background: 'none', border: 'none', cursor: 'pointer',
+        padding: '14px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', textAlign: 'left',
+      }}>
         <span style={{ color: '#fff', fontWeight: 600, fontSize: 14 }}>{title}</span>
         <span style={{ color: 'var(--gold)', fontSize: 18, transform: open ? 'rotate(45deg)' : 'none', transition: 'transform 0.2s' }}>+</span>
       </button>
-      {open && (
-        <div style={{ paddingBottom: 16 }}>
-          <p style={{ color: 'var(--text-muted)', fontSize: 13, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{content}</p>
-        </div>
-      )}
+      {open && <div style={{ paddingBottom: 16 }}>
+        <p style={{ color: 'var(--text-muted)', fontSize: 13, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{content}</p>
+      </div>}
+    </div>
+  )
+}
+
+function ProgressRing({ pct }: { pct: number }) {
+  const r = 28, circ = 2 * Math.PI * r
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: '24px 0' }}>
+      <div style={{ position: 'relative', width: 72, height: 72 }}>
+        <svg width={72} height={72} style={{ transform: 'rotate(-90deg)', position: 'absolute' }}>
+          <circle cx={36} cy={36} r={r} fill="none" stroke="rgba(201,168,76,0.15)" strokeWidth={4} />
+          <circle cx={36} cy={36} r={r} fill="none" stroke="var(--gold)" strokeWidth={4}
+            strokeDasharray={circ} strokeDashoffset={circ * (1 - pct / 100)}
+            style={{ transition: 'stroke-dashoffset 1.2s ease' }} />
+        </svg>
+        <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gold)', fontWeight: 700, fontSize: 16 }}>{pct}%</span>
+      </div>
+      <div style={{ textAlign: 'center' }}>
+        <p style={{ color: '#fff', fontWeight: 600, fontSize: 14 }}>Reading your cards…</p>
+        <p style={{ color: 'var(--text-muted)', fontSize: 12, marginTop: 4 }}>Usually under a minute.</p>
+        <p style={{ color: '#ef4444', fontSize: 11, marginTop: 4 }}>Please don&apos;t close or leave this page.</p>
+      </div>
+    </div>
+  )
+}
+
+function CardStrip({ slots, revealed }: { slots: (TarotCard | null)[]; revealed: boolean }) {
+  return (
+    <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginBottom: 24 }}>
+      {POSITIONS.map((pos, i) => {
+        const card = slots[i]
+        return (
+          <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+            {revealed && card
+              ? <img src={cardImageUrl(card.file)} alt={card.name} style={{ width: 80, height: 120, objectFit: 'cover', borderRadius: 8, border: '1.5px solid var(--gold)' }} />
+              : <div style={{ width: 80, height: 120, background: 'linear-gradient(135deg,#16213E,#0f1829)', border: '1.5px solid rgba(201,168,76,0.6)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ color: 'rgba(201,168,76,0.7)', fontSize: 24 }}>✦</span>
+                </div>
+            }
+            <p style={{ color: revealed ? 'var(--gold)' : 'var(--text-muted)', fontSize: 11, fontWeight: 600 }}>{pos.label}</p>
+            {revealed && card && <p style={{ color: 'var(--text-muted)', fontSize: 9, textAlign: 'center', maxWidth: 80 }}>{card.name}</p>}
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -74,83 +104,71 @@ export default function ThreeCardPage() {
   const [exitIdxs, setExitIdxs] = useState<Set<number>>(new Set())
   const [slots, setSlots] = useState<(TarotCard | null)[]>([null, null, null])
   const [slotEntering, setSlotEntering] = useState<Set<number>>(new Set())
-  const [flipped, setFlipped] = useState([false, false, false])
   const [gptText, setGptText] = useState<string | null>(null)
-  const [gptCalled, setGptCalled] = useState(false)
-  const [allFlipped, setAllFlipped] = useState(false)
   const [error, setError] = useState('')
-  const [creditCharged, setCreditCharged] = useState(false)
-  // Scenario reading
+  const [loadPct, setLoadPct] = useState(0)
   const [scenarioQuestion, setScenarioQuestion] = useState('')
   const [scenarioText, setScenarioText] = useState<string | null>(null)
   const [scenarioLoading, setScenarioLoading] = useState(false)
   const [scenarioError, setScenarioError] = useState('')
-  const slotsRef = useRef(slots)
-  slotsRef.current = slots
+
+  useEffect(() => { setDeck(shuffleDeck(FULL_DECK)) }, [])
 
   useEffect(() => {
-    setDeck(shuffleDeck(FULL_DECK).slice(0, DECK_DISPLAY))
-  }, [])
-
-  useEffect(() => {
-    if (!allFlipped) return
-    if (gptText) setPhase('result')
-    else setPhase('loading')
-  }, [allFlipped, gptText])
-
-  useEffect(() => {
-    if (phase === 'loading' && gptText) setPhase('result')
-  }, [gptText, phase])
+    if (phase !== 'loading') { setLoadPct(0); return }
+    setLoadPct(10)
+    const targets = [25, 42, 58, 70, 80, 88, 93, 97]
+    let i = 0
+    const iv = setInterval(() => {
+      if (i < targets.length) { setLoadPct(targets[i]); i++ }
+      else clearInterval(iv)
+    }, 5000)
+    return () => clearInterval(iv)
+  }, [phase])
 
   function handleSelectCard(deckIdx: number) {
     if (exitIdxs.has(deckIdx)) return
     const nextSlot = slots.findIndex(s => s === null)
     if (nextSlot === -1) return
-
     const card = deck[deckIdx]
     setExitIdxs(prev => new Set([...prev, deckIdx]))
-
     setTimeout(() => {
       setDeck(prev => prev.filter((_, i) => i !== deckIdx))
       setExitIdxs(prev => { const n = new Set(prev); n.delete(deckIdx); return n })
       setSlotEntering(prev => new Set([...prev, nextSlot]))
       setSlots(prev => { const n = [...prev]; n[nextSlot] = card; return n })
-      setTimeout(() => {
-        setSlotEntering(prev => { const n = new Set(prev); n.delete(nextSlot); return n })
-        if (nextSlot === 2) setTimeout(() => setPhase('revealing'), 400)
-      }, 400)
+      setTimeout(() => setSlotEntering(prev => { const n = new Set(prev); n.delete(nextSlot); return n }), 350)
     }, 280)
   }
 
-  async function callGPT(currentSlots: (TarotCard | null)[]) {
-    if (gptCalled) return
-    setGptCalled(true)
+  async function startReading() {
+    setPhase('loading')
     try {
       const res = await apiPost<{ content_text: string }>('/tarot/three_card', {
         question: question.trim() || null,
-        cards: currentSlots.map(c => c?.name ?? ''),
+        cards: slots.map(c => c?.name ?? ''),
       })
-      if (user?.email && !creditCharged) {
-        await apiPost('/use_pouch', { email: user.email, reading_type: 'tarot_three_card' })
-        setCreditCharged(true)
+      setLoadPct(99)
+      if (user?.email) {
+        await Promise.all([
+          apiPost('/use_pouch', { email: user.email, reading_type: 'tarot_three_card' }),
+          saveReading(user.email, {
+            reading_type: 'tarot_three_card',
+            name: question.trim() || 'Three Card Reading',
+            birth_date: '', birth_city: '',
+            result: {
+              content_text: res.content_text,
+              cards: slots.map((c, i) => ({ name: c?.name, position: POSITIONS[i].label })),
+              question: question.trim(),
+            },
+          }),
+        ])
       }
       setGptText(res.content_text)
+      setTimeout(() => setPhase('result'), 400)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Reading failed. Please try again.')
-      setPhase('revealing')
-    }
-  }
-
-  function handleFlip(idx: number) {
-    if (flipped[idx]) return
-    const newFlipped = [...flipped]
-    newFlipped[idx] = true
-    setFlipped(newFlipped)
-
-    if (!gptCalled) callGPT(slotsRef.current)
-
-    if (newFlipped.every(Boolean)) {
-      setTimeout(() => setAllFlipped(true), 700)
+      setPhase('selecting')
     }
   }
 
@@ -174,51 +192,37 @@ export default function ThreeCardPage() {
     }
   }
 
-  if (loading) return <Loader label="Loading..." />
-
+  if (loading) return <Spinner />
   const notEnough = credits !== null && credits < cost
+  const filledCount = slots.filter(Boolean).length
 
   return (
     <main style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 96 }}>
-
-      {/* Header */}
-      <header style={{
-        padding: '16px 24px', display: 'flex', justifyContent: 'space-between',
-        alignItems: 'center', maxWidth: 480, margin: '0 auto',
-        borderBottom: '1px solid var(--border)',
-      }}>
+      <header style={{ padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: 480, margin: '0 auto', borderBottom: '1px solid var(--border)' }}>
         <Link href="/tarot" style={{ textDecoration: 'none' }}>
           <span className="font-display" style={{ color: 'var(--gold)', fontSize: 20, letterSpacing: 3, fontWeight: 600 }}>ASTROPILLAR</span>
         </Link>
-        <Link href="/buy" style={{
-          background: 'var(--card)', border: '1px solid var(--gold)', borderRadius: 20,
-          padding: '6px 12px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6,
-        }}>
+        <Link href="/buy" style={{ background: 'var(--card)', border: '1px solid var(--gold)', borderRadius: 20, padding: '6px 12px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ color: 'var(--gold)', fontWeight: 700, fontSize: 14 }}>{credits ?? '—'}</span>
           <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>Credits</span>
         </Link>
       </header>
 
       <div style={{ maxWidth: 480, margin: '0 auto', padding: '24px 24px 0' }}>
-
-        {/* Page title */}
         <div style={{ marginBottom: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
             <h1 className="font-display" style={{ color: '#fff', fontSize: 22, fontWeight: 600 }}>Three Card Spread</h1>
-            <span style={{ border: '1px solid var(--gold)', color: 'var(--gold)', borderRadius: 20, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>
+            <span style={{ border: '1px solid var(--gold)', color: 'var(--gold)', borderRadius: 20, padding: '3px 10px', fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap' }}>
               {cost} Credit{cost !== 1 ? 's' : ''}
             </span>
           </div>
           <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>Past · Present · Future — 3 cards</p>
         </div>
 
-        {/* Not enough credits */}
         {notEnough && phase === 'question' && (
           <div style={{ background: 'var(--card)', border: '1px solid #ef4444', borderRadius: 16, padding: 24, textAlign: 'center' }}>
             <p style={{ color: '#fff', fontWeight: 600, marginBottom: 8 }}>Not enough Credits</p>
-            <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 20 }}>
-              This reading costs {cost} Credit{cost !== 1 ? 's' : ''}. You have {credits}.
-            </p>
+            <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 20 }}>This reading costs {cost} Credit{cost !== 1 ? 's' : ''}. You have {credits}.</p>
             <Link href="/buy" className="btn-gold" style={{ fontSize: 14, padding: '12px 28px' }}>Get Credits</Link>
           </div>
         )}
@@ -227,25 +231,12 @@ export default function ThreeCardPage() {
         {phase === 'question' && !notEnough && (
           <div className="card" style={{ padding: 24 }}>
             <p style={{ color: '#fff', fontWeight: 600, fontSize: 15, marginBottom: 6 }}>What&apos;s your question?</p>
-            <p style={{ color: 'var(--text-muted)', fontSize: 12, marginBottom: 14 }}>
-              Optional — leave blank for a general reading.
-            </p>
-            <textarea
-              value={question}
-              onChange={e => setQuestion(e.target.value)}
-              placeholder="e.g. How will my career change this year?"
-              rows={3}
-              style={{
-                width: '100%', background: '#0f1829', border: '1px solid var(--border)',
-                borderRadius: 10, padding: '12px 14px', color: '#fff', fontSize: 14,
-                resize: 'none', outline: 'none', colorScheme: 'dark', boxSizing: 'border-box',
-              }}
+            <p style={{ color: 'var(--text-muted)', fontSize: 12, marginBottom: 14 }}>Optional — leave blank for a general reading.</p>
+            <textarea value={question} onChange={e => setQuestion(e.target.value)}
+              placeholder="e.g. How will my career change this year?" rows={3}
+              style={{ width: '100%', background: '#0f1829', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 14px', color: '#fff', fontSize: 14, resize: 'none', outline: 'none', colorScheme: 'dark', boxSizing: 'border-box' }}
             />
-            <button
-              onClick={() => setPhase('selecting')}
-              className="btn-gold"
-              style={{ width: '100%', marginTop: 16, fontSize: 15, padding: '14px' }}
-            >
+            <button onClick={() => setPhase('selecting')} className="btn-gold" style={{ width: '100%', marginTop: 16, fontSize: 15, padding: '14px' }}>
               Shuffle the Deck →
             </button>
           </div>
@@ -254,170 +245,77 @@ export default function ThreeCardPage() {
         {/* PHASE: selecting */}
         {phase === 'selecting' && (
           <div>
-            {/* Slot row */}
-            <div style={{ display: 'flex', gap: 12, marginBottom: 24, justifyContent: 'center' }}>
+            {error && <p style={{ color: '#ef4444', fontSize: 13, textAlign: 'center', marginBottom: 12 }}>{error}</p>}
+
+            {/* Slot preview */}
+            <div style={{ display: 'flex', gap: 12, marginBottom: 20, justifyContent: 'center' }}>
               {POSITIONS.map((pos, i) => {
                 const card = slots[i]
                 const entering = slotEntering.has(i)
                 return (
-                  <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                  <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
                     <div style={{
-                      width: 80, height: 120,
+                      width: 72, height: 108,
                       border: card ? '1.5px solid var(--gold)' : '1.5px dashed rgba(201,168,76,0.35)',
                       borderRadius: 10,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      background: card ? 'transparent' : 'rgba(201,168,76,0.03)',
+                      background: card ? 'rgba(201,168,76,0.05)' : 'transparent',
                       transition: 'all 0.3s',
                       transform: entering ? 'translateY(8px)' : 'translateY(0)',
                       opacity: entering ? 0 : 1,
                     }}>
-                      {card ? <CardBack size="lg" /> : (
-                        <span style={{ color: 'rgba(201,168,76,0.3)', fontSize: 28 }}>✦</span>
-                      )}
+                      {card ? <CardBack size="md" /> : <span style={{ color: 'rgba(201,168,76,0.3)', fontSize: 24 }}>✦</span>}
                     </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <p style={{ color: card ? 'var(--gold)' : 'var(--text-muted)', fontSize: 12, fontWeight: 600 }}>{pos.label}</p>
-                      <p style={{ color: 'var(--text-muted)', fontSize: 10 }}>{pos.desc}</p>
-                    </div>
+                    <p style={{ color: card ? 'var(--gold)' : 'var(--text-muted)', fontSize: 11, fontWeight: 600 }}>{pos.label}</p>
                   </div>
                 )
               })}
             </div>
 
-            {/* Instruction */}
-            <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: 13, marginBottom: 20 }}>
-              {slots.filter(Boolean).length === 0
-                ? 'Tap any card to begin'
-                : slots.filter(Boolean).length === 3
-                ? 'All cards chosen ✦'
-                : `${slots.filter(Boolean).length} / 3 chosen — tap another`}
-            </p>
-
-            {/* Deck grid — full 78 cards scrollable */}
-            <p style={{ color: 'var(--text-muted)', fontSize: 11, marginBottom: 8 }}>
-              Full deck · 78 cards · Tap to select
-            </p>
-            <div style={{ maxHeight: 340, overflowY: 'auto', borderRadius: 10, padding: '2px 0' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 6 }}>
-                {deck.map((card, i) => {
-                  const exiting = exitIdxs.has(i)
-                  return (
-                    <button
-                      key={card.file}
-                      onClick={() => handleSelectCard(i)}
-                      style={{
+            {/* All 3 selected → show View button */}
+            {filledCount === 3 ? (
+              <button onClick={startReading} className="btn-gold" style={{ width: '100%', fontSize: 15, padding: '15px', marginBottom: 20 }}>
+                View My Reading →
+              </button>
+            ) : (
+              <>
+                <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: 13, marginBottom: 16 }}>
+                  {filledCount === 0 ? 'Tap any card to begin' : `${filledCount} / 3 chosen — tap another`}
+                </p>
+                <p style={{ color: 'var(--text-muted)', fontSize: 11, marginBottom: 8 }}>Full deck · 78 cards · Tap to select</p>
+                <div style={{ maxHeight: 360, overflowY: 'auto', borderRadius: 10 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 6 }}>
+                    {deck.map((card, i) => (
+                      <button key={card.file} onClick={() => handleSelectCard(i)} style={{
                         background: 'none', border: 'none', cursor: 'pointer', padding: 0,
                         transition: 'transform 0.28s, opacity 0.28s',
-                        transform: exiting ? 'scale(0.5) translateY(-16px)' : 'scale(1)',
-                        opacity: exiting ? 0 : 1,
+                        transform: exitIdxs.has(i) ? 'scale(0.5) translateY(-16px)' : 'scale(1)',
+                        opacity: exitIdxs.has(i) ? 0 : 1,
                         display: 'flex', justifyContent: 'center',
-                      }}
-                    >
-                      <CardBack size="sm" />
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* PHASE: revealing */}
-        {phase === 'revealing' && (
-          <div>
-            <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: 13, marginBottom: 24 }}>
-              {flipped.every(Boolean) ? 'All revealed — reading in progress...' : 'Tap each card to reveal'}
-            </p>
-
-            {error && <p style={{ color: '#ef4444', fontSize: 13, textAlign: 'center', marginBottom: 16 }}>{error}</p>}
-
-            <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
-              {POSITIONS.map((pos, i) => {
-                const card = slots[i]
-                return (
-                  <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                    {/* Flip container */}
-                    <div
-                      onClick={() => handleFlip(i)}
-                      style={{
-                        width: 80, height: 120,
-                        perspective: 800,
-                        cursor: flipped[i] ? 'default' : 'pointer',
-                      }}
-                    >
-                      <div style={{
-                        width: '100%', height: '100%',
-                        position: 'relative',
-                        transformStyle: 'preserve-3d',
-                        transition: 'transform 0.55s cubic-bezier(0.4,0,0.2,1)',
-                        transform: flipped[i] ? 'rotateY(180deg)' : 'rotateY(0deg)',
                       }}>
-                        {/* Back */}
-                        <div style={{
-                          position: 'absolute', inset: 0,
-                          backfaceVisibility: 'hidden',
-                          background: 'linear-gradient(135deg, #16213E 0%, #0f1829 100%)',
-                          border: '1.5px solid rgba(201,168,76,0.6)',
-                          borderRadius: 8,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        }}>
-                          <span style={{ color: 'rgba(201,168,76,0.7)', fontSize: 28 }}>✦</span>
-                        </div>
-                        {/* Front */}
-                        <div style={{
-                          position: 'absolute', inset: 0,
-                          backfaceVisibility: 'hidden',
-                          transform: 'rotateY(180deg)',
-                          borderRadius: 8, overflow: 'hidden',
-                          border: '1.5px solid var(--gold)',
-                        }}>
-                          {card && (
-                            <img
-                              src={cardImageUrl(card.file)}
-                              alt={card.name}
-                              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                            />
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <p style={{ color: flipped[i] ? 'var(--gold)' : 'var(--text-muted)', fontSize: 11, fontWeight: 600 }}>
-                        {pos.label}
-                      </p>
-                      {flipped[i] && card && (
-                        <p style={{ color: '#fff', fontSize: 10, marginTop: 2 }}>{card.name}</p>
-                      )}
-                    </div>
+                        <CardBack size="sm" />
+                      </button>
+                    ))}
                   </div>
-                )
-              })}
-            </div>
+                </div>
+              </>
+            )}
           </div>
         )}
 
         {/* PHASE: loading */}
-        {phase === 'loading' && <Loader label="Reading your cards..." />}
+        {phase === 'loading' && (
+          <div>
+            <CardStrip slots={slots} revealed={true} />
+            <ProgressRing pct={loadPct} />
+          </div>
+        )}
 
         {/* PHASE: result */}
         {phase === 'result' && gptText && (
           <div>
-            {/* Cards strip */}
-            <div style={{ display: 'flex', gap: 10, marginBottom: 24, justifyContent: 'center' }}>
-              {slots.map((card, i) => card && (
-                <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                  <img
-                    src={cardImageUrl(card.file)}
-                    alt={card.name}
-                    style={{ width: 72, height: 108, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--gold)' }}
-                  />
-                  <p style={{ color: 'var(--gold)', fontSize: 10, fontWeight: 600 }}>{POSITIONS[i].label}</p>
-                  <p style={{ color: 'var(--text-muted)', fontSize: 9, textAlign: 'center', maxWidth: 72 }}>{card.name}</p>
-                </div>
-              ))}
-            </div>
+            <CardStrip slots={slots} revealed={true} />
 
-            {/* Accordion reading */}
             <div className="card" style={{ padding: '0 20px', marginBottom: 20 }}>
               {parseResult(gptText).map((sec, i) => (
                 <Section key={i} title={sec.title ?? `Section ${i + 1}`} content={sec.content} defaultOpen={i < 2} />
@@ -427,59 +325,35 @@ export default function ThreeCardPage() {
             {/* Scenario CTA */}
             {!scenarioText && (
               <div className="card" style={{ padding: 20, marginBottom: 16 }}>
-                <p style={{ color: 'var(--gold)', fontSize: 12, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 }}>
-                  Go Deeper
-                </p>
+                <p style={{ color: 'var(--gold)', fontSize: 12, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 }}>Go Deeper</p>
                 <p style={{ color: '#fff', fontWeight: 600, fontSize: 15, marginBottom: 6 }}>Tarot Scenario Reading</p>
-                <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 14 }}>
-                  Ask a specific question — get a deeper reading based on the cards you drew.
-                </p>
-                <textarea
-                  value={scenarioQuestion}
-                  onChange={e => setScenarioQuestion(e.target.value)}
-                  placeholder="e.g. Should I take this job offer?"
-                  rows={2}
-                  style={{
-                    width: '100%', background: '#0f1829', border: '1px solid var(--border)',
-                    borderRadius: 10, padding: '10px 12px', color: '#fff', fontSize: 13,
-                    resize: 'none', outline: 'none', colorScheme: 'dark', boxSizing: 'border-box',
-                    marginBottom: 12,
-                  }}
+                <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 14 }}>Ask a specific question — get a deeper reading based on the cards you drew.</p>
+                <textarea value={scenarioQuestion} onChange={e => setScenarioQuestion(e.target.value)}
+                  placeholder="e.g. Should I take this job offer?" rows={2}
+                  style={{ width: '100%', background: '#0f1829', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 12px', color: '#fff', fontSize: 13, resize: 'none', outline: 'none', colorScheme: 'dark', boxSizing: 'border-box', marginBottom: 12 }}
                 />
                 {scenarioError && <p style={{ color: '#ef4444', fontSize: 12, marginBottom: 10 }}>{scenarioError}</p>}
-                <button
-                  onClick={handleScenario}
-                  disabled={!scenarioQuestion.trim() || scenarioLoading}
-                  className="btn-gold"
-                  style={{ width: '100%', fontSize: 14, padding: '12px', opacity: (!scenarioQuestion.trim() || scenarioLoading) ? 0.5 : 1 }}
-                >
+                <button onClick={handleScenario} disabled={!scenarioQuestion.trim() || scenarioLoading} className="btn-gold"
+                  style={{ width: '100%', fontSize: 14, padding: '12px', opacity: (!scenarioQuestion.trim() || scenarioLoading) ? 0.5 : 1 }}>
                   {scenarioLoading ? 'Reading...' : 'Get Scenario Reading →'}
                 </button>
               </div>
             )}
 
-            {/* Scenario result */}
             {scenarioText && (
               <div className="card" style={{ padding: '0 20px', marginBottom: 16 }}>
-                <p style={{ color: 'var(--gold)', fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', padding: '16px 0 8px' }}>
-                  Scenario Reading
-                </p>
+                <p style={{ color: 'var(--gold)', fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', padding: '16px 0 8px' }}>Scenario Reading</p>
                 {parseResult(scenarioText).map((sec, i) => (
                   <Section key={i} title={sec.title ?? `Section ${i + 1}`} content={sec.content} defaultOpen={i === 0} />
                 ))}
               </div>
             )}
 
-            {/* Start over */}
-            <button
-              onClick={() => {
-                setPhase('question'); setQuestion(''); setDeck(shuffleDeck(FULL_DECK).slice(0, DECK_DISPLAY))
-                setSlots([null, null, null]); setFlipped([false, false, false])
-                setGptText(null); setGptCalled(false); setCreditCharged(false)
-                setAllFlipped(false); setScenarioText(null); setScenarioQuestion('')
-              }}
-              style={{ width: '100%', background: 'none', border: '1px solid var(--border)', borderRadius: 12, padding: '12px', color: 'var(--text-muted)', fontSize: 13, cursor: 'pointer' }}
-            >
+            <button onClick={() => {
+              setPhase('question'); setQuestion(''); setDeck(shuffleDeck(FULL_DECK))
+              setSlots([null, null, null]); setGptText(null); setError(''); setLoadPct(0)
+              setScenarioText(null); setScenarioQuestion('')
+            }} style={{ width: '100%', background: 'none', border: '1px solid var(--border)', borderRadius: 12, padding: '12px', color: 'var(--text-muted)', fontSize: 13, cursor: 'pointer' }}>
               New Reading
             </button>
           </div>
@@ -490,16 +364,11 @@ export default function ThreeCardPage() {
   )
 }
 
-function Loader({ label }: { label: string }) {
+function Spinner() {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 24px', gap: 16 }}>
-      <div style={{
-        width: 48, height: 48, border: '2px solid rgba(201,168,76,0.2)',
-        borderTop: '2px solid var(--gold)', borderRadius: '50%',
-        animation: 'spin 1s linear infinite',
-      }} />
-      <p style={{ color: 'var(--gold)', fontSize: 14 }}>{label}</p>
-      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+      <div style={{ width: 40, height: 40, border: '2px solid rgba(201,168,76,0.2)', borderTop: '2px solid var(--gold)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   )
 }

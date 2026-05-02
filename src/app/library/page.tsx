@@ -18,6 +18,9 @@ const TYPE_LABELS: Record<string, string> = {
   yearly: 'Yearly Fortune',
   compatibility: 'Compatibility',
   scenario: 'Scenario',
+  tarot_three_card: 'Tarot · Three Card',
+  tarot_relationship: 'Tarot · Relationship',
+  tarot_celtic_cross: 'Tarot · Celtic Cross',
 }
 const TYPE_COLORS: Record<string, string> = {
   personal_fortune: 'var(--gold)',
@@ -25,6 +28,9 @@ const TYPE_COLORS: Record<string, string> = {
   yearly: '#60a5fa',
   compatibility: '#f472b6',
   scenario: '#a78bfa',
+  tarot_three_card: '#c084fc',
+  tarot_relationship: '#f472b6',
+  tarot_celtic_cross: '#818cf8',
 }
 
 const inputStyle: React.CSSProperties = {
@@ -131,6 +137,9 @@ function LibraryPageInner() {
   )
 
   if (viewReading) {
+    const isTarot = viewReading.reading_type?.startsWith('tarot_')
+    const tarotResult = isTarot ? viewReading.result as { content_text?: string; cards?: { name?: string; position?: string }[]; question?: string } : null
+
     return (
       <main style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 80 }}>
         <header style={{ padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: 480, margin: '0 auto', borderBottom: '1px solid var(--border)' }}>
@@ -138,7 +147,35 @@ function LibraryPageInner() {
           <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>{formatDate(viewReading)}</span>
         </header>
         <div style={{ maxWidth: 480, margin: '0 auto', padding: '24px 24px 0' }}>
-          <ReadingResult raw={viewReading.result} onReset={() => setViewReading(null)} userEmail={user?.email ?? undefined} />
+          {isTarot && tarotResult ? (
+            <div>
+              <p style={{ color: 'var(--gold)', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>
+                {TYPE_LABELS[viewReading.reading_type] ?? viewReading.reading_type}
+              </p>
+              {tarotResult.question && (
+                <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 16, fontStyle: 'italic' }}>
+                  &ldquo;{tarotResult.question}&rdquo;
+                </p>
+              )}
+              {tarotResult.cards && tarotResult.cards.length > 0 && (
+                <div style={{ display: 'flex', gap: 8, overflowX: 'auto', marginBottom: 20, paddingBottom: 4 }}>
+                  {tarotResult.cards.map((c, i) => (
+                    <div key={i} style={{ flexShrink: 0, textAlign: 'center' }}>
+                      <p style={{ color: 'var(--gold)', fontSize: 9, marginBottom: 2 }}>{c.position}</p>
+                      <p style={{ color: '#fff', fontSize: 10, maxWidth: 72 }}>{c.name}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {tarotResult.content_text && (
+                <div className="card" style={{ padding: '16px 20px' }}>
+                  <p style={{ color: 'var(--text-muted)', fontSize: 13, lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{tarotResult.content_text}</p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <ReadingResult raw={viewReading.result} onReset={() => setViewReading(null)} userEmail={user?.email ?? undefined} />
+          )}
         </div>
         <BottomNav />
       </main>
