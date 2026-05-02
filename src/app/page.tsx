@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
+import BottomNav from '@/components/BottomNav'
 
 // ── Zodiac / DayMaster calculation ──────────────────────────────────────────
 const CUT = [20,20,21,20,21,21,23,23,23,23,22,22]
@@ -235,7 +236,7 @@ export default function LandingPage() {
           </div>
 
           {/* Bottom CTA area */}
-          <div style={{ position:'absolute', bottom:50, left:0, right:0, zIndex:10, padding:'0 20px 16px', display:'flex', flexDirection:'column', alignItems:'center', background:'linear-gradient(to top,rgba(7,7,26,1) 75%,transparent 100%)' }}>
+          <div style={{ position:'absolute', bottom:76, left:0, right:0, zIndex:10, padding:'0 20px 16px', display:'flex', flexDirection:'column', alignItems:'center', background:'linear-gradient(to top,rgba(7,7,26,1) 75%,transparent 100%)' }}>
             {/* Rolling text */}
             <div style={{ height:20, overflow:'hidden', marginBottom:5, width:'100%', textAlign:'center' }}>
               <div style={{ fontSize:11, color:'rgba(200,195,220,.75)', fontWeight:300, fontStyle:'italic', lineHeight:'20px', transition:'transform 0.35s ease', transform:`translateY(-${rollingIdx * 20}px)` }}>
@@ -254,7 +255,7 @@ export default function LandingPage() {
 
       {/* ══════════ VIEW 2: FORM ══════════ */}
       {view === 'v2' && (
-        <div style={{ maxWidth:390, margin:'0 auto', minHeight:'100vh', background:'#07071a' }}>
+        <div style={{ maxWidth:390, margin:'0 auto', minHeight:'100vh', background:'#07071a', paddingBottom:96 }}>
           {/* Sticky topbar */}
           <div style={{ position:'sticky', top:0, zIndex:100, display:'flex', justifyContent:'space-between', alignItems:'center', padding:'14px 20px', background:'rgba(13,13,43,0.95)', borderBottom:'1px solid rgba(201,168,76,.1)' }}>
             <span style={{ color:'#C9A84C', fontSize:13, fontWeight:900, letterSpacing:'2.5px', fontFamily:"'Cormorant Garamond', serif" }}>ASTROPILLAR</span>
@@ -325,7 +326,7 @@ export default function LandingPage() {
 
       {/* ══════════ VIEW 3: RESULT ══════════ */}
       {view === 'v3' && result && (
-        <div style={{ maxWidth:390, margin:'0 auto', minHeight:'100vh', background:'#07071a' }}>
+        <div style={{ maxWidth:390, margin:'0 auto', minHeight:'100vh', background:'#07071a', paddingBottom:96 }}>
           {/* Sticky topbar */}
           <div style={{ position:'sticky', top:0, zIndex:100, display:'flex', justifyContent:'space-between', alignItems:'center', padding:'14px 20px', background:'rgba(13,13,43,0.95)', borderBottom:'1px solid rgba(201,168,76,.1)' }}>
             <span style={{ color:'#C9A84C', fontSize:13, fontWeight:900, letterSpacing:'2.5px', fontFamily:"'Cormorant Garamond', serif" }}>ASTROPILLAR</span>
@@ -400,6 +401,7 @@ export default function LandingPage() {
           </div>
         </div>
       )}
+      <BottomNav />
     </main>
   )
 }

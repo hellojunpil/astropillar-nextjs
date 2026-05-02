@@ -162,6 +162,10 @@ export default function TodayFortunePage() {
   const [tarotError, setTarotError] = useState('')
   const [isFirstDraw, setIsFirstDraw] = useState(true)
   const apiCalledRef = useRef(false)
+  const [shuffledCards] = useState<Array<{name: string; file: string}>>(() =>
+    [...MAJOR_ARCANA].sort(() => Math.random() - 0.5)
+  )
+  const [shareToast, setShareToast] = useState('')
 
   useEffect(() => {
     apiGet<MoonPhaseData>('/moon_phase').then(d => setMoonPhase(d)).catch(() => {})
@@ -209,6 +213,66 @@ export default function TodayFortunePage() {
     apiCalledRef.current = false
   }
 
+  async function generateShareImage(imgUrl: string, label: string): Promise<Blob | null> {
+    return new Promise((resolve) => {
+      try {
+        const size = 1080
+        const canvas = document.createElement('canvas')
+        canvas.width = size; canvas.height = size
+        const ctx = canvas.getContext('2d')
+        if (!ctx) { resolve(null); return }
+        const bg = ctx.createLinearGradient(0, 0, 0, size)
+        bg.addColorStop(0, '#0a0a1a'); bg.addColorStop(1, '#16213E')
+        ctx.fillStyle = bg; ctx.fillRect(0, 0, size, size)
+        ctx.strokeStyle = 'rgba(201,168,76,0.6)'; ctx.lineWidth = 4
+        ctx.strokeRect(30, 30, size - 60, size - 60)
+        const img = document.createElement('img') as HTMLImageElement
+        img.crossOrigin = 'anonymous'
+        img.onload = () => {
+          const isTarot = imgUrl.includes('major_arcana')
+          const w = isTarot ? 340 : 480; const h = isTarot ? 570 : 480
+          const x = (size - w) / 2; const y = isTarot ? 130 : 150
+          ctx.drawImage(img, x, y, w, h)
+          ctx.fillStyle = '#C9A84C'
+          ctx.font = `bold ${isTarot ? 54 : 48}px Georgia, serif`
+          ctx.textAlign = 'center'
+          ctx.fillText(label, size / 2, y + h + 76)
+          ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.font = '30px sans-serif'
+          ctx.fillText('AstroPillar · astropillar.com/today', size / 2, y + h + 132)
+          canvas.toBlob(blob => resolve(blob), 'image/png')
+        }
+        img.onerror = () => resolve(null)
+        img.src = imgUrl
+      } catch { resolve(null) }
+    })
+  }
+
+  async function shareReading(imgUrl: string, label: string, type: 'tarot' | 'horoscope' | 'chinese') {
+    const shareUrl = 'https://astropillar.com/today'
+    const text = type === 'tarot'
+      ? `✦ I drew "${label}" from the Major Arcana today — what does your card say?`
+      : type === 'horoscope'
+      ? `✦ My ${label} horoscope for today has been revealed ✦`
+      : `✦ Year of the ${label} — today's fortune revealed ✦`
+    try {
+      const blob = await generateShareImage(imgUrl, label)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const nav = navigator as any
+      if (nav.share) {
+        const files: File[] = []
+        if (blob) {
+          const f = new File([blob], 'astropillar.png', { type: 'image/png' })
+          if (nav.canShare?.({ files: [f] })) files.push(f)
+        }
+        await nav.share({ title: 'AstroPillar', text, url: shareUrl, ...(files.length ? { files } : {}) })
+      } else {
+        await navigator.clipboard.writeText(`${text}\n${shareUrl}`)
+        setShareToast('Link copied to clipboard!')
+        setTimeout(() => setShareToast(''), 2500)
+      }
+    } catch { /* user cancelled */ }
+  }
+
   async function fetchTarotReading(card: { name: string; file: string }) {
     if (apiCalledRef.current) return
     apiCalledRef.current = true
@@ -237,7 +301,7 @@ export default function TodayFortunePage() {
     { label: 'Creative', key: 'score_creative', color: '#fb923c' },
   ] as const
 
-  function FortuneResult({ fortune, mode, onBack }: { fortune: FortuneData; mode: 'horoscope'|'chinese'; onBack: () => void }) {
+  function FortuneResult({ fortune, mode, onBack, shareInfo }: { fortune: FortuneData; mode: 'horoscope'|'chinese'; onBack: () => void; shareInfo?: { imgUrl: string; label: string } }) {
     const scores = SCORE_ITEMS.filter(s => typeof fortune[s.key] === 'number')
     const bestMatch = typeof fortune.best_match === 'string' ? fortune.best_match : null
     const bestMatchSign = bestMatch ? HOROSCOPE_SIGNS.find(s => s.name.toLowerCase() === bestMatch.toLowerCase()) : null
@@ -280,13 +344,25 @@ export default function TodayFortunePage() {
             </div>
           )}
         </div>
+        {shareInfo && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
+            <button
+              onClick={() => shareReading(shareInfo.imgUrl, shareInfo.label, mode)}
+              style={{ width: '100%', background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.4)', color: 'var(--gold)', borderRadius: 50, padding: '11px', fontSize: 13, cursor: 'pointer' }}>
+              ↗ Share Your {mode === 'horoscope' ? 'Horoscope' : 'Fortune'}
+            </button>
+            <p style={{ color: 'var(--text-muted)', fontSize: 10, textAlign: 'center' }}>
+              Free Fortune shares do not count toward the 3-share Credit promotion.
+            </p>
+          </div>
+        )}
         <button onClick={onBack} style={{ width: '100%', background: 'none', border: '1px solid var(--border)', color: 'var(--text-muted)', borderRadius: 50, padding: '11px', fontSize: 13, cursor: 'pointer', marginBottom: 14 }}>
           ← Check Another Sign
         </button>
         <div className="card" style={{ textAlign: 'center' }}>
           <p style={{ color: '#fff', fontWeight: 600, marginBottom: 6 }}>Want a personalized reading?</p>
           <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 14 }}>Get your full BaZi chart + Astrology reading tailored to your exact birth details.</p>
-          <Link href="/login" className="btn-gold" style={{ fontSize: 13, padding: '11px 24px' }}>Start for Free →</Link>
+          <Link href="/menu" className="btn-gold" style={{ fontSize: 13, padding: '11px 24px' }}>Explore Readings →</Link>
         </div>
       </div>
     )
@@ -296,6 +372,18 @@ export default function TodayFortunePage() {
 
   return (
     <main style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 96 }}>
+
+      {shareToast && (
+        <div style={{
+          position: 'fixed', top: 72, left: '50%', transform: 'translateX(-50%)',
+          background: '#C9A84C', color: '#16213E', padding: '10px 22px',
+          borderRadius: 24, fontSize: 13, fontWeight: 700, zIndex: 999,
+          animation: 'fadeIn 0.2s ease', whiteSpace: 'nowrap',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+        }}>
+          {shareToast}
+        </div>
+      )}
 
       <header style={{ padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: 480, margin: '0 auto', borderBottom: '1px solid var(--border)' }}>
         <Link href="/" style={{ textDecoration: 'none' }}>
@@ -366,7 +454,7 @@ export default function TodayFortunePage() {
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
-                  {MAJOR_ARCANA.map(card => {
+                  {shuffledCards.map(card => {
                     const isSelected = tarotCard?.file === card.file
                     const isFlipping = tarotPhase === 'flipping'
                     return (
@@ -425,7 +513,7 @@ export default function TodayFortunePage() {
                 }}>
                   {!isFirstDraw && (
                     <p style={{ color: 'rgba(201,168,76,0.6)', fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', textAlign: 'center' }}>
-                      첫번째 결과가 당신의 운명입니다.
+                      Your first draw is closest to your destiny.
                     </p>
                   )}
 
@@ -458,12 +546,21 @@ export default function TodayFortunePage() {
                       ))}
 
                       <p style={{ color: 'rgba(201,168,76,0.75)', fontSize: 13, textAlign: 'center', fontStyle: 'italic', marginTop: 4 }}>
-                        첫번째 결과가 당신의 운명입니다.
+                        Your first draw is closest to your destiny.
+                      </p>
+
+                      <button
+                        onClick={() => tarotCard && shareReading(`${IMG}${tarotCard.file}.webp`, tarotCard.name, 'tarot')}
+                        style={{ width: '100%', background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.4)', color: 'var(--gold)', borderRadius: 50, padding: '11px', fontSize: 13, cursor: 'pointer', letterSpacing: 0.5 }}>
+                        ↗ Share Your Card
+                      </button>
+                      <p style={{ color: 'var(--text-muted)', fontSize: 10, textAlign: 'center', marginTop: -4 }}>
+                        Note: Free Fortune shares do not count toward the 3-share Credit promotion.
                       </p>
 
                       <button onClick={resetTarot} style={{
-                        width: '100%', background: 'none', border: '1px solid rgba(201,168,76,0.4)',
-                        color: 'var(--gold)', borderRadius: 50, padding: '11px', fontSize: 13,
+                        width: '100%', background: 'none', border: '1px solid rgba(255,255,255,0.12)',
+                        color: 'var(--text-muted)', borderRadius: 50, padding: '11px', fontSize: 13,
                         cursor: 'pointer', letterSpacing: 0.5,
                       }}>
                         ↺ Draw Again
@@ -497,7 +594,11 @@ export default function TodayFortunePage() {
               )}
 
               {horoStep === 'result' && horoFortune ? (
-                <FortuneResult fortune={horoFortune} mode="horoscope" onBack={() => { setHoroStep('pick'); setHoroFortune(null); setHoroSelected(null) }} />
+                <FortuneResult
+                  fortune={horoFortune} mode="horoscope"
+                  onBack={() => { setHoroStep('pick'); setHoroFortune(null); setHoroSelected(null) }}
+                  shareInfo={horoSelected ? { imgUrl: `${IMG}${HOROSCOPE_SIGNS.find(s => s.name === horoSelected)?.img ?? ''}`, label: horoSelected } : undefined}
+                />
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div>
@@ -544,7 +645,11 @@ export default function TodayFortunePage() {
           {activeTab === 'chinese' && (
             <div>
               {chineseStep === 'result' && chineseFortune ? (
-                <FortuneResult fortune={chineseFortune} mode="chinese" onBack={() => { setChineseStep('pick'); setChineseFortune(null); setChineseSelected(null) }} />
+                <FortuneResult
+                  fortune={chineseFortune} mode="chinese"
+                  onBack={() => { setChineseStep('pick'); setChineseFortune(null); setChineseSelected(null) }}
+                  shareInfo={chineseSelected ? { imgUrl: `${IMG}${CHINESE_SIGNS.find(s => s.name === chineseSelected)?.img ?? ''}`, label: chineseSelected } : undefined}
+                />
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div>
