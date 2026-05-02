@@ -13,7 +13,7 @@ const POSITIONS = [
   { label: 'Present', desc: 'Where you are now' },
   { label: 'Future', desc: 'Where this leads' },
 ]
-const DECK_DISPLAY = 15
+const DECK_DISPLAY = 78
 const RELATIONSHIP_TYPES = [
   'Romantic Partner', 'Crush', 'Ex-Partner', 'Spouse', 'Friend',
   'Best Friend', 'Family Member', 'Colleague', 'Boss', 'Mentor', 'Rival', 'Stranger',
@@ -293,25 +293,31 @@ export default function ThreeCardPage() {
                 : `${slots.filter(Boolean).length} / 3 chosen — tap another`}
             </p>
 
-            {/* Deck grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
-              {deck.map((card, i) => {
-                const exiting = exitIdxs.has(i)
-                return (
-                  <button
-                    key={card.file}
-                    onClick={() => handleSelectCard(i)}
-                    style={{
-                      background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-                      transition: 'transform 0.28s, opacity 0.28s',
-                      transform: exiting ? 'scale(0.5) translateY(-16px)' : 'scale(1)',
-                      opacity: exiting ? 0 : 1,
-                    }}
-                  >
-                    <CardBack size="sm" />
-                  </button>
-                )
-              })}
+            {/* Deck grid — full 78 cards scrollable */}
+            <p style={{ color: 'var(--text-muted)', fontSize: 11, marginBottom: 8 }}>
+              Full deck · 78 cards · Tap to select
+            </p>
+            <div style={{ maxHeight: 340, overflowY: 'auto', borderRadius: 10, padding: '2px 0' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 6 }}>
+                {deck.map((card, i) => {
+                  const exiting = exitIdxs.has(i)
+                  return (
+                    <button
+                      key={card.file}
+                      onClick={() => handleSelectCard(i)}
+                      style={{
+                        background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                        transition: 'transform 0.28s, opacity 0.28s',
+                        transform: exiting ? 'scale(0.5) translateY(-16px)' : 'scale(1)',
+                        opacity: exiting ? 0 : 1,
+                        display: 'flex', justifyContent: 'center',
+                      }}
+                    >
+                      <CardBack size="sm" />
+                    </button>
+                  )
+                })}
+              </div>
             </div>
           </div>
         )}

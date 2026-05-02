@@ -14,7 +14,7 @@ const POSITIONS = [
   { label: 'Connection', desc: 'The dynamic' },
   { label: 'Advice', desc: 'What to do' },
 ]
-const DECK_DISPLAY = 16
+const DECK_DISPLAY = 78
 const RELATIONSHIP_TYPES = [
   'Romantic Partner', 'Crush', 'Ex-Partner', 'Spouse', 'Friend',
   'Best Friend', 'Family Member', 'Colleague', 'Boss', 'Mentor', 'Rival', 'Stranger',
@@ -266,17 +266,23 @@ export default function RelationshipPage() {
                 : `${slots.filter(Boolean).length} / 4 chosen`}
             </p>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+            <p style={{ color: 'var(--text-muted)', fontSize: 11, marginBottom: 8 }}>
+              Full deck · 78 cards · Tap to select
+            </p>
+            <div style={{ maxHeight: 340, overflowY: 'auto', borderRadius: 10, padding: '2px 0' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 6 }}>
               {deck.map((card, i) => (
                 <button key={card.file} onClick={() => handleSelectCard(i)} style={{
                   background: 'none', border: 'none', cursor: 'pointer', padding: 0,
                   transition: 'transform 0.28s, opacity 0.28s',
                   transform: exitIdxs.has(i) ? 'scale(0.5) translateY(-16px)' : 'scale(1)',
                   opacity: exitIdxs.has(i) ? 0 : 1,
+                  display: 'flex', justifyContent: 'center',
                 }}>
                   <CardBack size="sm" />
                 </button>
               ))}
+            </div>
             </div>
           </div>
         )}
