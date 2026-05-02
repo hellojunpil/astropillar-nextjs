@@ -232,9 +232,9 @@ export function parseResult(raw: unknown, readingType?: string): Section[] {
     const obj = raw as Record<string,unknown>
     const textFields = ['reading','interpretation','result','content','summary','fortune','message','content_text']
     for (const f of textFields) {
-      if (typeof obj[f] === 'string' && (obj[f] as string).length > 30) return parseResult(obj[f] as string)
+      if (typeof obj[f] === 'string' && (obj[f] as string).length > 30) return parseResult(obj[f] as string, readingType)
     }
-    if (obj.sections) return parseResult(obj.sections)
+    if (obj.sections) return parseResult(obj.sections, readingType)
     return Object.entries(obj)
       .filter(([k,v]) => typeof v === 'string' && (v as string).length > 20 && !['sun_sign','moon_sign','ascendant','rising'].includes(k))
       .map(([k,v]) => ({ title: k.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()), content: v as string }))
