@@ -122,6 +122,27 @@ export default function MenuPage() {
           </div>
         </Link>
 
+        {/* Tarot 배너 */}
+        <Link href="/tarot" style={{ textDecoration: 'none', display: 'block', marginBottom: 12 }}>
+          <div style={{
+            background: 'linear-gradient(135deg, #1a0f2e 0%, #16213E 100%)',
+            border: '1px solid rgba(201,168,76,0.5)',
+            borderRadius: 16, padding: '16px 20px',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          }}>
+            <div>
+              <p style={{ color: 'var(--gold)', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>
+                New · Tarot Readings
+              </p>
+              <p style={{ color: '#fff', fontWeight: 600, fontSize: 15 }}>Tarot Card Spreads</p>
+              <p style={{ color: 'var(--text-muted)', fontSize: 12, marginTop: 2 }}>
+                Three Card · Relationship · Celtic Cross
+              </p>
+            </div>
+            <span style={{ fontSize: 28 }}>🂠</span>
+          </div>
+        </Link>
+
         {/* 서비스 카드 목록 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {SERVICES.map((s) => (

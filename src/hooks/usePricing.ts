@@ -8,6 +8,9 @@ const DEFAULTS: PricingConfig = {
   yearly: 1,
   compatibility: 1,
   scenario: 1,
+  tarot_three_card: 1,
+  tarot_relationship: 1,
+  tarot_celtic_cross: 2,
 }
 
 export function usePricing() {

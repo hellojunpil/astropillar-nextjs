@@ -147,6 +147,9 @@ export interface PricingConfig {
   yearly: number
   compatibility: number
   scenario: number
+  tarot_three_card: number
+  tarot_relationship: number
+  tarot_celtic_cross: number
   [key: string]: number
 }
 
@@ -156,6 +159,9 @@ const PRICING_DEFAULTS: PricingConfig = {
   yearly: 1,
   compatibility: 1,
   scenario: 1,
+  tarot_three_card: 1,
+  tarot_relationship: 1,
+  tarot_celtic_cross: 2,
 }
 
 export async function getPricing(): Promise<PricingConfig> {
