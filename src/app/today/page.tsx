@@ -264,7 +264,13 @@ export default function TodayFortunePage() {
           const f = new File([blob], 'astropillar.png', { type: 'image/png' })
           if (nav.canShare?.({ files: [f] })) files.push(f)
         }
-        await nav.share({ title: 'AstroPillar', text, url: shareUrl, ...(files.length ? { files } : {}) })
+        const textWithUrl = `${text}\n${shareUrl}`
+        if (files.length) {
+          // Some platforms drop url when files are present — embed URL in text instead
+          await nav.share({ title: 'AstroPillar', text: textWithUrl, files })
+        } else {
+          await nav.share({ title: 'AstroPillar', text, url: shareUrl })
+        }
       } else {
         await navigator.clipboard.writeText(`${text}\n${shareUrl}`)
         setShareToast('Link copied to clipboard!')
