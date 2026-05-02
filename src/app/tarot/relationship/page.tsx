@@ -116,6 +116,7 @@ export default function RelationshipPage() {
   const [scenarioQ, setScenarioQ] = useState('')
   const [scenarioText, setScenarioText] = useState<string | null>(null)
   const [scenarioLoading, setScenarioLoading] = useState(false)
+  const [scenarioError, setScenarioError] = useState('')
 
   useEffect(() => { setDeck(shuffleDeck(FULL_DECK)) }, [])
 
@@ -182,6 +183,7 @@ export default function RelationshipPage() {
   async function handleScenario() {
     if (!scenarioQ.trim()) return
     setScenarioLoading(true)
+    setScenarioError('')
     try {
       const res = await apiPost<{ content_text: string }>('/tarot/scenario', {
         cards: slots.map(c => c?.name ?? ''),
@@ -191,7 +193,9 @@ export default function RelationshipPage() {
         scenario_question: scenarioQ.trim(),
       })
       setScenarioText(res.content_text)
-    } catch { /* silent */ } finally { setScenarioLoading(false) }
+    } catch (e) {
+      setScenarioError(e instanceof Error ? e.message : 'Failed. Please try again.')
+    } finally { setScenarioLoading(false) }
   }
 
   const notEnough = credits !== null && credits < cost
@@ -335,6 +339,7 @@ export default function RelationshipPage() {
                 <textarea value={scenarioQ} onChange={e => setScenarioQ(e.target.value)}
                   placeholder="e.g. How can I get closer to them?" rows={2}
                   style={{ width: '100%', background: '#0f1829', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 12px', color: '#fff', fontSize: 13, resize: 'none', outline: 'none', colorScheme: 'dark', boxSizing: 'border-box', marginBottom: 12 }} />
+                {scenarioError && <p style={{ color: '#ef4444', fontSize: 12, marginBottom: 10 }}>{scenarioError}</p>}
                 <button onClick={handleScenario} disabled={!scenarioQ.trim() || scenarioLoading} className="btn-gold"
                   style={{ width: '100%', fontSize: 14, padding: '12px', opacity: (!scenarioQ.trim() || scenarioLoading) ? 0.5 : 1 }}>
                   {scenarioLoading ? 'Reading...' : 'Get Scenario Reading →'}
@@ -352,7 +357,8 @@ export default function RelationshipPage() {
 
             <button onClick={() => {
               setPhase('question'); setQuestion(''); setDeck(shuffleDeck(FULL_DECK))
-              setSlots([null, null, null, null]); setGptText(null); setError(''); setLoadPct(0)
+              setSlots([null, null, null, null]); setExitIdxs(new Set()); setSlotEntering(new Set())
+              setGptText(null); setError(''); setLoadPct(0)
               setScenarioText(null); setScenarioQ('')
             }} style={{ width: '100%', background: 'none', border: '1px solid var(--border)', borderRadius: 12, padding: '12px', color: 'var(--text-muted)', fontSize: 13, cursor: 'pointer' }}>
               New Reading

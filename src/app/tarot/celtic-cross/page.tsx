@@ -357,7 +357,8 @@ export default function CelticCrossPage() {
             </div>
             <button onClick={() => {
               setPhase('question'); setQuestion(''); setDeck(shuffleDeck(FULL_DECK))
-              setSlots(Array(10).fill(null)); setGptText(null); setError(''); setLoadPct(0)
+              setSlots(Array(10).fill(null)); setExitIdxs(new Set()); setSlotEntering(new Set())
+              setGptText(null); setError(''); setLoadPct(0)
             }} style={{ width: '100%', background: 'none', border: '1px solid var(--border)', borderRadius: 12, padding: '12px', color: 'var(--text-muted)', fontSize: 13, cursor: 'pointer' }}>
               New Reading
             </button>

@@ -351,7 +351,8 @@ export default function ThreeCardPage() {
 
             <button onClick={() => {
               setPhase('question'); setQuestion(''); setDeck(shuffleDeck(FULL_DECK))
-              setSlots([null, null, null]); setGptText(null); setError(''); setLoadPct(0)
+              setSlots([null, null, null]); setExitIdxs(new Set()); setSlotEntering(new Set())
+              setGptText(null); setError(''); setLoadPct(0)
               setScenarioText(null); setScenarioQuestion('')
             }} style={{ width: '100%', background: 'none', border: '1px solid var(--border)', borderRadius: 12, padding: '12px', color: 'var(--text-muted)', fontSize: 13, cursor: 'pointer' }}>
               New Reading
