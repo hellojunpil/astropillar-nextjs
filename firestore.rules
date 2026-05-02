@@ -7,6 +7,9 @@ service cloud.firestore {
     match /daily_fortunes/{doc} {
       allow read: if true;
     }
+    match /daily_tarot/{doc} {
+      allow read: if true;
+    }
     match /service_config/{doc} {
       allow read: if true;
     }

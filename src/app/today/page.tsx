@@ -239,13 +239,17 @@ export default function TodayFortunePage() {
     apiCalledRef.current = true
     setTarotLoading(true); setTarotError('')
     try {
-      // Firestore 캐시 우선 조회
-      const docId = `${getTodayKey()}_${card.file}`
-      const snap = await getDoc(doc(db, 'daily_tarot', docId))
-      if (snap.exists()) {
-        setTarotResult((snap.data() as { content_text: string }).content_text)
-        if (isFirstDraw) setIsFirstDraw(false)
-        return
+      // Firestore 캐시 우선 조회 (실패해도 API로 폴백)
+      try {
+        const docId = `${getTodayKey()}_${card.file}`
+        const snap = await getDoc(doc(db, 'daily_tarot', docId))
+        if (snap.exists()) {
+          setTarotResult((snap.data() as { content_text: string }).content_text)
+          if (isFirstDraw) setIsFirstDraw(false)
+          return
+        }
+      } catch {
+        // Firestore 캐시 실패 시 API로 진행
       }
       // 캐시 없으면 API 폴백
       const data = await apiPost<{ content_text: string }>('/tarot/daily', {
