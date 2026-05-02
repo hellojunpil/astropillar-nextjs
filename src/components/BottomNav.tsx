@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth'
 const NAV_ITEMS = [
   { href: '/',        icon: 'home',          label: 'Home' },
   { href: '/menu',    icon: 'auto_awesome',  label: 'Destiny' },
-  { href: '/today',   icon: 'calendar_today',label: 'Daily' },
+  { href: '/today',   icon: 'calendar_today',label: 'Free' },
   { href: '/library', icon: 'local_library', label: 'Library' },
 ]
 
