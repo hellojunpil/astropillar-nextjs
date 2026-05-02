@@ -40,8 +40,7 @@ const CHINESE_SIGNS = [
   { name: 'Pig',     img: '03_04_pig.png'     },
 ]
 
-const TAROT_CARDS = [
-  // Major Arcana
+const MAJOR_ARCANA = [
   { name: 'The Fool',           file: 'major_arcana_fool'        },
   { name: 'The Magician',       file: 'major_arcana_magician'    },
   { name: 'The High Priestess', file: 'major_arcana_priestess'   },
@@ -64,66 +63,6 @@ const TAROT_CARDS = [
   { name: 'The Sun',            file: 'major_arcana_sun'         },
   { name: 'Judgement',          file: 'major_arcana_judgement'   },
   { name: 'The World',          file: 'major_arcana_world'       },
-  // Cups
-  { name: 'Ace of Cups',    file: 'minor_arcana_cups_ace'    },
-  { name: 'Two of Cups',    file: 'minor_arcana_cups_2'      },
-  { name: 'Three of Cups',  file: 'minor_arcana_cups_3'      },
-  { name: 'Four of Cups',   file: 'minor_arcana_cups_4'      },
-  { name: 'Five of Cups',   file: 'minor_arcana_cups_5'      },
-  { name: 'Six of Cups',    file: 'minor_arcana_cups_6'      },
-  { name: 'Seven of Cups',  file: 'minor_arcana_cups_7'      },
-  { name: 'Eight of Cups',  file: 'minor_arcana_cups_8'      },
-  { name: 'Nine of Cups',   file: 'minor_arcana_cups_9'      },
-  { name: 'Ten of Cups',    file: 'minor_arcana_cups_10'     },
-  { name: 'Page of Cups',   file: 'minor_arcana_cups_page'   },
-  { name: 'Knight of Cups', file: 'minor_arcana_cups_knight' },
-  { name: 'Queen of Cups',  file: 'minor_arcana_cups_queen'  },
-  { name: 'King of Cups',   file: 'minor_arcana_cups_king'   },
-  // Pentacles
-  { name: 'Ace of Pentacles',    file: 'minor_arcana_pentacles_ace'    },
-  { name: 'Two of Pentacles',    file: 'minor_arcana_pentacles_2'      },
-  { name: 'Three of Pentacles',  file: 'minor_arcana_pentacles_3'      },
-  { name: 'Four of Pentacles',   file: 'minor_arcana_pentacles_4'      },
-  { name: 'Five of Pentacles',   file: 'minor_arcana_pentacles_5'      },
-  { name: 'Six of Pentacles',    file: 'minor_arcana_pentacles_6'      },
-  { name: 'Seven of Pentacles',  file: 'minor_arcana_pentacles_7'      },
-  { name: 'Eight of Pentacles',  file: 'minor_arcana_pentacles_8'      },
-  { name: 'Nine of Pentacles',   file: 'minor_arcana_pentacles_9'      },
-  { name: 'Ten of Pentacles',    file: 'minor_arcana_pentacles_10'     },
-  { name: 'Page of Pentacles',   file: 'minor_arcana_pentacles_page'   },
-  { name: 'Knight of Pentacles', file: 'minor_arcana_pentacles_knight' },
-  { name: 'Queen of Pentacles',  file: 'minor_arcana_pentacles_queen'  },
-  { name: 'King of Pentacles',   file: 'minor_arcana_pentacles_king'   },
-  // Swords
-  { name: 'Ace of Swords',    file: 'minor_arcana_swords_ace'    },
-  { name: 'Two of Swords',    file: 'minor_arcana_swords_2'      },
-  { name: 'Three of Swords',  file: 'minor_arcana_swords_3'      },
-  { name: 'Four of Swords',   file: 'minor_arcana_swords_4'      },
-  { name: 'Five of Swords',   file: 'minor_arcana_swords_5'      },
-  { name: 'Six of Swords',    file: 'minor_arcana_swords_6'      },
-  { name: 'Seven of Swords',  file: 'minor_arcana_swords_7'      },
-  { name: 'Eight of Swords',  file: 'minor_arcana_swords_8'      },
-  { name: 'Nine of Swords',   file: 'minor_arcana_swords_9'      },
-  { name: 'Ten of Swords',    file: 'minor_arcana_swords_10'     },
-  { name: 'Page of Swords',   file: 'minor_arcana_swords_page'   },
-  { name: 'Knight of Swords', file: 'minor_arcana_swords_knight' },
-  { name: 'Queen of Swords',  file: 'minor_arcana_swords_queen'  },
-  { name: 'King of Swords',   file: 'minor_arcana_swords_king'   },
-  // Wands
-  { name: 'Ace of Wands',    file: 'minor_arcana_wands_ace'    },
-  { name: 'Two of Wands',    file: 'minor_arcana_wands_2'      },
-  { name: 'Three of Wands',  file: 'minor_arcana_wands_3'      },
-  { name: 'Four of Wands',   file: 'minor_arcana_wands_4'      },
-  { name: 'Five of Wands',   file: 'minor_arcana_wands_5'      },
-  { name: 'Six of Wands',    file: 'minor_arcana_wands_6'      },
-  { name: 'Seven of Wands',  file: 'minor_arcana_wands_7'      },
-  { name: 'Eight of Wands',  file: 'minor_arcana_wands_8'      },
-  { name: 'Nine of Wands',   file: 'minor_arcana_wands_9'      },
-  { name: 'Ten of Wands',    file: 'minor_arcana_wands_10'     },
-  { name: 'Page of Wands',   file: 'minor_arcana_wands_page'   },
-  { name: 'Knight of Wands', file: 'minor_arcana_wands_knight' },
-  { name: 'Queen of Wands',  file: 'minor_arcana_wands_queen'  },
-  { name: 'King of Wands',   file: 'minor_arcana_wands_king'   },
 ]
 
 const CHINESE_ORDER = ['Rat','Ox','Tiger','Rabbit','Dragon','Snake','Horse','Goat','Monkey','Rooster','Dog','Pig']
@@ -134,8 +73,8 @@ const TAROT_STORAGE_KEY = 'tarot_daily_v1'
 
 const selectStyle: React.CSSProperties = {
   flex: 1, background: '#0f1829', border: '1px solid var(--border)',
-  borderRadius: 12, padding: '8px 10px', color: '#fff',
-  fontSize: 14, outline: 'none', colorScheme: 'dark', cursor: 'pointer',
+  borderRadius: 10, padding: '8px 10px', color: '#fff',
+  fontSize: 13, outline: 'none', colorScheme: 'dark', cursor: 'pointer',
   appearance: 'none' as const, WebkitAppearance: 'none' as const,
 }
 
@@ -145,15 +84,10 @@ const MOON_PHASE_EMOJIS: Record<string, string> = {
   'third quarter': '🌗', 'last quarter': '🌗', 'waning crescent': '🌘',
 }
 
-interface MoonPhaseData {
-  phase?: string
-  illumination?: number | null
-  moon_age?: number | null
-}
-
+interface MoonPhaseData { phase?: string; illumination?: number | null; moon_age?: number | null }
 interface FortuneData { [key: string]: unknown }
 
-type FortuneMode = 'horoscope' | 'chinese'
+type ActiveTab = 'tarot' | 'horoscope' | 'chinese'
 
 function getTodayKey() {
   const d = new Date()
@@ -189,23 +123,37 @@ function parseTarotResult(text: string): Array<{ header: string; content: string
 
 const todayStr = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
 
+const TABS: { id: ActiveTab; label: string }[] = [
+  { id: 'tarot',     label: '🃏 Daily Tarot'   },
+  { id: 'horoscope', label: '🌙 Horoscope'      },
+  { id: 'chinese',   label: '☯ Chinese Zodiac' },
+]
+
 export default function TodayFortunePage() {
   const { user } = useAuth(false)
-  const [activeTab, setActiveTab] = useState<'fortune' | 'tarot'>('fortune')
+  const [activeTab, setActiveTab] = useState<ActiveTab>('tarot')
 
-  // ── Fortune tab state ─────────────────────────────────────────
-  const [bMonth, setBMonth] = useState('')
-  const [bDay, setBDay] = useState('')
-  const [bYear, setBYear] = useState('')
-  const [selected, setSelected] = useState<string | null>(null)
-  const [mode, setMode] = useState<FortuneMode | null>(null)
-  const [autoHoro, setAutoHoro] = useState<string | null>(null)
-  const [autoChinese, setAutoChinese] = useState<string | null>(null)
-  const [fortune, setFortune] = useState<FortuneData | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [step, setStep] = useState<'pick' | 'result'>('pick')
+  // ── Moon phase ────────────────────────────────────────────────
   const [moonPhase, setMoonPhase] = useState<MoonPhaseData | null>(null)
+
+  // ── Horoscope tab state ───────────────────────────────────────
+  const [horoMonth, setHoroMonth] = useState('')
+  const [horoDay, setHoroDay] = useState('')
+  const [horoAuto, setHoroAuto] = useState<string | null>(null)
+  const [horoSelected, setHoroSelected] = useState<string | null>(null)
+  const [horoFortune, setHoroFortune] = useState<FortuneData | null>(null)
+  const [horoLoading, setHoroLoading] = useState(false)
+  const [horoError, setHoroError] = useState('')
+  const [horoStep, setHoroStep] = useState<'pick'|'result'>('pick')
+
+  // ── Chinese tab state ─────────────────────────────────────────
+  const [chineseYear, setChineseYear] = useState('')
+  const [chineseAuto, setChineseAuto] = useState<string | null>(null)
+  const [chineseSelected, setChineseSelected] = useState<string | null>(null)
+  const [chineseFortune, setChineseFortune] = useState<FortuneData | null>(null)
+  const [chineseLoading, setChineseLoading] = useState(false)
+  const [chineseError, setChineseError] = useState('')
+  const [chineseStep, setChineseStep] = useState<'pick'|'result'>('pick')
 
   // ── Tarot tab state ───────────────────────────────────────────
   const [tarotCard, setTarotCard] = useState<{ name: string; file: string } | null>(null)
@@ -226,7 +174,7 @@ export default function TodayFortunePage() {
       if (!raw) return
       const saved = JSON.parse(raw)
       if (saved.date === getTodayKey() && saved.cardFile && saved.result) {
-        const card = TAROT_CARDS.find(c => c.file === saved.cardFile)
+        const card = MAJOR_ARCANA.find(c => c.file === saved.cardFile)
         if (card) {
           setTarotCard(card)
           setFlipped(true)
@@ -238,24 +186,17 @@ export default function TodayFortunePage() {
     } catch { /* ignore */ }
   }, [])
 
-  function handleBirthday(m: string, d: string, y: string) {
-    const month = parseInt(m), day = parseInt(d), year = parseInt(y)
-    setAutoHoro(month && day ? getHoroscope(month, day) : null)
-    setAutoChinese(year ? getChineseZodiac(year) : null)
-  }
-
-  function selectSign(name: string, m: FortuneMode) {
-    if (selected === name && mode === m) { setSelected(null); setMode(null) }
-    else { setSelected(name); setMode(m) }
-  }
-
-  async function fetchFortune() {
-    if (!selected || !mode) return
+  async function fetchFortune(sign: string, mode: 'horoscope' | 'chinese') {
+    const setLoading = mode === 'horoscope' ? setHoroLoading : setChineseLoading
+    const setError   = mode === 'horoscope' ? setHoroError   : setChineseError
+    const setFortune = mode === 'horoscope' ? setHoroFortune : setChineseFortune
+    const setStep    = mode === 'horoscope' ? setHoroStep    : setChineseStep
     setLoading(true); setError('')
     try {
       const dateKey = getTodayKey()
-      const signKey = selected.toLowerCase()
-      const docId = mode === 'horoscope' ? `${dateKey}_horoscope_${signKey}` : `${dateKey}_zodiac_${signKey}`
+      const docId = mode === 'horoscope'
+        ? `${dateKey}_horoscope_${sign.toLowerCase()}`
+        : `${dateKey}_zodiac_${sign.toLowerCase()}`
       const snap = await getDoc(doc(db, 'daily_fortunes', docId))
       if (!snap.exists()) { setError('No fortune available for today. Please check back later.'); return }
       setFortune(snap.data() as FortuneData)
@@ -267,12 +208,11 @@ export default function TodayFortunePage() {
     }
   }
 
-  function drawCard() {
+  function selectTarotCard(card: { name: string; file: string }) {
     if (alreadyDrawn || tarotCard) return
-    const card = TAROT_CARDS[Math.floor(Math.random() * TAROT_CARDS.length)]
     setTarotCard(card)
     setTimeout(() => setFlipped(true), 80)
-    setTimeout(() => fetchTarotReading(card), 800)
+    setTimeout(() => fetchTarotReading(card), 820)
   }
 
   async function fetchTarotReading(card: { name: string; file: string }) {
@@ -280,10 +220,9 @@ export default function TodayFortunePage() {
     apiCalledRef.current = true
     setTarotLoading(true); setTarotError('')
     try {
-      const imageUrl = `${IMG}${card.file}.webp`
       const data = await apiPost<{ content_text: string }>('/tarot/daily', {
         card_name: card.name,
-        card_image_url: imageUrl,
+        card_image_url: `${IMG}${card.file}.webp`,
       })
       setTarotResult(data.content_text)
       localStorage.setItem(TAROT_STORAGE_KEY, JSON.stringify({
@@ -305,9 +244,62 @@ export default function TodayFortunePage() {
     { label: 'Social',   key: 'score_social',   color: '#60a5fa' },
     { label: 'Creative', key: 'score_creative', color: '#fb923c' },
   ] as const
-  const scores = fortune ? SCORE_ITEMS.filter(s => typeof fortune[s.key] === 'number') : []
-  const bestMatch = fortune && typeof fortune.best_match === 'string' ? fortune.best_match : null
-  const bestMatchSign = bestMatch ? HOROSCOPE_SIGNS.find(s => s.name.toLowerCase() === bestMatch.toLowerCase()) : null
+
+  function FortuneResult({ fortune, mode, onBack }: { fortune: FortuneData; mode: 'horoscope'|'chinese'; onBack: () => void }) {
+    const scores = SCORE_ITEMS.filter(s => typeof fortune[s.key] === 'number')
+    const bestMatch = typeof fortune.best_match === 'string' ? fortune.best_match : null
+    const bestMatchSign = bestMatch ? HOROSCOPE_SIGNS.find(s => s.name.toLowerCase() === bestMatch.toLowerCase()) : null
+    return (
+      <div>
+        <div className="card" style={{ marginBottom: 12 }}>
+          <p style={{ color: 'var(--gold)', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 14 }}>
+            {mode === 'horoscope' ? '✦ Horoscope' : '✦ Chinese Zodiac'}
+          </p>
+          {scores.length > 0 && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 20px', marginBottom: 16 }}>
+              {scores.map(s => (
+                <div key={s.key}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
+                    <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, letterSpacing: 1, textTransform: 'uppercase' }}>{s.label}</span>
+                    <span style={{ color: s.color, fontSize: 12, fontWeight: 700 }}>{fortune[s.key] as number}</span>
+                  </div>
+                  <div style={{ height: 3, background: 'rgba(255,255,255,0.07)', borderRadius: 2 }}>
+                    <div style={{ height: '100%', width: `${fortune[s.key] as number}%`, background: s.color, borderRadius: 2 }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {bestMatch && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '10px 12px', marginBottom: 14 }}>
+              {bestMatchSign && <Image src={`${IMG}${bestMatchSign.img}`} alt={bestMatch} width={32} height={32} style={{ objectFit: 'contain' }} unoptimized />}
+              <div>
+                <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 9, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 2 }}>Best Match Today</p>
+                <p style={{ color: '#fff', fontSize: 13, fontWeight: 700 }}>{bestMatch}</p>
+              </div>
+            </div>
+          )}
+          {!!fortune.intro && <p style={{ color: 'var(--text-muted)', fontSize: 13, fontStyle: 'italic', marginBottom: 12, lineHeight: 1.7 }}>{fortune.intro as string}</p>}
+          {!!fortune.fortune && <p style={{ color: '#ddd', fontSize: 14, lineHeight: 1.9, marginBottom: 14, whiteSpace: 'pre-wrap' }}>{(fortune.fortune as string).replace(/^\[[\w\s]+\]\s*/i, '')}</p>}
+          {!!fortune.tip && (
+            <div style={{ background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.25)', borderRadius: 10, padding: '10px 14px' }}>
+              <p style={{ color: 'var(--gold)', fontSize: 11, letterSpacing: 1, marginBottom: 4 }}>TIP FOR TODAY</p>
+              <p style={{ color: '#ddd', fontSize: 13, lineHeight: 1.7 }}>{fortune.tip as string}</p>
+            </div>
+          )}
+        </div>
+        <button onClick={onBack} style={{ width: '100%', background: 'none', border: '1px solid var(--border)', color: 'var(--text-muted)', borderRadius: 50, padding: '11px', fontSize: 13, cursor: 'pointer', marginBottom: 14 }}>
+          ← Check Another Sign
+        </button>
+        <div className="card" style={{ textAlign: 'center' }}>
+          <p style={{ color: '#fff', fontWeight: 600, marginBottom: 6 }}>Want a personalized reading?</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 14 }}>Get your full BaZi chart + Astrology reading tailored to your exact birth details.</p>
+          <Link href="/login" className="btn-gold" style={{ fontSize: 13, padding: '11px 24px' }}>Start for Free →</Link>
+        </div>
+      </div>
+    )
+  }
+
   const tarotSections = tarotResult ? parseTarotResult(tarotResult) : []
 
   return (
@@ -323,297 +315,252 @@ export default function TodayFortunePage() {
         }
       </header>
 
-      <div style={{ maxWidth: 480, margin: '0 auto', padding: '12px 20px 0' }}>
+      <div style={{ maxWidth: 480, margin: '0 auto' }}>
 
         {/* Page title */}
-        <div style={{ textAlign: 'center', marginBottom: 14 }}>
-          <h1 className="font-display" style={{ color: '#fff', fontSize: 22, fontWeight: 600, marginBottom: 2 }}>Today&apos;s Fortune</h1>
+        <div style={{ textAlign: 'center', padding: '14px 20px 0' }}>
           <p style={{ color: 'var(--text-muted)', fontSize: 12 }}>{todayStr}</p>
-          <span style={{ display: 'inline-block', marginTop: 5, border: '1px solid #2ecc71', color: '#2ecc71', borderRadius: 20, padding: '2px 10px', fontSize: 10, fontWeight: 700 }}>
+          <span style={{ display: 'inline-block', marginTop: 4, border: '1px solid #2ecc71', color: '#2ecc71', borderRadius: 20, padding: '2px 10px', fontSize: 10, fontWeight: 700 }}>
             FREE — No login required
           </span>
         </div>
 
-        {/* Tab switcher */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 20, background: 'rgba(255,255,255,0.04)', borderRadius: 16, padding: 4 }}>
-          {(['fortune', 'tarot'] as const).map(tab => (
-            <button key={tab} onClick={() => setActiveTab(tab)} style={{
-              flex: 1, padding: '10px 0', borderRadius: 12, border: 'none', cursor: 'pointer',
-              background: activeTab === tab ? 'var(--card)' : 'transparent',
-              color: activeTab === tab ? '#fff' : 'var(--text-muted)',
-              fontSize: 13, fontWeight: activeTab === tab ? 700 : 400,
-              transition: 'all 0.2s',
-              boxShadow: activeTab === tab ? '0 1px 4px rgba(0,0,0,0.3)' : 'none',
-            }}>
-              {tab === 'fortune' ? '🌙 Today\'s Fortune' : '🃏 Daily Tarot'}
-            </button>
-          ))}
+        {/* ── Tab bar ──────────────────────────────────────────── */}
+        <div style={{
+          display: 'flex',
+          borderBottom: '2px solid var(--border)',
+          margin: '14px 0 0',
+        }}>
+          {TABS.map(tab => {
+            const active = activeTab === tab.id
+            return (
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
+                flex: 1,
+                padding: '12px 4px',
+                background: active ? 'rgba(201,168,76,0.06)' : 'transparent',
+                border: 'none',
+                borderBottom: active ? '2px solid var(--gold)' : '2px solid transparent',
+                marginBottom: -2,
+                color: active ? '#fff' : 'var(--text-muted)',
+                fontSize: 12,
+                fontWeight: active ? 700 : 400,
+                cursor: 'pointer',
+                transition: 'all 0.18s',
+                letterSpacing: 0.2,
+              }}>
+                {tab.label}
+              </button>
+            )
+          })}
         </div>
 
-        {/* ── Fortune tab ──────────────────────────────────────── */}
-        {activeTab === 'fortune' && (
-          <div>
-            {moonPhase?.phase && (
-              <div style={{ background: 'rgba(22,33,62,0.7)', border: '1px solid rgba(167,139,250,0.25)', borderRadius: 16, padding: '12px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 14 }}>
-                <span style={{ fontSize: 32, lineHeight: 1 }}>
-                  {MOON_PHASE_EMOJIS[moonPhase.phase.toLowerCase()] ?? '🌙'}
-                </span>
-                <div style={{ flex: 1 }}>
-                  <p style={{ color: '#a78bfa', fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 3 }}>Moon Phase</p>
-                  <p style={{ color: '#fff', fontSize: 14, fontWeight: 700, marginBottom: 2 }}>{moonPhase.phase}</p>
-                  <p style={{ color: 'var(--text-muted)', fontSize: 11 }}>
-                    {moonPhase.illumination != null ? `${Math.round(moonPhase.illumination <= 1 ? moonPhase.illumination*100 : moonPhase.illumination)}% illuminated` : ''}
-                    {moonPhase.moon_age != null ? ` · Day ${Math.round(moonPhase.moon_age)} of cycle` : ''}
-                  </p>
-                </div>
-              </div>
-            )}
+        <div style={{ padding: '20px 20px 0' }}>
 
-            {step === 'result' && fortune ? (
-              <div>
-                <div className="card" style={{ marginBottom: 12 }}>
-                  <p style={{ color: 'var(--gold)', fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 14 }}>
-                    {mode === 'horoscope' ? '✦ Horoscope' : '✦ Chinese Zodiac'} · {selected}
-                  </p>
-                  {scores.length > 0 && (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 20px', marginBottom: 18 }}>
-                      {scores.map(s => (
-                        <div key={s.key}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 }}>
-                            <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase' }}>{s.label}</span>
-                            <span style={{ color: s.color, fontSize: 13, fontWeight: 700 }}>{fortune[s.key] as number}</span>
-                          </div>
-                          <div style={{ height: 3, background: 'rgba(255,255,255,0.07)', borderRadius: 2 }}>
-                            <div style={{ height: '100%', width: `${fortune[s.key] as number}%`, background: s.color, borderRadius: 2 }} />
-                          </div>
+          {/* ── Daily Tarot tab ─────────────────────────────────── */}
+          {activeTab === 'tarot' && (
+            <div>
+              {!tarotCard ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <p className="font-display" style={{ color: '#fff', fontSize: 20, fontWeight: 600, marginBottom: 4 }}>Daily Tarot</p>
+                    <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>Choose one card from the Major Arcana — one draw per day.</p>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+                    {MAJOR_ARCANA.map(card => (
+                      <button key={card.file} onClick={() => selectTarotCard(card)} style={{
+                        background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
+                      }}>
+                        <div style={{
+                          width: '100%', aspectRatio: '2/3',
+                          background: 'linear-gradient(145deg, #1a2a4a 0%, #0d1626 100%)',
+                          border: '1.5px solid rgba(201,168,76,0.4)',
+                          borderRadius: 10,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          boxShadow: '0 3px 10px rgba(0,0,0,0.4)',
+                          transition: 'border-color 0.15s, transform 0.15s',
+                        }}
+                          onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--gold)'; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)' }}
+                          onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(201,168,76,0.4)'; (e.currentTarget as HTMLDivElement).style.transform = 'none' }}
+                        >
+                          <span style={{ color: 'rgba(201,168,76,0.5)', fontSize: 18 }}>✦</span>
                         </div>
-                      ))}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
+                  {alreadyDrawn && (
+                    <p style={{ color: 'rgba(201,168,76,0.7)', fontSize: 12, textAlign: 'center' }}>
+                      Today&apos;s card — come back tomorrow for a new draw.
+                    </p>
+                  )}
+
+                  {/* Flipped card */}
+                  <div style={{ width: 180, height: 300, perspective: '1000px' }}>
+                    <div style={{
+                      width: '100%', height: '100%', position: 'relative',
+                      transformStyle: 'preserve-3d',
+                      transition: 'transform 0.75s ease',
+                      transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+                    }}>
+                      <div style={{
+                        position: 'absolute', inset: 0, borderRadius: 12,
+                        background: 'linear-gradient(145deg, #1a2a4a 0%, #0d1626 100%)',
+                        border: '2px solid var(--gold)',
+                        WebkitBackfaceVisibility: 'hidden', backfaceVisibility: 'hidden',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                        boxShadow: '0 8px 28px rgba(0,0,0,0.5)',
+                      }}>
+                        <span style={{ fontSize: 40, color: 'var(--gold)', opacity: 0.6 }}>✦</span>
+                      </div>
+                      <div style={{
+                        position: 'absolute', inset: 0, borderRadius: 12, overflow: 'hidden',
+                        border: '2px solid var(--gold)',
+                        WebkitBackfaceVisibility: 'hidden', backfaceVisibility: 'hidden',
+                        transform: 'rotateY(180deg)',
+                        boxShadow: '0 8px 28px rgba(0,0,0,0.5)',
+                      }}>
+                        <Image src={`${IMG}${tarotCard.file}.webp`} alt={tarotCard.name} fill style={{ objectFit: 'cover' }} unoptimized />
+                      </div>
+                    </div>
+                  </div>
+
+                  <p className="font-display" style={{ color: 'var(--gold)', fontSize: 18, fontWeight: 600, letterSpacing: 1, textAlign: 'center' }}>
+                    {tarotCard.name}
+                  </p>
+
+                  {tarotLoading && <p style={{ color: 'var(--gold)', fontSize: 13 }}>✦ Reading the cards...</p>}
+
+                  {tarotError && (
+                    <div style={{ textAlign: 'center' }}>
+                      <p style={{ color: '#ef4444', fontSize: 13, marginBottom: 10 }}>{tarotError}</p>
+                      <button onClick={() => { apiCalledRef.current = false; fetchTarotReading(tarotCard) }} className="btn-gold" style={{ fontSize: 13, padding: '10px 22px' }}>Try Again</button>
                     </div>
                   )}
-                  {bestMatch && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '10px 14px', marginBottom: 18 }}>
-                      {bestMatchSign && (
-                        <Image src={`${IMG}${bestMatchSign.img}`} alt={bestMatch} width={36} height={36} style={{ objectFit: 'contain' }} unoptimized />
-                      )}
-                      <div>
-                        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 9, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 2 }}>Best Match Today</p>
-                        <p style={{ color: '#fff', fontSize: 14, fontWeight: 700 }}>{bestMatch}</p>
+
+                  {tarotSections.length > 0 && (
+                    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {tarotSections.map((sec, i) => (
+                        <div key={i} className="card" style={{ padding: '14px 16px' }}>
+                          {sec.header && <p style={{ color: 'var(--gold)', fontSize: 12, fontWeight: 700, marginBottom: 7 }}>{sec.header}</p>}
+                          <p style={{ color: '#ddd', fontSize: 14, lineHeight: 1.8 }}>{sec.content}</p>
+                        </div>
+                      ))}
+                      <div className="card" style={{ textAlign: 'center', marginTop: 4 }}>
+                        <p style={{ color: '#fff', fontWeight: 600, marginBottom: 6 }}>Want a deeper reading?</p>
+                        <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 14 }}>Three-Card, Relationship, or Celtic Cross spreads — full AI tarot interpretation.</p>
+                        <Link href="/menu" className="btn-gold" style={{ fontSize: 13, padding: '11px 24px' }}>Explore Readings →</Link>
                       </div>
                     </div>
                   )}
-                  {!!fortune.intro && <p style={{ color: 'var(--text-muted)', fontSize: 13, fontStyle: 'italic', marginBottom: 14, lineHeight: 1.7 }}>{fortune.intro as string}</p>}
-                  {!!fortune.fortune && <p style={{ color: '#ddd', fontSize: 14, lineHeight: 1.9, marginBottom: 16, whiteSpace: 'pre-wrap' }}>{(fortune.fortune as string).replace(/^\[[\w\s]+\]\s*/i, '')}</p>}
-                  {!!fortune.tip && (
-                    <div style={{ background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.25)', borderRadius: 10, padding: '10px 14px' }}>
-                      <p style={{ color: 'var(--gold)', fontSize: 11, letterSpacing: 1, marginBottom: 4 }}>TIP FOR TODAY</p>
-                      <p style={{ color: '#ddd', fontSize: 13, lineHeight: 1.7 }}>{fortune.tip as string}</p>
-                    </div>
-                  )}
                 </div>
-                <button onClick={() => { setStep('pick'); setFortune(null); setSelected(null); setMode(null) }}
-                  style={{ width: '100%', background: 'none', border: '1px solid var(--border)', color: 'var(--text-muted)', borderRadius: 50, padding: '12px', fontSize: 14, cursor: 'pointer', marginBottom: 16 }}>
-                  ← Check Another Sign
-                </button>
-                <div className="card" style={{ textAlign: 'center' }}>
-                  <p style={{ color: '#fff', fontWeight: 600, marginBottom: 6 }}>Want a personalized reading?</p>
-                  <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 16 }}>Get your full BaZi chart + Astrology reading tailored to your exact birth details.</p>
-                  <Link href="/login" className="btn-gold" style={{ fontSize: 14, padding: '12px 28px' }}>Start for Free →</Link>
-                </div>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                <div>
-                  <p style={{ color: 'var(--text-muted)', fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>Your Birthday</p>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <select value={bMonth} onChange={e => { setBMonth(e.target.value); handleBirthday(e.target.value, bDay, bYear) }} style={selectStyle}>
-                      <option value="">Month</option>
-                      {MONTHS.map((m, i) => <option key={m} value={String(i+1)}>{m}</option>)}
-                    </select>
-                    <select value={bDay} onChange={e => { setBDay(e.target.value); handleBirthday(bMonth, e.target.value, bYear) }} style={{...selectStyle, flex: '0 0 80px'}}>
-                      <option value="">Day</option>
-                      {DAYS.map(d => <option key={d} value={String(d)}>{d}</option>)}
-                    </select>
-                    <select value={bYear} onChange={e => { setBYear(e.target.value); handleBirthday(bMonth, bDay, e.target.value) }} style={{...selectStyle, flex: '0 0 96px'}}>
-                      <option value="">Year</option>
-                      {YEARS.map(y => <option key={y} value={String(y)}>{y}</option>)}
-                    </select>
-                  </div>
-                  {(autoHoro || autoChinese) && (
-                    <p style={{ color: 'var(--gold)', fontSize: 12, marginTop: 8, textAlign: 'center' }}>
-                      {autoHoro && `✦ ${autoHoro}`}{autoHoro && autoChinese && ' · '}{autoChinese && `Year of the ${autoChinese}`}
-                    </p>
-                  )}
-                </div>
+              )}
+            </div>
+          )}
 
-                <div>
-                  <p style={{ color: 'var(--text-muted)', fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8 }}>Horoscope</p>
+          {/* ── Horoscope tab ───────────────────────────────────── */}
+          {activeTab === 'horoscope' && (
+            <div>
+              {moonPhase?.phase && (
+                <div style={{ background: 'rgba(22,33,62,0.7)', border: '1px solid rgba(167,139,250,0.25)', borderRadius: 14, padding: '10px 14px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <span style={{ fontSize: 28 }}>{MOON_PHASE_EMOJIS[moonPhase.phase.toLowerCase()] ?? '🌙'}</span>
+                  <div>
+                    <p style={{ color: '#a78bfa', fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 2 }}>Moon Phase</p>
+                    <p style={{ color: '#fff', fontSize: 13, fontWeight: 700 }}>{moonPhase.phase}
+                      {moonPhase.illumination != null && <span style={{ color: 'var(--text-muted)', fontWeight: 400, fontSize: 11 }}> · {Math.round(moonPhase.illumination <= 1 ? moonPhase.illumination*100 : moonPhase.illumination)}% illuminated</span>}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {horoStep === 'result' && horoFortune ? (
+                <FortuneResult fortune={horoFortune} mode="horoscope" onBack={() => { setHoroStep('pick'); setHoroFortune(null); setHoroSelected(null) }} />
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div>
+                    <p style={{ color: 'var(--text-muted)', fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>Your Birthday</p>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <select value={horoMonth} onChange={e => { setHoroMonth(e.target.value); const m=parseInt(e.target.value),d=parseInt(horoDay); if(m&&d) setHoroAuto(getHoroscope(m,d)); else setHoroAuto(null) }} style={selectStyle}>
+                        <option value="">Month</option>
+                        {MONTHS.map((m,i) => <option key={m} value={String(i+1)}>{m}</option>)}
+                      </select>
+                      <select value={horoDay} onChange={e => { setHoroDay(e.target.value); const m=parseInt(horoMonth),d=parseInt(e.target.value); if(m&&d) setHoroAuto(getHoroscope(m,d)); else setHoroAuto(null) }} style={{...selectStyle, maxWidth: 90}}>
+                        <option value="">Day</option>
+                        {DAYS.map(d => <option key={d} value={String(d)}>{d}</option>)}
+                      </select>
+                    </div>
+                    {horoAuto && <p style={{ color: 'var(--gold)', fontSize: 12, marginTop: 6 }}>✦ {horoAuto}</p>}
+                  </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
                     {HOROSCOPE_SIGNS.map(s => {
-                      const isSelected = selected === s.name && mode === 'horoscope'
-                      const isAuto = autoHoro === s.name && !(selected && mode)
-                      const highlight = isSelected || isAuto
+                      const isSel = horoSelected === s.name
+                      const isAuto = horoAuto === s.name && !horoSelected
+                      const hi = isSel || isAuto
                       return (
-                        <button key={s.name} type="button" onClick={() => selectSign(s.name, 'horoscope')}
+                        <button key={s.name} type="button" onClick={() => setHoroSelected(horoSelected===s.name ? null : s.name)}
                           style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                          <div style={{ width: 76, height: 76, borderRadius: 18, background: highlight ? 'rgba(201,168,76,0.12)' : 'rgba(255,255,255,0.04)', border: `2px solid ${isSelected ? 'var(--gold)' : isAuto ? 'rgba(201,168,76,0.5)' : 'transparent'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: highlight ? '0 0 12px rgba(201,168,76,0.3)' : 'none', transition: 'all 0.15s' }}>
-                            <Image src={`${IMG}${s.img}`} alt={s.name} width={56} height={56} style={{ objectFit: 'contain' }} unoptimized />
+                          <div style={{ width: 72, height: 72, borderRadius: 16, background: hi ? 'rgba(201,168,76,0.12)' : 'rgba(255,255,255,0.04)', border: `2px solid ${isSel ? 'var(--gold)' : isAuto ? 'rgba(201,168,76,0.5)' : 'transparent'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: hi ? '0 0 10px rgba(201,168,76,0.25)' : 'none', transition: 'all 0.15s' }}>
+                            <Image src={`${IMG}${s.img}`} alt={s.name} width={52} height={52} style={{ objectFit: 'contain' }} unoptimized />
                           </div>
-                          <span style={{ color: isSelected ? 'var(--gold)' : isAuto ? 'rgba(201,168,76,0.8)' : 'var(--text-muted)', fontSize: 10, fontWeight: 600 }}>{s.name}</span>
+                          <span style={{ color: isSel ? 'var(--gold)' : isAuto ? 'rgba(201,168,76,0.8)' : 'var(--text-muted)', fontSize: 10, fontWeight: 600 }}>{s.name}</span>
                         </button>
                       )
                     })}
                   </div>
+                  {horoError && <p style={{ color: '#ef4444', fontSize: 13, textAlign: 'center' }}>{horoError}</p>}
+                  <button onClick={() => horoSelected && fetchFortune(horoSelected, 'horoscope')} disabled={!horoSelected || horoLoading} className="btn-gold"
+                    style={{ opacity: (!horoSelected || horoLoading) ? 0.4 : 1, cursor: (!horoSelected || horoLoading) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {horoLoading ? '✦ Reading the stars...' : "See Today's Horoscope"}
+                  </button>
                 </div>
+              )}
+            </div>
+          )}
 
-                <div>
-                  <p style={{ color: 'var(--text-muted)', fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8 }}>Chinese Zodiac</p>
+          {/* ── Chinese Zodiac tab ──────────────────────────────── */}
+          {activeTab === 'chinese' && (
+            <div>
+              {chineseStep === 'result' && chineseFortune ? (
+                <FortuneResult fortune={chineseFortune} mode="chinese" onBack={() => { setChineseStep('pick'); setChineseFortune(null); setChineseSelected(null) }} />
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div>
+                    <p style={{ color: 'var(--text-muted)', fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>Birth Year</p>
+                    <select value={chineseYear} onChange={e => { setChineseYear(e.target.value); const y=parseInt(e.target.value); setChineseAuto(y ? getChineseZodiac(y) : null) }} style={{...selectStyle, maxWidth: 140}}>
+                      <option value="">Select year</option>
+                      {YEARS.map(y => <option key={y} value={String(y)}>{y}</option>)}
+                    </select>
+                    {chineseAuto && <p style={{ color: 'var(--gold)', fontSize: 12, marginTop: 6 }}>✦ Year of the {chineseAuto}</p>}
+                  </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
                     {CHINESE_SIGNS.map(s => {
-                      const isSelected = selected === s.name && mode === 'chinese'
-                      const isAuto = autoChinese === s.name && !(selected && mode)
-                      const highlight = isSelected || isAuto
+                      const isSel = chineseSelected === s.name
+                      const isAuto = chineseAuto === s.name && !chineseSelected
+                      const hi = isSel || isAuto
                       return (
-                        <button key={s.name} type="button" onClick={() => selectSign(s.name, 'chinese')}
+                        <button key={s.name} type="button" onClick={() => setChineseSelected(chineseSelected===s.name ? null : s.name)}
                           style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                          <div style={{ width: 76, height: 76, borderRadius: 18, background: highlight ? 'rgba(167,139,250,0.12)' : 'rgba(255,255,255,0.04)', border: `2px solid ${isSelected ? '#a78bfa' : isAuto ? 'rgba(167,139,250,0.5)' : 'transparent'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: highlight ? '0 0 12px rgba(167,139,250,0.3)' : 'none', transition: 'all 0.15s' }}>
-                            <Image src={`${IMG}${s.img}`} alt={s.name} width={56} height={56} style={{ objectFit: 'contain' }} unoptimized />
+                          <div style={{ width: 72, height: 72, borderRadius: 16, background: hi ? 'rgba(167,139,250,0.12)' : 'rgba(255,255,255,0.04)', border: `2px solid ${isSel ? '#a78bfa' : isAuto ? 'rgba(167,139,250,0.5)' : 'transparent'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: hi ? '0 0 10px rgba(167,139,250,0.25)' : 'none', transition: 'all 0.15s' }}>
+                            <Image src={`${IMG}${s.img}`} alt={s.name} width={52} height={52} style={{ objectFit: 'contain' }} unoptimized />
                           </div>
-                          <span style={{ color: isSelected ? '#a78bfa' : isAuto ? 'rgba(167,139,250,0.8)' : 'var(--text-muted)', fontSize: 10, fontWeight: 600 }}>{s.name}</span>
+                          <span style={{ color: isSel ? '#a78bfa' : isAuto ? 'rgba(167,139,250,0.8)' : 'var(--text-muted)', fontSize: 10, fontWeight: 600 }}>{s.name}</span>
                         </button>
                       )
                     })}
                   </div>
+                  {chineseError && <p style={{ color: '#ef4444', fontSize: 13, textAlign: 'center' }}>{chineseError}</p>}
+                  <button onClick={() => chineseSelected && fetchFortune(chineseSelected, 'chinese')} disabled={!chineseSelected || chineseLoading} className="btn-gold"
+                    style={{ opacity: (!chineseSelected || chineseLoading) ? 0.4 : 1, cursor: (!chineseSelected || chineseLoading) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {chineseLoading ? '✦ Reading the stars...' : "See Today's Fortune"}
+                  </button>
                 </div>
-
-                {error && <p style={{ color: '#ef4444', fontSize: 13, textAlign: 'center' }}>{error}</p>}
-
-                <button onClick={fetchFortune} disabled={!selected || loading} className="btn-gold"
-                  style={{ opacity: (!selected || loading) ? 0.4 : 1, cursor: (!selected || loading) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                  {loading ? '✦ Reading the stars...' : "See Today's Fortune"}
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ── Tarot tab ─────────────────────────────────────────── */}
-        {activeTab === 'tarot' && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24 }}>
-
-            <div style={{ textAlign: 'center' }}>
-              <p style={{ color: 'var(--text-muted)', fontSize: 13, lineHeight: 1.6 }}>
-                One card drawn from the full 78-card Rider-Waite deck.<br />
-                {alreadyDrawn ? <span style={{ color: 'var(--gold)', fontSize: 12 }}>You&apos;ve drawn your card for today.</span> : 'One draw per day.'}
-              </p>
+              )}
             </div>
+          )}
 
-            {/* Card flip area */}
-            <div style={{ width: 200, height: 340, perspective: '1000px' }}>
-              <div style={{
-                width: '100%', height: '100%', position: 'relative',
-                transformStyle: 'preserve-3d',
-                transition: 'transform 0.7s ease',
-                transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
-              }}>
-                {/* Card back */}
-                <div style={{
-                  position: 'absolute', inset: 0, borderRadius: 14,
-                  background: 'linear-gradient(145deg, #1a2a4a 0%, #0d1626 100%)',
-                  border: '2px solid var(--gold)',
-                  WebkitBackfaceVisibility: 'hidden', backfaceVisibility: 'hidden',
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12,
-                  cursor: tarotCard ? 'default' : 'pointer',
-                  boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-                }} onClick={!tarotCard ? drawCard : undefined}>
-                  <div style={{ fontSize: 52, color: 'var(--gold)', opacity: 0.6, lineHeight: 1 }}>✦</div>
-                  <div style={{ fontSize: 10, color: 'var(--gold)', letterSpacing: 4, opacity: 0.5 }}>ASTROPILLAR</div>
-                  {!tarotCard && (
-                    <div style={{ position: 'absolute', bottom: 20, fontSize: 11, color: 'rgba(201,168,76,0.6)', letterSpacing: 1 }}>
-                      tap to draw
-                    </div>
-                  )}
-                </div>
-
-                {/* Card front */}
-                <div style={{
-                  position: 'absolute', inset: 0, borderRadius: 14, overflow: 'hidden',
-                  border: '2px solid var(--gold)',
-                  WebkitBackfaceVisibility: 'hidden', backfaceVisibility: 'hidden',
-                  transform: 'rotateY(180deg)',
-                  boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-                }}>
-                  {tarotCard && (
-                    <Image
-                      src={`${IMG}${tarotCard.file}.webp`}
-                      alt={tarotCard.name}
-                      fill
-                      style={{ objectFit: 'cover' }}
-                      unoptimized
-                    />
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Card name */}
-            {tarotCard && (
-              <p className="font-display" style={{ color: 'var(--gold)', fontSize: 18, fontWeight: 600, letterSpacing: 1, textAlign: 'center' }}>
-                {tarotCard.name}
-              </p>
-            )}
-
-            {/* Draw button (before drawing) */}
-            {!tarotCard && (
-              <button onClick={drawCard} className="btn-gold" style={{ padding: '14px 40px', fontSize: 15 }}>
-                Draw Your Card
-              </button>
-            )}
-
-            {/* Loading */}
-            {tarotLoading && (
-              <div style={{ textAlign: 'center', padding: '8px 0' }}>
-                <p style={{ color: 'var(--gold)', fontSize: 13 }}>✦ Reading the cards...</p>
-              </div>
-            )}
-
-            {/* Error */}
-            {tarotError && (
-              <div style={{ textAlign: 'center' }}>
-                <p style={{ color: '#ef4444', fontSize: 13, marginBottom: 12 }}>{tarotError}</p>
-                <button onClick={() => { apiCalledRef.current = false; fetchTarotReading(tarotCard!) }} className="btn-gold" style={{ fontSize: 13, padding: '10px 24px' }}>
-                  Try Again
-                </button>
-              </div>
-            )}
-
-            {/* Result */}
-            {tarotResult && tarotSections.length > 0 && (
-              <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {tarotSections.map((sec, i) => (
-                  <div key={i} className="card" style={{ padding: '16px 18px' }}>
-                    {sec.header && (
-                      <p style={{ color: 'var(--gold)', fontSize: 13, fontWeight: 700, marginBottom: 8 }}>{sec.header}</p>
-                    )}
-                    <p style={{ color: '#ddd', fontSize: 14, lineHeight: 1.8 }}>{sec.content}</p>
-                  </div>
-                ))}
-
-                {/* Upsell */}
-                <div className="card" style={{ textAlign: 'center', marginTop: 4 }}>
-                  <p style={{ color: '#fff', fontWeight: 600, marginBottom: 6 }}>Want a deeper reading?</p>
-                  <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 16 }}>
-                    Try Three-Card, Relationship, or Celtic Cross spreads — personalized tarot with full AI interpretation.
-                  </p>
-                  <Link href="/menu" className="btn-gold" style={{ fontSize: 14, padding: '12px 28px' }}>
-                    Explore Readings →
-                  </Link>
-                </div>
-              </div>
-            )}
-
-          </div>
-        )}
-
+        </div>
       </div>
       <BottomNav />
     </main>
