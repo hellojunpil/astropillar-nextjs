@@ -135,13 +135,19 @@ export default function TarotHubPage() {
                   </div>
 
                   {/* Footer */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>
-                      🃏 {spread.cards} · Good for: {spread.goodFor}
-                    </span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 12 }}>
+                    <div>
+                      <span style={{ color: 'var(--text-muted)', fontSize: 12, display: 'block', marginBottom: 2 }}>
+                        {spread.cards}
+                      </span>
+                      <span style={{ color: 'var(--text-muted)', fontSize: 11, lineHeight: 1.4 }}>
+                        {spread.goodFor}
+                      </span>
+                    </div>
                     <span style={{
                       border: '1px solid var(--gold)', color: 'var(--gold)',
-                      borderRadius: 20, padding: '4px 12px', fontSize: 11, fontWeight: 700,
+                      borderRadius: 20, padding: '6px 14px', fontSize: 12, fontWeight: 700,
+                      whiteSpace: 'nowrap', flexShrink: 0,
                     }}>
                       {badge}
                     </span>
