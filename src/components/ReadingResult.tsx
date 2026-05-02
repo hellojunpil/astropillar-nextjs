@@ -120,11 +120,11 @@ function extractPersonWestern(data: Record<string,unknown>, prefix: string): Wes
   }
 }
 
-const EMOJI_SET = '✨💼❤️💰🌿📊💡🌟⚡🏥📅🎯✅⚠️🔮🔥💫☁️📚💬🌱🂠'
+const EMOJI_SET = '✨💼❤️💰🌿📊💡🌟⚡🏥📅🎯✅⚠️🔮🔥💫☁️📚💬🌱🂠✦'
 const EMOJI_RE = new RegExp(`[${EMOJI_SET}]`, 'u')
 // \n+ handles both single and double newlines before section headers (fixes intermittent Yearly split bug)
-// ✦ added for tarot section markers (U+2726, not an emoji but used as tarot section delimiter)
-const SPLIT_RE = new RegExp(`\\n+(?=#{1,3} |\\*\\*[A-Z\\u00C0-\\uFFFF]|✦ |[${EMOJI_SET}])`, 'u')
+// 🂠 = tarot card-back emoji for card sections; ✦ = tarot answer section delimiter
+const SPLIT_RE = new RegExp(`\\n+(?=#{1,3} |\\*\\*[A-Z\\u00C0-\\uFFFF]|[${EMOJI_SET}])`, 'u')
 
 // ── Chinese character annotations ────────────────────────────────────
 const GAN_LABELS: Record<string, string> = {
