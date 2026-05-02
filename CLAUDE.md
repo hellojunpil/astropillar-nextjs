@@ -86,8 +86,80 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 | `/reading/yearly` | Yearly Fortune | ✅ | 1 Credit |
 | `/reading/compatibility` | Compatibility (궁합) | ✅ | 1 Credit |
 | `/reading/scenario` | Scenario Reading | ✅ | 1 Credit |
-| `/today` | Today's Fortune (별자리+띠) | ❌ | 무료 |
+| `/today` | Today's Fortune (별자리+띠+타로) | ❌ | 무료 |
+| `/tarot/three-card` | Three Card Spread | ✅ | 1 Credit |
+| `/tarot/relationship` | Relationship Spread | ✅ | 1 Credit |
+| `/tarot/celtic-cross` | Celtic Cross | ✅ | 2 Credits |
 | `/buy` | Credit 구매 (Gumroad 연결) | ✅ | — |
+
+---
+
+## 타로 서비스 기획
+
+### 서비스 구조
+```
+하단 네비 "Daily" → "Free" 로 명칭 변경
+  └── /today
+        ├── Horoscope (기존)
+        ├── Chinese Zodiac (기존)
+        └── Tarot (신규 — 원카드 무료, 하루 1회 제한)
+
+메뉴 "Tarot" 섹션 (신규)
+  ├── Three Card Spread — 1 Credit
+  ├── Relationship Spread — 1 Credit
+  └── Celtic Cross — 2 Credits
+```
+
+### 스프레드 상세
+
+| 서비스 | 스프레드 | 카드 수 | 비용 | 인증 |
+|--------|---------|---------|------|------|
+| 원카드 데일리 | 오늘의 에너지 + 조언 | 1장 | 무료 | ✅ (하루 1회 제한) |
+| Three Card Spread | 과거 / 현재 / 미래 | 3장 | 1 Credit | ✅ |
+| Relationship Spread | 나 / 상대방 / 관계에너지 / 조언 | 4장 | 1 Credit | ✅ |
+| Celtic Cross | 현재상황/장애물/내면/외부영향/결과 등 | 10장 | 2 Credits | ✅ |
+
+### 카드 이미지
+- **덱**: Rider-Waite (퍼블릭 도메인)
+- **포맷**: `.webp` 사용
+- **호스팅**: `https://raw.githubusercontent.com/hellojunpil/astropillar_images/main/` (루트, tarot/ 서브폴더 없음)
+- **파일명 컨벤션**: `major_arcana_[name].webp`
+  - 예: `major_arcana_fool.webp`, `major_arcana_chariot.webp`, `major_arcana_death.webp`
+- Minor Arcana 업로드 여부 확인 필요 (현재 Major Arcana 22장 확인)
+
+### 해석 방식
+- **BaZi/Western 융합 없음** — 모든 타로 서비스는 순수 타로 해석만
+- 사주/별자리와 완전 분리된 독립 서비스
+
+### 입력 구성
+
+| 서비스 | 입력 |
+|--------|------|
+| 원카드 (무료) | 없음 — 그냥 뽑기 |
+| Three Card | Your Question (선택) |
+| Relationship | 관계 유형 드롭다운 (필수) + Your Question (선택) |
+| Celtic Cross | Your Question (필수) |
+
+- 입력 필드 레이블: **"Your Question"** ("시나리오" X — 타로 고유 용어)
+- Relationship 관계 유형: 기존 Compatibility 드롭다운 12종 재활용
+  - Romantic Partner / Crush / Spouse / Friend / Family / Colleague 등
+
+### 개발 순서
+1. ✅ 원카드 무료 — `/today` Daily Tarot 탭 추가 (커밋 922baec)
+2. ✅ 하단 네비 "Daily" → "Free" 변경 (커밋 922baec)
+3. ✅ main.py `POST /tarot/daily` 엔드포인트 추가 (Cloud Run revision 00191-msr)
+4. Three Card Spread (`/tarot/three-card`)
+5. Relationship Spread (`/tarot/relationship`)
+6. Celtic Cross (`/tarot/celtic-cross`)
+7. menu 페이지에 Tarot 섹션 추가
+
+### 원카드 하루 1회 제한
+- 로그인 불필요 → **localStorage**로 날짜 저장 (`tarot_daily_date` 키)
+- 오늘 날짜와 비교해서 이미 뽑았으면 결과 화면 유지, 재뽑기 불가
+
+### 미결 사항
+- [ ] Minor Arcana 파일명 컨벤션 확인 (업로드 완료 후)
+- [ ] Minor Arcana 업로드 여부 확인 (Major Arcana 22장은 확인 완료)
 
 ---
 
@@ -294,7 +366,73 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 
 ## 다음 세션 시작 가이드
 
-> 마지막 작업: 2026-04-26 세션65 완료
+> 마지막 작업: 2026-05-02 세션67 완료
+
+### ✅ 세션67 완료 — 2026-05-02
+
+**작업 목록:**
+1. ✅ **Cloud Run IAM 복구** — allUsers roles/run.invoker 추가 → 크레딧 정상(118개) 표시
+2. ✅ **타로카드 버그 수정** — `firestore.rules` daily_tarot read 추가 + `firebase deploy` 완료
+3. ✅ **today/page.tsx 폴백 처리** — Firestore 권한 오류 시 API로 silent fallback (커밋 7b25e62)
+4. ✅ **전체 서비스 QA** — test07 기준 8개 서비스 전수 검증 (전체 PASS)
+5. ✅ **QA 리포트 작성** — `D:\snap_pillar bck\result\result_20260502_1.txt`
+
+- **Cloud Run**: 변경 없음
+- **Credit 변화**: 118 → 115 (Compatibility 2cr + Scenario 1cr)
+
+**QA 결과 요약 (세션67 — test07 기준):**
+| 서비스 | 결과 | 점수 |
+|--------|------|------|
+| Daily Tarot | ✅ PASS | 4.8/5 (이전: 버그 → 정상화) |
+| Horoscope | ✅ PASS | 4.7/5 |
+| Chinese Zodiac | ✅ PASS | 4.2/5 (점수바 없음 지적) |
+| Personal Fortune | ✅ PASS | 5.0/5 |
+| Personal Daily | ✅ PASS | 4.83/5 |
+| Yearly Fortune | ✅ PASS | 5.0/5 |
+| Compatibility | ✅ PASS | 5.0/5 |
+| Scenario Reading | ✅ PASS | 5.0/5 |
+| **전체 평균** | **8/8 PASS** | **4.85/5 (97%)** |
+
+**수정된 버그 (3개):**
+- Bug#1: Cloud Run IAM 차단 → allUsers 권한 추가
+- Bug#2: Firestore daily_tarot 규칙 없음 → rules 추가 + firebase deploy
+- Bug#3: today/page.tsx 권한 오류 시 에러 표시 → silent fallback
+
+**미수정 이슈 (P2):**
+- Moon Phase "Waning Gibbous · 100% illuminated" 데이터 오류 (외부 API)
+- Chinese Zodiac 점수 바 없음 (Horoscope와 격차)
+
+> 마지막 작업: 2026-04-26 세션66 완료
+
+### ✅ 세션66 완료 — 2026-04-26
+
+**작업 목록:**
+1. ✅ **GA4 설치 확인** — `layout.tsx` Script 태그 + `NEXT_PUBLIC_GA4_ID` 정상 확인
+2. ✅ **Meta/Instagram 광고 분석** — ₩20,000/일, 영/미/캐 타겟, 15 link clicks (2.5시간 기준)
+3. ✅ **Instagram in-app browser GA4 미추적 확인** — LTE 모바일 2회 접속(크롬+인스타), GA4 카운트 변화 없음 → Meta↔GA4 수치 차이 원인 확인
+4. ✅ **MCP Computer Use 서버 구축** — `E:\My Team\mcp-computer-use\server.py` 생성
+   - 6개 툴: screenshot / click / type_text / key / scroll / move
+   - pyautogui + mss + Pillow 기반 (화면 50% 축소 PNG 전송)
+   - `claude mcp add my-computer-use` 등록 → ✓ Connected
+
+- **Cloud Run**: 변경 없음
+- **Credit 변화**: 없음
+
+**MCP Computer Use 사용법 (재시작 후):**
+- `screenshot` — 현재 화면 캡처
+- `click(x, y, button)` — 좌/우/더블 클릭
+- `type_text(text)` — 키보드 입력
+- `key(key)` — enter, ctrl+c 등 키 조합
+- `scroll(x, y, amount)` — 스크롤 (양수=위)
+- `move(x, y)` — 마우스 이동
+
+**등록 위치**: `C:\Users\SNOOPY\.claude.json` (project: E:\My Team\astropillar)
+
+**다음 세션 우선순위:**
+1. 🔴 [P1] Claude Code 재시작 후 MCP screenshot 툴 동작 확인
+2. 🟡 [P2] 광고 1일치 데이터 확인 (다음날 아침)
+
+---
 
 ### ✅ 세션65 완료 — 2026-04-26
 
@@ -580,26 +718,33 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 
 ### 다음 세션 우선순위
 
-> 세션65 기준 최신화 (2026-04-26)
+> 세션66 기준 최신화 (2026-04-26)
+
+**인프라**
+1. **[P1]** Claude Code 재시작 후 MCP `my-computer-use` screenshot 동작 확인
+2. **[P1]** 광고 1일치 데이터 확인 (다음날 아침 GA4 + Meta 비교)
 
 **버그 수정**
-1. **[P1]** 랜딩 "100% Private. Never stored. Never shared." 문구 교체 (법적 리스크) ← 광고 집행 전 필수
-2. **[P2]** Astrology Profile RISING 카드 "ASC" 텍스트 → 별자리 이미지 수정
+3. **[P1]** 랜딩 "100% Private. Never stored. Never shared." 문구 교체 (법적 리스크) ← 광고 집행 중 필수
+4. **[P2]** Astrology Profile RISING 카드 "ASC" 텍스트 → 별자리 이미지 수정
 
 **UX 개선**
-3. **[P2]** PersonPicker 저장 인물 1명일 때 auto-select
-4. **[P2]** STEP 2 OF 2 표기 수정 → "STEP 2 OF 3" 또는 STEP 제거 (회원가입이 실제 3단계)
-5. **[P3]** Share CTA 위치 조정 — 회원가입 전제 명확화 ("Join free → then share to earn")
-6. **[P3]** Landing Hero 소셜 프루프 강화 (리뷰 수, 별점 추가)
-7. **[P3]** Chart Signals 생년월일 기반 구체화 (Barnum effect 최소화)
+5. **[P2]** PersonPicker 저장 인물 1명일 때 auto-select
+6. **[P2]** STEP 2 OF 2 표기 수정 → "STEP 2 OF 3" 또는 STEP 제거 (회원가입이 실제 3단계)
+7. **[P3]** Share CTA 위치 조정 — 회원가입 전제 명확화 ("Join free → then share to earn")
+8. **[P3]** Landing Hero 소셜 프루프 강화 (리뷰 수, 별점 추가)
+9. **[P3]** Chart Signals 생년월일 기반 구체화 (Barnum effect 최소화)
 
 **✅ 완료된 CRO 수정 (세션65)**
 - ✅ /login?tab=signup — 퍼널 CTA → Sign Up 탭 자동 활성 (커밋 e2827b6)
 - ✅ Gender 버튼 aria-pressed + ✓ 체크마크 피드백 (커밋 b2227f9)
 
+**✅ 완료된 인프라 (세션66)**
+- ✅ MCP Computer Use 서버 등록 (`my-computer-use`, ✓ Connected)
+
 **기타**
-8. **[배포]** `firebase deploy --only firestore:rules`
-9. **[비즈]** 크레딧 소모량 조정 검토 — Personal Fortune/Scenario/Compatibility 2크레딧, Yearly 3크레딧
+10. **[배포]** `firebase deploy --only firestore:rules`
+11. **[비즈]** 크레딧 소모량 조정 검토 — Personal Fortune/Scenario/Compatibility 2크레딧, Yearly 3크레딧
 
 ### 핵심 파일 경로
 | 파일 | 역할 |
