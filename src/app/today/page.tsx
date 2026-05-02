@@ -162,7 +162,7 @@ export default function TodayFortunePage() {
   const [tarotError, setTarotError] = useState('')
   const [isFirstDraw, setIsFirstDraw] = useState(true)
   const apiCalledRef = useRef(false)
-  const [shuffledCards] = useState<Array<{name: string; file: string}>>(() =>
+  const [shuffledCards, setShuffledCards] = useState<Array<{name: string; file: string}>>(() =>
     [...MAJOR_ARCANA].sort(() => Math.random() - 0.5)
   )
   const [shareToast, setShareToast] = useState('')
@@ -211,6 +211,7 @@ export default function TodayFortunePage() {
     setTarotError('')
     setTarotLoading(false)
     apiCalledRef.current = false
+    setShuffledCards([...MAJOR_ARCANA].sort(() => Math.random() - 0.5))
   }
 
   async function generateShareImage(imgUrl: string, label: string): Promise<Blob | null> {
