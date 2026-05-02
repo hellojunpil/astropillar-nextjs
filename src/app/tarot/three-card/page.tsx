@@ -49,6 +49,34 @@ function Section({ title, content, defaultOpen }: { title: string; content: stri
   )
 }
 
+function CardSection({ card, positionLabel, positionDesc, content, defaultOpen }: {
+  card: TarotCard; positionLabel: string; positionDesc: string; content: string; defaultOpen?: boolean
+}) {
+  const [open, setOpen] = useState(defaultOpen ?? false)
+  return (
+    <div style={{ borderBottom: '1px solid var(--border)' }}>
+      <button onClick={() => setOpen(v => !v)} style={{
+        width: '100%', background: 'none', border: 'none', cursor: 'pointer',
+        padding: '12px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <img src={cardImageUrl(card.file)} alt={card.name}
+            style={{ width: 38, height: 58, objectFit: 'cover', borderRadius: 5, border: '1.5px solid var(--gold)', flexShrink: 0 }} />
+          <div style={{ textAlign: 'left' }}>
+            <p style={{ color: 'var(--gold)', fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase', fontWeight: 700, marginBottom: 3 }}>{positionLabel}</p>
+            <p style={{ color: '#fff', fontWeight: 700, fontSize: 14 }}>{card.name}</p>
+            <p style={{ color: 'var(--text-muted)', fontSize: 11, marginTop: 2 }}>{positionDesc}</p>
+          </div>
+        </div>
+        <span style={{ color: 'var(--gold)', fontSize: 18, transform: open ? 'rotate(45deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }}>+</span>
+      </button>
+      {open && <div style={{ paddingBottom: 16, paddingLeft: 50 }}>
+        <p style={{ color: 'var(--text-muted)', fontSize: 13, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{content}</p>
+      </div>}
+    </div>
+  )
+}
+
 function ProgressRing({ pct }: { pct: number }) {
   const r = 28, circ = 2 * Math.PI * r
   return (
@@ -321,9 +349,13 @@ export default function ThreeCardPage() {
             <CardStrip slots={slots} revealed={true} />
 
             <div className="card" style={{ padding: '0 20px', marginBottom: 20 }}>
-              {parseResult(gptText).map((sec, i) => (
-                <Section key={i} title={sec.title ?? `Section ${i + 1}`} content={sec.content} defaultOpen={i < 2} />
-              ))}
+              {parseResult(gptText).map((sec, i) => {
+                const card = slots[i]
+                if (i < 3 && card) {
+                  return <CardSection key={i} card={card} positionLabel={POSITIONS[i].label} positionDesc={POSITIONS[i].desc} content={sec.content} defaultOpen={i === 0} />
+                }
+                return <Section key={i} title={sec.title ?? `Section ${i + 1}`} content={sec.content} defaultOpen={i === 3} />
+              })}
             </div>
 
             {/* Scenario CTA */}
