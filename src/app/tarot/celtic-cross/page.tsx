@@ -71,8 +71,8 @@ function CardSection({ card, positionLabel, positionDesc, content, defaultOpen }
           <img src={cardImageUrl(card.file)} alt={card.name}
             style={{ width: 38, height: 58, objectFit: 'cover', borderRadius: 5, border: '1.5px solid var(--gold)', flexShrink: 0 }} />
           <div style={{ textAlign: 'left' }}>
-            <p style={{ color: 'var(--gold)', fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase', fontWeight: 700, marginBottom: 3 }}>{positionLabel}</p>
-            <p style={{ color: '#fff', fontWeight: 700, fontSize: 14 }}>{card.name}</p>
+            <h2 style={{ color: 'var(--gold)', fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase', fontWeight: 700, margin: '0 0 3px' }}>{positionLabel}</h2>
+            <h3 style={{ color: '#fff', fontWeight: 700, fontSize: 14, margin: 0 }}>{card.name}</h3>
             <p style={{ color: 'var(--text-muted)', fontSize: 11, marginTop: 2 }}>{positionDesc}</p>
           </div>
         </div>
@@ -247,7 +247,7 @@ export default function CelticCrossPage() {
             birth_city: '',
             result: {
               content_text: res.content_text,
-              cards: slots.map((c, i) => ({ name: c?.name, position: POSITIONS[i].label })),
+              cards: slots.map((c, i) => ({ name: c?.name, position: POSITIONS[i].label, file: c?.file })),
               question: question.trim(),
             },
           }),
@@ -402,7 +402,9 @@ export default function CelticCrossPage() {
           <div>
             <CrossLayout slots={slots} revealed={true} />
             <div className="card" style={{ padding: '0 20px', marginBottom: 20, marginTop: 20 }}>
-              {parseResult(gptText).map((sec, i) => {
+              {parseResult(gptText)
+                .filter(sec => !sec.content.includes('Get Scenario Reading') && !sec.content.includes('Share & Earn Credits'))
+                .map((sec, i) => {
                 const card = slots[i]
                 if (i < 10 && card) {
                   return <CardSection key={i} card={card} positionLabel={POSITIONS[i].label} positionDesc={POSITIONS[i].desc} content={sec.content} defaultOpen={i === 0} />

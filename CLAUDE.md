@@ -366,7 +366,39 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 
 ## 다음 세션 시작 가이드
 
-> 마지막 작업: 2026-05-02 세션67 완료
+> 마지막 작업: 2026-05-02 세션68 완료
+
+### ✅ 세션68 완료 — 2026-05-02
+
+**작업 목록:**
+1. ✅ **Celtic Cross 결과 렌더링 업데이트** — `parseResult().map()` 에서 `i < 10` → CardSection, `i >= 10` → Section(defaultOpen=true) (커밋 07b576d)
+2. ✅ **parseResult 타로 파싱 버그 3개 수정**:
+   - `59a480e`: `🂠`(카드뒤 이모지) + `✦` EMOJI_SET 추가 → Three Card/Relationship 섹션 분리
+   - `4abea60`: `✦` EMOJI_SET 추가 → "The Answer" 제목 정상 파싱
+   - `6c775f0`: Celtic Cross 전용 이모지 9개(`🌀⚔⏪💭🌊🪞🌐🌗⭐`) + `️?` variation selector 처리
+3. ✅ **Playwright 타로 서비스 QA** — 3개 서비스 직접 테스트 및 점수 평가
+
+- **Cloud Run**: 변경 없음
+- **Credit 변화**: 104 → 99 (Three Card ×2 + Relationship ×1 + Celtic Cross ×1)
+
+**QA 결과 (세션68 — k@k.com 기준):**
+| 서비스 | 점수 | 비고 |
+|--------|------|------|
+| Three Card Spread | 9.0/10 | 카드별 섹션 분리, The Answer 질문 연동 우수 |
+| Relationship Spread | 9.5/10 | 4장 섹션 완벽, What This Means 합산 탁월 |
+| Celtic Cross | 9.3/10 | 10장 전부 분리, The Bigger Picture 수트 패턴 분석 |
+| **평균** | **9.3/10** | |
+
+**수정된 버그:**
+- parseResult EMOJI_SET 미등록으로 모든 카드 내용이 첫 번째 섹션에 뭉치는 버그 → 3회 커밋으로 완전 해결
+
+**미결 사항 (다음 세션):**
+- 🔴 **[P1] Celtic Cross 요금 버그**: 1 Credit 표시 + 실제 1 Credit 차감 → 2 Credits여야 함
+  - Firestore `service_config/pricing.tarot_celtic_cross` 값 확인 및 수정 필요
+  - 프론트엔드 뱃지도 같이 확인
+- 🟡 **[P2] 타로 결과 쉐어 기능**: 카드 조합 + 한 줄 요약 이미지 공유 → 기존 share reward 시스템 연동
+- 🟡 **[P2] Tarot Scenario Reading 통합 여부**: 타로 결과 화면 내 시나리오 리딩 실제 작동 여부 확인 필요 (GO DEEPER 섹션 존재하나 실제 타로 기반으로 동작하는지 미확인)
+- 🟡 **[P3] Playwright dispatchEvent 이슈**: `browser_click` 대신 `dispatchEvent` 사용해야 React 이벤트 작동 — 향후 자동화 테스트 주의
 
 ### ✅ 세션67 완료 — 2026-05-02
 

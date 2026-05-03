@@ -375,6 +375,22 @@ function LibraryPageInner() {
                       <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>{formatDate(r)}</span>
                     </div>
                     <p style={{ color: '#fff', fontSize: 14, fontWeight: 500 }}>{r.name}</p>
+                    {r.reading_type?.startsWith('tarot_') && (() => {
+                      const cards = ((r.result as { cards?: { file?: string; name?: string }[] })?.cards ?? []).slice(0, 3)
+                      if (!cards.length) return null
+                      return (
+                        <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                          {cards.map((c, i) => (
+                            <img key={i}
+                              src={c.file ? cardImageUrl(c.file) : cardImageUrl('major_arcana_' + (c.name ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^the_/, ''))}
+                              alt={c.name ?? ''}
+                              onError={e => { (e.currentTarget as HTMLImageElement).style.opacity = '0.3' }}
+                              style={{ width: 30, height: 45, objectFit: 'cover', borderRadius: 4, border: '1px solid rgba(201,168,76,0.5)' }}
+                            />
+                          ))}
+                        </div>
+                      )
+                    })()}
                     <p style={{ color: 'var(--text-muted)', fontSize: 12, marginTop: 2 }}>{r.birth_date} · {r.birth_city}</p>
                   </button>
                 ))}
