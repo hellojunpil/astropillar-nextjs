@@ -7,6 +7,7 @@ import { apiPost } from '@/lib/api'
 import { saveReading } from '@/lib/firestore'
 import { FULL_DECK, TarotCard, cardImageUrl, shuffleDeck } from '@/lib/tarotDeck'
 import { parseResult } from '@/components/ReadingResult'
+import TarotShareButton from '@/components/TarotShareButton'
 import BottomNav from '@/components/BottomNav'
 
 const POSITIONS = [
@@ -384,6 +385,8 @@ export default function ThreeCardPage() {
                 ))}
               </div>
             )}
+
+            <TarotShareButton userEmail={user?.email ?? ''} />
 
             <button onClick={() => {
               setPhase('question'); setQuestion(''); setDeck(shuffleDeck(FULL_DECK))

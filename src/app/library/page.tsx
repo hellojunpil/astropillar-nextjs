@@ -9,8 +9,162 @@ import {
   getReadings, getPeople, deletePerson, savePerson,
   ReadingRecord, SavedPerson
 } from '@/lib/firestore'
-import ReadingResult from '@/components/ReadingResult'
+import ReadingResult, { parseResult } from '@/components/ReadingResult'
+import { cardImageUrl } from '@/lib/tarotDeck'
 import BottomNav from '@/components/BottomNav'
+
+const TAROT_POSITIONS: Record<string, { label: string; desc: string }[]> = {
+  tarot_three_card: [
+    { label: 'Past', desc: 'What shaped this' },
+    { label: 'Present', desc: 'Where you are now' },
+    { label: 'Future', desc: 'Where this leads' },
+  ],
+  tarot_relationship: [
+    { label: 'You', desc: 'Your energy' },
+    { label: 'Them', desc: 'Their energy' },
+    { label: 'Connection', desc: 'The dynamic' },
+    { label: 'Advice', desc: 'What to do' },
+  ],
+  tarot_celtic_cross: [
+    { label: 'The Heart', desc: 'Core of the situation' },
+    { label: 'The Challenge', desc: 'Obstacle & hidden dynamic' },
+    { label: 'The Root', desc: 'Foundation / how it began' },
+    { label: 'Recent Past', desc: 'What just passed' },
+    { label: "What You're Reaching For", desc: 'Your conscious goal' },
+    { label: 'Beneath the Surface', desc: 'The unconscious driver' },
+    { label: 'How You See Yourself', desc: 'Your self-perception' },
+    { label: 'Outside Forces', desc: 'External influences' },
+    { label: 'Hopes & Fears', desc: 'What you want & dread' },
+    { label: 'Where This Is Heading', desc: 'The outcome of this path' },
+  ],
+}
+
+function TarotCardAccordion({ cardName, cardFile, posLabel, posDesc, content, defaultOpen }: {
+  cardName: string; cardFile?: string; posLabel: string; posDesc: string; content: string; defaultOpen?: boolean
+}) {
+  const [open, setOpen] = useState(defaultOpen ?? false)
+  const imgSrc = cardFile ? cardImageUrl(cardFile) : null
+  const nameToFile = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^the_/, '')
+  const fallbackSrc = cardImageUrl('major_arcana_' + nameToFile(cardName))
+  return (
+    <div style={{ borderBottom: '1px solid var(--border)' }}>
+      <button onClick={() => setOpen(v => !v)} style={{
+        width: '100%', background: 'none', border: 'none', cursor: 'pointer',
+        padding: '12px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <img src={imgSrc ?? fallbackSrc} alt={cardName}
+            onError={e => { (e.currentTarget as HTMLImageElement).style.opacity = '0.3' }}
+            style={{ width: 38, height: 58, objectFit: 'cover', borderRadius: 5, border: '1.5px solid var(--gold)', flexShrink: 0 }} />
+          <div style={{ textAlign: 'left' }}>
+            <p style={{ color: 'var(--gold)', fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase', fontWeight: 700, marginBottom: 3 }}>{posLabel}</p>
+            <p style={{ color: '#fff', fontWeight: 700, fontSize: 14 }}>{cardName}</p>
+            <p style={{ color: 'var(--text-muted)', fontSize: 11, marginTop: 2 }}>{posDesc}</p>
+          </div>
+        </div>
+        <span style={{ color: 'var(--gold)', fontSize: 18, transform: open ? 'rotate(45deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }}>+</span>
+      </button>
+      {open && <div style={{ paddingBottom: 16, paddingLeft: 50 }}>
+        <p style={{ color: 'var(--text-muted)', fontSize: 13, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{content}</p>
+      </div>}
+    </div>
+  )
+}
+
+function TarotSectionAccordion({ title, content, defaultOpen }: { title: string; content: string; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen ?? false)
+  return (
+    <div style={{ borderBottom: '1px solid var(--border)' }}>
+      <button onClick={() => setOpen(v => !v)} style={{
+        width: '100%', background: 'none', border: 'none', cursor: 'pointer',
+        padding: '14px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', textAlign: 'left',
+      }}>
+        <span style={{ color: '#fff', fontWeight: 600, fontSize: 14 }}>{title}</span>
+        <span style={{ color: 'var(--gold)', fontSize: 18, transform: open ? 'rotate(45deg)' : 'none', transition: 'transform 0.2s' }}>+</span>
+      </button>
+      {open && <div style={{ paddingBottom: 16 }}>
+        <p style={{ color: 'var(--text-muted)', fontSize: 13, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{content}</p>
+      </div>}
+    </div>
+  )
+}
+
+function TarotResultView({ readingType, tarotResult }: {
+  readingType: string
+  tarotResult: { content_text?: string; cards?: { name?: string; position?: string; file?: string }[]; question?: string }
+}) {
+  const positions = TAROT_POSITIONS[readingType] ?? []
+  const cards = tarotResult.cards ?? []
+  const sections = tarotResult.content_text ? parseResult(tarotResult.content_text) : []
+  const cardCount = positions.length
+
+  return (
+    <div>
+      <p style={{ color: 'var(--gold)', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>
+        {TYPE_LABELS[readingType] ?? readingType}
+      </p>
+      {tarotResult.question && (
+        <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 16, fontStyle: 'italic' }}>
+          &ldquo;{tarotResult.question}&rdquo;
+        </p>
+      )}
+
+      {/* Card image strip */}
+      {cards.length > 0 && (
+        <div style={{ display: 'flex', gap: 10, overflowX: 'auto', marginBottom: 20, paddingBottom: 4 }}>
+          {cards.map((c, i) => {
+            const pos = positions[i]
+            return (
+              <div key={i} style={{ flexShrink: 0, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                <img
+                  src={c.file ? cardImageUrl(c.file) : cardImageUrl('major_arcana_' + (c.name ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^the_/, ''))}
+                  alt={c.name ?? ''}
+                  onError={e => { (e.currentTarget as HTMLImageElement).style.opacity = '0.3' }}
+                  style={{ width: 56, height: 84, objectFit: 'cover', borderRadius: 6, border: '1.5px solid var(--gold)' }}
+                />
+                <p style={{ color: 'var(--gold)', fontSize: 9, fontWeight: 700, maxWidth: 60, textAlign: 'center' }}>
+                  {pos?.label ?? c.position ?? `Card ${i + 1}`}
+                </p>
+                <p style={{ color: 'var(--text-muted)', fontSize: 8, maxWidth: 60, textAlign: 'center' }}>{c.name}</p>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Accordion sections */}
+      {sections.length > 0 && (
+        <div className="card" style={{ padding: '0 20px', marginBottom: 16 }}>
+          {sections.map((sec, i) => {
+            const card = cards[i]
+            const pos = positions[i]
+            if (i < cardCount && card?.name && pos) {
+              return (
+                <TarotCardAccordion
+                  key={i}
+                  cardName={card.name}
+                  cardFile={card.file}
+                  posLabel={pos.label}
+                  posDesc={pos.desc}
+                  content={sec.content}
+                  defaultOpen={i === 0}
+                />
+              )
+            }
+            return (
+              <TarotSectionAccordion
+                key={i}
+                title={sec.title ?? `Section ${i + 1}`}
+                content={sec.content}
+                defaultOpen={i === cardCount}
+              />
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
 
 const TYPE_LABELS: Record<string, string> = {
   personal_fortune: 'Personal Fortune',
@@ -138,7 +292,7 @@ function LibraryPageInner() {
 
   if (viewReading) {
     const isTarot = viewReading.reading_type?.startsWith('tarot_')
-    const tarotResult = isTarot ? viewReading.result as { content_text?: string; cards?: { name?: string; position?: string }[]; question?: string } : null
+    const tarotResult = isTarot ? viewReading.result as { content_text?: string; cards?: { name?: string; position?: string; file?: string }[]; question?: string } : null
 
     return (
       <main style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 80 }}>
@@ -148,31 +302,7 @@ function LibraryPageInner() {
         </header>
         <div style={{ maxWidth: 480, margin: '0 auto', padding: '24px 24px 0' }}>
           {isTarot && tarotResult ? (
-            <div>
-              <p style={{ color: 'var(--gold)', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>
-                {TYPE_LABELS[viewReading.reading_type] ?? viewReading.reading_type}
-              </p>
-              {tarotResult.question && (
-                <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 16, fontStyle: 'italic' }}>
-                  &ldquo;{tarotResult.question}&rdquo;
-                </p>
-              )}
-              {tarotResult.cards && tarotResult.cards.length > 0 && (
-                <div style={{ display: 'flex', gap: 8, overflowX: 'auto', marginBottom: 20, paddingBottom: 4 }}>
-                  {tarotResult.cards.map((c, i) => (
-                    <div key={i} style={{ flexShrink: 0, textAlign: 'center' }}>
-                      <p style={{ color: 'var(--gold)', fontSize: 9, marginBottom: 2 }}>{c.position}</p>
-                      <p style={{ color: '#fff', fontSize: 10, maxWidth: 72 }}>{c.name}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-              {tarotResult.content_text && (
-                <div className="card" style={{ padding: '16px 20px' }}>
-                  <p style={{ color: 'var(--text-muted)', fontSize: 13, lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{tarotResult.content_text}</p>
-                </div>
-              )}
-            </div>
+            <TarotResultView readingType={viewReading.reading_type} tarotResult={tarotResult} />
           ) : (
             <ReadingResult raw={viewReading.result} onReset={() => setViewReading(null)} userEmail={user?.email ?? undefined} />
           )}

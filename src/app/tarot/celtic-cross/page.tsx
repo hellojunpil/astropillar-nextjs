@@ -7,6 +7,7 @@ import { apiPost } from '@/lib/api'
 import { saveReading } from '@/lib/firestore'
 import { FULL_DECK, TarotCard, cardImageUrl, shuffleDeck } from '@/lib/tarotDeck'
 import { parseResult } from '@/components/ReadingResult'
+import TarotShareButton from '@/components/TarotShareButton'
 import BottomNav from '@/components/BottomNav'
 
 const POSITIONS = [
@@ -174,6 +175,10 @@ export default function CelticCrossPage() {
   const [gptText, setGptText] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [loadPct, setLoadPct] = useState(0)
+  const [scenarioQ, setScenarioQ] = useState('')
+  const [scenarioText, setScenarioText] = useState<string | null>(null)
+  const [scenarioLoading, setScenarioLoading] = useState(false)
+  const [scenarioError, setScenarioError] = useState('')
 
   useEffect(() => { setDeck(shuffleDeck(FULL_DECK)) }, [])
 
@@ -204,6 +209,24 @@ export default function CelticCrossPage() {
       setSlots(prev => { const n = [...prev]; n[nextSlot] = card; return n })
       setTimeout(() => setSlotEntering(prev => { const n = new Set(prev); n.delete(nextSlot); return n }), 350)
     }, 280)
+  }
+
+  async function handleScenario() {
+    if (!scenarioQ.trim()) return
+    setScenarioLoading(true)
+    setScenarioError('')
+    try {
+      const res = await apiPost<{ content_text: string }>('/tarot/scenario', {
+        cards: slots.map(c => c?.name ?? ''),
+        positions: POSITIONS.map(p => p.label),
+        spread_type: 'celtic_cross',
+        original_question: question.trim() || null,
+        scenario_question: scenarioQ.trim(),
+      })
+      setScenarioText(res.content_text)
+    } catch (e) {
+      setScenarioError(e instanceof Error ? e.message : 'Failed. Please try again.')
+    } finally { setScenarioLoading(false) }
   }
 
   async function startReading() {
@@ -387,11 +410,38 @@ export default function CelticCrossPage() {
                 return <Section key={i} title={sec.title ?? `Section ${i + 1}`} content={sec.content} defaultOpen={i === 10} />
               })}
             </div>
+            {!scenarioText && (
+              <div className="card" style={{ padding: 20, marginBottom: 16 }}>
+                <p style={{ color: 'var(--gold)', fontSize: 12, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 }}>Go Deeper</p>
+                <p style={{ color: '#fff', fontWeight: 600, fontSize: 15, marginBottom: 6 }}>Tarot Scenario Reading</p>
+                <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 14 }}>Ask a specific question — get a deeper reading based on all 10 cards.</p>
+                <textarea value={scenarioQ} onChange={e => setScenarioQ(e.target.value)}
+                  placeholder="e.g. What should I do about this situation?" rows={2}
+                  style={{ width: '100%', background: '#0f1829', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 12px', color: '#fff', fontSize: 13, resize: 'none', outline: 'none', colorScheme: 'dark', boxSizing: 'border-box', marginBottom: 12 }} />
+                {scenarioError && <p style={{ color: '#ef4444', fontSize: 12, marginBottom: 10 }}>{scenarioError}</p>}
+                <button onClick={handleScenario} disabled={!scenarioQ.trim() || scenarioLoading} className="btn-gold"
+                  style={{ width: '100%', fontSize: 14, padding: '12px', opacity: (!scenarioQ.trim() || scenarioLoading) ? 0.5 : 1 }}>
+                  {scenarioLoading ? 'Reading...' : 'Get Scenario Reading →'}
+                </button>
+              </div>
+            )}
+            {scenarioText && (
+              <div className="card" style={{ padding: '0 20px', marginBottom: 16 }}>
+                <p style={{ color: 'var(--gold)', fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', padding: '16px 0 8px' }}>Scenario Reading</p>
+                {parseResult(scenarioText).map((sec, i) => (
+                  <Section key={i} title={sec.title ?? `Section ${i + 1}`} content={sec.content} defaultOpen={i === 0} />
+                ))}
+              </div>
+            )}
+
+            <TarotShareButton userEmail={user?.email ?? ''} />
+
             <button onClick={() => {
               setPhase('question'); setQuestion(''); setDeck(shuffleDeck(FULL_DECK))
               setSlots(Array(10).fill(null)); setExitIdxs(new Set()); setSlotEntering(new Set())
               setGptText(null); setError(''); setLoadPct(0)
-            }} style={{ width: '100%', background: 'none', border: '1px solid var(--border)', borderRadius: 12, padding: '12px', color: 'var(--text-muted)', fontSize: 13, cursor: 'pointer' }}>
+              setScenarioText(null); setScenarioQ('')
+            }} style={{ width: '100%', background: 'none', border: '1px solid var(--border)', borderRadius: 12, padding: '12px', color: 'var(--text-muted)', fontSize: 13, cursor: 'pointer', marginTop: 8 }}>
               New Reading
             </button>
           </div>
