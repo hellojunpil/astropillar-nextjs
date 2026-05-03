@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
 import { usePricing } from '@/hooks/usePricing'
 import { apiPost } from '@/lib/api'
+import { gtagEvent } from '@/lib/gtag'
 import { saveReading } from '@/lib/firestore'
 import { FULL_DECK, TarotCard, cardImageUrl, shuffleDeck } from '@/lib/tarotDeck'
 import { parseResult } from '@/components/ReadingResult'
@@ -194,6 +195,7 @@ export default function ThreeCardPage() {
           }),
         ])
       }
+      gtagEvent('reading_completed', { reading_type: 'tarot_three_card' })
       setGptText(res.content_text)
       setTimeout(() => setPhase('result'), 400)
     } catch (e) {
@@ -215,6 +217,7 @@ export default function ThreeCardPage() {
         original_question: question.trim() || null,
         scenario_question: scenarioQuestion.trim(),
       })
+      gtagEvent('reading_completed', { reading_type: 'tarot_scenario', spread: 'three_card' })
       setScenarioText(res.content_text)
       if (user?.email) {
         refreshCredits(scenarioCost)

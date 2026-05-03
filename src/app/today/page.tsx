@@ -7,6 +7,7 @@ import { doc, getDoc } from 'firebase/firestore'
 import { useAuth } from '@/hooks/useAuth'
 import BottomNav from '@/components/BottomNav'
 import { apiGet, apiPost } from '@/lib/api'
+import { gtagEvent } from '@/lib/gtag'
 
 const IMG = 'https://raw.githubusercontent.com/hellojunpil/astropillar_images/main/'
 
@@ -245,7 +246,7 @@ export default function TodayFortunePage() {
         const snap = await getDoc(doc(db, 'daily_tarot', docId))
         if (snap.exists()) {
           setTarotResult((snap.data() as { content_text: string }).content_text)
-          if (isFirstDraw) setIsFirstDraw(false)
+          if (isFirstDraw) { gtagEvent('tarot_daily_draw', { card: card.name }); setIsFirstDraw(false) }
           return
         }
       } catch {
@@ -257,7 +258,7 @@ export default function TodayFortunePage() {
         card_image_url: `${IMG}${card.file}.webp`,
       })
       setTarotResult(data.content_text)
-      if (isFirstDraw) setIsFirstDraw(false)
+      if (isFirstDraw) { gtagEvent('tarot_daily_draw', { card: card.name }); setIsFirstDraw(false) }
     } catch (e: unknown) {
       setTarotError(e instanceof Error ? e.message : 'Could not load your reading. Please try again.')
       apiCalledRef.current = false

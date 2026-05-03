@@ -11,6 +11,7 @@ import {
 } from 'firebase/auth'
 import { auth, googleProvider } from '@/lib/firebase'
 import { apiPost } from '@/lib/api'
+import { gtagEvent } from '@/lib/gtag'
 
 type Mode = 'login' | 'signup' | 'forgot'
 
@@ -43,9 +44,11 @@ function LoginContent() {
     try {
       if (mode === 'login') {
         await signInWithEmailAndPassword(auth, email, password)
+        gtagEvent('login', { method: 'email' })
       } else {
         const cred = await createUserWithEmailAndPassword(auth, email, password)
         await registerUser(cred.user.email!)
+        gtagEvent('sign_up', { method: 'email' })
       }
       router.push('/menu')
     } catch (err: unknown) {
@@ -70,7 +73,12 @@ function LoginContent() {
     try {
       const result = await signInWithPopup(auth, googleProvider)
       const info = getAdditionalUserInfo(result)
-      if (info?.isNewUser) await registerUser(result.user.email!)
+      if (info?.isNewUser) {
+        await registerUser(result.user.email!)
+        gtagEvent('sign_up', { method: 'google' })
+      } else {
+        gtagEvent('login', { method: 'google' })
+      }
       router.push('/menu')
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Google sign-in failed'

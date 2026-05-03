@@ -366,7 +366,35 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 
 ## 다음 세션 시작 가이드
 
-> 마지막 작업: 2026-05-02 세션68 완료
+> 마지막 작업: 2026-05-03 세션69 완료
+
+### ✅ 세션69 완료 — 2026-05-03
+
+**작업 목록:**
+1. ✅ **GA4 전면 재설정** — 서비스 확장에 맞춰 누락 이벤트 전부 추가
+   - `gtag.ts`: `gtagPageview()` 함수 추가
+   - `Providers.tsx`: `usePathname` + `useEffect` → 클라이언트 라우팅 시 자동 `page_view` 발송
+   - `tarot/three-card`: `reading_completed` (tarot_three_card) + 시나리오 (tarot_scenario, spread: three_card)
+   - `tarot/relationship`: `reading_completed` (tarot_relationship) + 시나리오 (tarot_scenario, spread: relationship)
+   - `tarot/celtic-cross`: `reading_completed` (tarot_celtic_cross) + 시나리오 (tarot_scenario, spread: celtic_cross)
+   - `today/page.tsx`: `tarot_daily_draw` (card 파라미터 포함, 첫 뽑기 시만)
+   - `login/page.tsx`: `login`/`sign_up` + `{ method: email|google }`
+
+**GA4 이벤트 전체 맵:**
+| 이벤트 | 발생 위치 | 파라미터 |
+|--------|-----------|---------|
+| page_view | 모든 라우트 변경 | page_path |
+| view_1_landing / view_2_form / view_3_result | 랜딩 | — |
+| calculation_complete | 랜딩 birth form | zodiac, day_master |
+| cta_click_v1 | 랜딩 메인 CTA | — |
+| login_attempt | 랜딩 Sign In | — |
+| service_view | 랜딩 V3 unlock CTA | service_type |
+| login | /login | method |
+| sign_up | /login | method |
+| reading_completed | 5개 reading 페이지 + 타로 3개 | reading_type |
+| tarot_daily_draw | /today 타로 탭 | card |
+| tarot_scenario | 타로 3개 페이지 GO DEEPER | spread |
+| credit_purchase_click | /buy | credits, price |
 
 ### ✅ 세션68 완료 — 2026-05-02
 
@@ -392,13 +420,7 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 **수정된 버그:**
 - parseResult EMOJI_SET 미등록으로 모든 카드 내용이 첫 번째 섹션에 뭉치는 버그 → 3회 커밋으로 완전 해결
 
-**미결 사항 (다음 세션):**
-- 🔴 **[P1] Celtic Cross 요금 버그**: 1 Credit 표시 + 실제 1 Credit 차감 → 2 Credits여야 함
-  - Firestore `service_config/pricing.tarot_celtic_cross` 값 확인 및 수정 필요
-  - 프론트엔드 뱃지도 같이 확인
-- 🟡 **[P2] 타로 결과 쉐어 기능**: 카드 조합 + 한 줄 요약 이미지 공유 → 기존 share reward 시스템 연동
-- 🟡 **[P2] Tarot Scenario Reading 통합 여부**: 타로 결과 화면 내 시나리오 리딩 실제 작동 여부 확인 필요 (GO DEEPER 섹션 존재하나 실제 타로 기반으로 동작하는지 미확인)
-- 🟡 **[P3] Playwright dispatchEvent 이슈**: `browser_click` 대신 `dispatchEvent` 사용해야 React 이벤트 작동 — 향후 자동화 테스트 주의
+**미결 사항 → 모두 해결 완료 (세션69)**
 
 ### ✅ 세션67 완료 — 2026-05-02
 
