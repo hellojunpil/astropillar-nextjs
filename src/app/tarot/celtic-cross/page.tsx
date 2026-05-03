@@ -162,9 +162,10 @@ function ProgressRing({ pct }: { pct: number }) {
 }
 
 export default function CelticCrossPage() {
-  const { user, credits, loading } = useAuth()
+  const { user, credits, loading, refreshCredits } = useAuth()
   const pricing = usePricing()
   const cost = pricing.tarot_celtic_cross ?? 2
+  const scenarioCost = pricing.scenario ?? 1
 
   const [phase, setPhase] = useState<Phase>('question')
   const [question, setQuestion] = useState('')
@@ -213,6 +214,7 @@ export default function CelticCrossPage() {
 
   async function handleScenario() {
     if (!scenarioQ.trim()) return
+    if (credits !== null && credits < scenarioCost) { setScenarioError('Not enough Credits.'); return }
     setScenarioLoading(true)
     setScenarioError('')
     try {
@@ -224,6 +226,24 @@ export default function CelticCrossPage() {
         scenario_question: scenarioQ.trim(),
       })
       setScenarioText(res.content_text)
+      if (user?.email) {
+        refreshCredits(scenarioCost)
+        await Promise.all([
+          apiPost('/use_pouch', { email: user.email, reading_type: 'tarot_scenario' }),
+          saveReading(user.email, {
+            reading_type: 'tarot_scenario',
+            name: scenarioQ.trim(),
+            birth_date: '', birth_city: '',
+            result: {
+              content_text: res.content_text,
+              cards: slots.map((c, i) => ({ name: c?.name, position: POSITIONS[i].label, file: c?.file })),
+              spread_type: 'celtic_cross',
+              scenario_question: scenarioQ.trim(),
+              original_question: question.trim() || null,
+            },
+          }),
+        ])
+      }
     } catch (e) {
       setScenarioError(e instanceof Error ? e.message : 'Failed. Please try again.')
     } finally { setScenarioLoading(false) }
@@ -414,16 +434,19 @@ export default function CelticCrossPage() {
             </div>
             {!scenarioText && (
               <div className="card" style={{ padding: 20, marginBottom: 16 }}>
-                <p style={{ color: 'var(--gold)', fontSize: 12, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 }}>Go Deeper</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                  <p style={{ color: 'var(--gold)', fontSize: 12, letterSpacing: 1, textTransform: 'uppercase', margin: 0 }}>Go Deeper</p>
+                  <span style={{ border: '1px solid var(--gold)', color: 'var(--gold)', borderRadius: 20, padding: '2px 8px', fontSize: 10, fontWeight: 700 }}>{scenarioCost} Credit{scenarioCost !== 1 ? 's' : ''}</span>
+                </div>
                 <p style={{ color: '#fff', fontWeight: 600, fontSize: 15, marginBottom: 6 }}>Tarot Scenario Reading</p>
                 <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 14 }}>Ask a specific question — get a deeper reading based on all 10 cards.</p>
                 <textarea value={scenarioQ} onChange={e => setScenarioQ(e.target.value)}
                   placeholder="e.g. What should I do about this situation?" rows={2}
                   style={{ width: '100%', background: '#0f1829', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 12px', color: '#fff', fontSize: 13, resize: 'none', outline: 'none', colorScheme: 'dark', boxSizing: 'border-box', marginBottom: 12 }} />
                 {scenarioError && <p style={{ color: '#ef4444', fontSize: 12, marginBottom: 10 }}>{scenarioError}</p>}
-                <button onClick={handleScenario} disabled={!scenarioQ.trim() || scenarioLoading} className="btn-gold"
-                  style={{ width: '100%', fontSize: 14, padding: '12px', opacity: (!scenarioQ.trim() || scenarioLoading) ? 0.5 : 1 }}>
-                  {scenarioLoading ? 'Reading...' : 'Get Scenario Reading →'}
+                <button onClick={handleScenario} disabled={!scenarioQ.trim() || scenarioLoading || (credits !== null && credits < scenarioCost)} className="btn-gold"
+                  style={{ width: '100%', fontSize: 14, padding: '12px', opacity: (!scenarioQ.trim() || scenarioLoading || (credits !== null && credits < scenarioCost)) ? 0.5 : 1 }}>
+                  {scenarioLoading ? 'Reading...' : `Get Scenario Reading — ${scenarioCost} Credit${scenarioCost !== 1 ? 's' : ''}`}
                 </button>
               </div>
             )}

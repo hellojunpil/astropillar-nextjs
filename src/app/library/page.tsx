@@ -91,21 +91,22 @@ function TarotSectionAccordion({ title, content, defaultOpen }: { title: string;
 
 function TarotResultView({ readingType, tarotResult }: {
   readingType: string
-  tarotResult: { content_text?: string; cards?: { name?: string; position?: string; file?: string }[]; question?: string }
+  tarotResult: { content_text?: string; cards?: { name?: string; position?: string; file?: string }[]; question?: string; scenario_question?: string; spread_type?: string }
 }) {
   const positions = TAROT_POSITIONS[readingType] ?? []
   const cards = tarotResult.cards ?? []
   const sections = tarotResult.content_text ? parseResult(tarotResult.content_text) : []
   const cardCount = positions.length
+  const displayQuestion = tarotResult.scenario_question ?? tarotResult.question
 
   return (
     <div>
       <p style={{ color: 'var(--gold)', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>
         {TYPE_LABELS[readingType] ?? readingType}
       </p>
-      {tarotResult.question && (
+      {displayQuestion && (
         <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 16, fontStyle: 'italic' }}>
-          &ldquo;{tarotResult.question}&rdquo;
+          &ldquo;{displayQuestion}&rdquo;
         </p>
       )}
 
@@ -175,6 +176,7 @@ const TYPE_LABELS: Record<string, string> = {
   tarot_three_card: 'Tarot · Three Card',
   tarot_relationship: 'Tarot · Relationship',
   tarot_celtic_cross: 'Tarot · Celtic Cross',
+  tarot_scenario: 'Tarot · Scenario',
 }
 const TYPE_COLORS: Record<string, string> = {
   personal_fortune: 'var(--gold)',
@@ -185,6 +187,7 @@ const TYPE_COLORS: Record<string, string> = {
   tarot_three_card: '#c084fc',
   tarot_relationship: '#f472b6',
   tarot_celtic_cross: '#818cf8',
+  tarot_scenario: '#34d399',
 }
 
 const inputStyle: React.CSSProperties = {
