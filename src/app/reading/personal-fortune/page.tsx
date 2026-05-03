@@ -50,7 +50,7 @@ export default function PersonalFortunePage() {
       const sid = await createShare({ reading_type: 'personal_fortune', name: data.name, birth_date, birth_city: data.city, result: raw, birth_data: data })
       setShareId(sid)
       setResult(raw); setFromCache(false); refreshCredits(cost)
-      gtagEvent('reading_completed', { reading_type: 'personal_fortune' })
+      gtagEvent('reading_personal_fortune')
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Something went wrong. Please try again.')
     } finally {

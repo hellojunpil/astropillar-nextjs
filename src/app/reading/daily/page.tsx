@@ -66,7 +66,7 @@ export default function DailyFortunePage() {
       const sid = await createShare({ reading_type: 'daily', name: data.name, birth_date, birth_city: data.city, result: raw, birth_data: data })
       setShareId(sid)
       setResult(raw); setFromCache(false); refreshCredits(cost)
-      gtagEvent('reading_completed', { reading_type: 'daily' })
+      gtagEvent('reading_daily_fortune')
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Something went wrong. Please try again.')
     } finally {

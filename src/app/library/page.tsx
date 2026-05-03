@@ -11,6 +11,7 @@ import {
 } from '@/lib/firestore'
 import ReadingResult, { parseResult } from '@/components/ReadingResult'
 import { cardImageUrl } from '@/lib/tarotDeck'
+import { gtagEvent } from '@/lib/gtag'
 import BottomNav from '@/components/BottomNav'
 
 const TAROT_POSITIONS: Record<string, { label: string; desc: string }[]> = {
@@ -358,7 +359,7 @@ function LibraryPageInner() {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {readings.map(r => (
-                  <button key={r.id} onClick={() => setViewReading(r)} style={{
+                  <button key={r.id} onClick={() => { gtagEvent('library_reading_open', { reading_type: r.reading_type }); setViewReading(r) }} style={{
                     width: '100%', textAlign: 'left', background: 'var(--card)',
                     border: '1px solid var(--border)', borderRadius: 14, padding: '14px 16px',
                     cursor: 'pointer', transition: 'border-color 0.2s',

@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { apiPost } from '@/lib/api'
+import { gtagEvent } from '@/lib/gtag'
 
 export default function TarotShareButton({ userEmail }: { userEmail: string }) {
   const [msg, setMsg] = useState('')
@@ -27,6 +28,7 @@ export default function TarotShareButton({ userEmail }: { userEmail: string }) {
     try {
       if (navigator.share) {
         await navigator.share({ title: 'AstroPillar — Tarot Reading', text: shareText, url: shareUrl })
+        gtagEvent('share_click', { type: 'tarot', method: 'native' })
         await recordShare()
       } else {
         setShowModal(true)
@@ -43,6 +45,7 @@ export default function TarotShareButton({ userEmail }: { userEmail: string }) {
     } catch {
       setMsg('Link copied!')
     }
+    gtagEvent('share_click', { type: 'tarot', method: 'copy' })
     setShowModal(false)
     await recordShare()
   }
@@ -51,6 +54,7 @@ export default function TarotShareButton({ userEmail }: { userEmail: string }) {
     const origin = typeof window !== 'undefined' ? window.location.origin : 'https://astropillar.com'
     const text = encodeURIComponent(`I just got a tarot reading on AstroPillar ✨ Try yours free! ${origin}`)
     window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank')
+    gtagEvent('share_click', { type: 'tarot', method: 'twitter' })
     setShowModal(false)
     recordShare()
   }
@@ -60,6 +64,7 @@ export default function TarotShareButton({ userEmail }: { userEmail: string }) {
     navigator.clipboard.writeText(`I just got a tarot reading on AstroPillar ✨ Try yours free! ${origin}`)
       .then(() => setMsg('Link copied! Paste it in your Instagram story or bio.'))
       .catch(() => setMsg('Copy the link and share on Instagram!'))
+    gtagEvent('share_click', { type: 'tarot', method: 'instagram' })
     setShowModal(false)
     recordShare()
   }

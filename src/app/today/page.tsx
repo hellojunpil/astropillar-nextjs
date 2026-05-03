@@ -188,6 +188,8 @@ export default function TodayFortunePage() {
       if (!snap.exists()) { setError('No fortune available for today. Please check back later.'); return }
       setFortune(snap.data() as FortuneData)
       setStep('result')
+      if (mode === 'horoscope') gtagEvent('today_horoscope_view', { sign })
+      else gtagEvent('today_chinese_zodiac_view', { sign })
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Could not load fortune. Please try again.')
     } finally {
@@ -227,8 +229,10 @@ export default function TodayFortunePage() {
       const nav = navigator as any
       if (nav.share) {
         await nav.share({ title: 'AstroPillar', text, url: shareUrl })
+        gtagEvent('share_click', { type, method: 'native' })
       } else {
         await navigator.clipboard.writeText(`${text}\n${shareUrl}`)
+        gtagEvent('share_click', { type, method: 'copy' })
         setShareToast('Link copied to clipboard!')
         setTimeout(() => setShareToast(''), 2500)
       }

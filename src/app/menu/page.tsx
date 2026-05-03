@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
 import { apiGet } from '@/lib/api'
+import { gtagEvent } from '@/lib/gtag'
 import { usePricing } from '@/hooks/usePricing'
 import BottomNav from '@/components/BottomNav'
 
@@ -52,10 +53,11 @@ export default function MenuPage() {
     router.push('/')
   }
 
-  function handleServiceClick(href: string) {
+  function handleServiceClick(href: string, serviceId?: string) {
     if (!isLoggedIn) {
       router.push('/login')
     } else {
+      if (serviceId) gtagEvent('menu_service_click', { service: serviceId })
       router.push(href)
     }
   }
@@ -146,7 +148,7 @@ export default function MenuPage() {
         {/* 서비스 카드 목록 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {SERVICES.map((s) => (
-            <div key={s.id} onClick={() => handleServiceClick(s.href)} style={{ cursor: 'pointer' }}>
+            <div key={s.id} onClick={() => handleServiceClick(s.href, s.id)} style={{ cursor: 'pointer' }}>
               <div className="card" style={{ padding: '18px 20px', transition: 'border-color 0.2s' }}
                 onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--gold)')}
                 onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border)')}>

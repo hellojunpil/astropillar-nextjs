@@ -73,7 +73,7 @@ export default function ScenarioPage() {
       const sid = await createShare({ reading_type: 'scenario', name: birthData.name, birth_date, birth_city: birthData.city, result: raw, birth_data: birthData })
       setShareId(sid)
       setResult(raw); refreshCredits(cost)
-      gtagEvent('reading_completed', { reading_type: 'scenario' })
+      gtagEvent('reading_scenario')
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Something went wrong. Please try again.')
     } finally {

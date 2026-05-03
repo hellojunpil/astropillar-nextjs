@@ -139,7 +139,7 @@ export default function CompatibilityPage() {
       setResult(raw)
       setFromCache(false)
       refreshCredits(cost)
-      gtagEvent('reading_completed', { reading_type: 'compatibility' })
+      gtagEvent('reading_compatibility')
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Something went wrong. Please try again.')
     } finally {

@@ -195,7 +195,7 @@ export default function ThreeCardPage() {
           }),
         ])
       }
-      gtagEvent('reading_completed', { reading_type: 'tarot_three_card' })
+      gtagEvent('reading_tarot_three_card')
       setGptText(res.content_text)
       setTimeout(() => setPhase('result'), 400)
     } catch (e) {
@@ -217,7 +217,7 @@ export default function ThreeCardPage() {
         original_question: question.trim() || null,
         scenario_question: scenarioQuestion.trim(),
       })
-      gtagEvent('reading_completed', { reading_type: 'tarot_scenario', spread: 'three_card' })
+      gtagEvent('reading_tarot_scenario', { spread: 'three_card' })
       setScenarioText(res.content_text)
       if (user?.email) {
         refreshCredits(scenarioCost)

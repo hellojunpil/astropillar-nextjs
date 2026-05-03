@@ -226,7 +226,7 @@ export default function CelticCrossPage() {
         original_question: question.trim() || null,
         scenario_question: scenarioQ.trim(),
       })
-      gtagEvent('reading_completed', { reading_type: 'tarot_scenario', spread: 'celtic_cross' })
+      gtagEvent('reading_tarot_scenario', { spread: 'celtic_cross' })
       setScenarioText(res.content_text)
       if (user?.email) {
         refreshCredits(scenarioCost)
@@ -275,7 +275,7 @@ export default function CelticCrossPage() {
           }),
         ])
       }
-      gtagEvent('reading_completed', { reading_type: 'tarot_celtic_cross' })
+      gtagEvent('reading_tarot_celtic_cross')
       setGptText(res.content_text)
       setTimeout(() => setPhase('result'), 400)
     } catch (e) {

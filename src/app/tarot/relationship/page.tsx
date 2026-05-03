@@ -203,7 +203,7 @@ export default function RelationshipPage() {
           }),
         ])
       }
-      gtagEvent('reading_completed', { reading_type: 'tarot_relationship' })
+      gtagEvent('reading_tarot_relationship')
       setGptText(res.content_text)
       setTimeout(() => setPhase('result'), 400)
     } catch (e) {
@@ -225,7 +225,7 @@ export default function RelationshipPage() {
         original_question: question.trim() || null,
         scenario_question: scenarioQ.trim(),
       })
-      gtagEvent('reading_completed', { reading_type: 'tarot_scenario', spread: 'relationship' })
+      gtagEvent('reading_tarot_scenario', { spread: 'relationship' })
       setScenarioText(res.content_text)
       if (user?.email) {
         refreshCredits(scenarioCost)

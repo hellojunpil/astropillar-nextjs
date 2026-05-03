@@ -52,7 +52,7 @@ export default function YearlyFortunePage() {
       const sid = await createShare({ reading_type: 'yearly', name: data.name, birth_date, birth_city: data.city, result: raw, birth_data: data })
       setShareId(sid)
       setResult(raw); setFromCache(false); refreshCredits(cost)
-      gtagEvent('reading_completed', { reading_type: 'yearly' })
+      gtagEvent('reading_yearly_fortune')
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Something went wrong. Please try again.')
     } finally {
