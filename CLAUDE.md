@@ -364,6 +364,35 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 
 ---
 
+## 포춘쿠키 서비스 기획 (`/fortune`)
+
+### 컨셉
+매일 사주 Day Master + 별자리 기반 **웃긴 영어 한 줄 운세**. 진지한 AstroPillar 브랜드와 대비되는 바이럴 훅.
+
+### 톤 샘플
+- "Mercury retrograde hid your charger. It's not lost. Mercury just doesn't like you."
+- "Your chart says don't text them. Your chart also knows you already did."
+- "Jupiter is staring at your wallet. Jupiter is worried."
+- "Today's forecast: opening the fridge 6 times, finding nothing, opening it again."
+- "Your Fierce Metal Day Master told you to be decisive today. You've been on the same menu for 20 minutes."
+
+### 구현 방향
+- **GPT 생성** (gpt-4o-mini, mini_only=True) — 날짜 + Day Master + 별자리 기반 맞춤 생성
+- **별도 `/fortune` 페이지** — 공유 링크 깔끔, 랜딩 CTA 연결 가능
+- 로그인 불필요 (생년월일 입력만)
+- 공유 가능한 이미지 카드 형태 (인스타/카톡 바이럴)
+- 매일 1회 무료
+
+### 바이럴 퍼널
+`/fortune (무료)` → 웃긴 카드 공유 → 신규 유입 → 회원가입 → 유료 리딩 전환
+
+### 미결 사항
+- [ ] 완전 익명(날짜만) vs 생년월일 입력 방식 결정
+- [ ] 공유 카드 디자인 방향
+- [ ] 랜딩 페이지 포춘쿠키 CTA 노출 여부
+
+---
+
 ## 다음 세션 시작 가이드
 
 > 마지막 작업: 2026-05-03 세션69 완료
@@ -772,32 +801,32 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 
 ### 다음 세션 우선순위
 
-> 세션66 기준 최신화 (2026-04-26)
-
-**인프라**
-1. **[P1]** Claude Code 재시작 후 MCP `my-computer-use` screenshot 동작 확인
-2. **[P1]** 광고 1일치 데이터 확인 (다음날 아침 GA4 + Meta 비교)
+> 세션72 기준 최신화 (2026-05-03)
 
 **버그 수정**
-3. **[P1]** 랜딩 "100% Private. Never stored. Never shared." 문구 교체 (법적 리스크) ← 광고 집행 중 필수
-4. **[P2]** Astrology Profile RISING 카드 "ASC" 텍스트 → 별자리 이미지 수정
+1. **[P1]** Celtic Cross 요금 버그 — Firestore `service_config/pricing.tarot_celtic_cross` 값 2로 수정
+2. **[P1]** 랜딩 "100% Private. Never stored. Never shared." 문구 교체 (법적 리스크) ← 광고 집행 중 필수
+3. **[P3]** Astrology Profile RISING 카드 "ASC" 텍스트 → 별자리 이미지 수정
+
+**신규 기능**
+4. **[P2]** 포춘쿠키 `/fortune` 페이지 — GPT 생성, 영어 웃긴 운세, 공유 카드 바이럴 훅
+
+**마케팅/분석**
+5. **[P2]** Meta Pixel 설치 (Instagram IAB 추적 보완)
+6. **[P2]** UTM 파라미터 bio 링크 적용
+7. **[P2]** Instagram Graph API 세팅
 
 **UX 개선**
-5. **[P2]** PersonPicker 저장 인물 1명일 때 auto-select
-6. **[P2]** STEP 2 OF 2 표기 수정 → "STEP 2 OF 3" 또는 STEP 제거 (회원가입이 실제 3단계)
-7. **[P3]** Share CTA 위치 조정 — 회원가입 전제 명확화 ("Join free → then share to earn")
-8. **[P3]** Landing Hero 소셜 프루프 강화 (리뷰 수, 별점 추가)
-9. **[P3]** Chart Signals 생년월일 기반 구체화 (Barnum effect 최소화)
+8. **[P3]** PersonPicker 저장 인물 1명일 때 auto-select
+9. **[P3]** STEP 2 OF 2 → STEP 2 OF 3 표기 수정
+10. **[P3]** Landing Hero 소셜 프루프 강화
 
-**✅ 완료된 CRO 수정 (세션65)**
-- ✅ /login?tab=signup — 퍼널 CTA → Sign Up 탭 자동 활성 (커밋 e2827b6)
-- ✅ Gender 버튼 aria-pressed + ✓ 체크마크 피드백 (커밋 b2227f9)
-
-**✅ 완료된 인프라 (세션66)**
-- ✅ MCP Computer Use 서버 등록 (`my-computer-use`, ✓ Connected)
+**✅ 세션72 완료**
+- ✅ GA4 전면 재설정 (route change page_view, 이벤트 전체 세분화, 누락 이벤트 추가)
+- ✅ AI 모델 비교 (Haiku 4.5 vs GPT-5.4-mini) → OpenAI 유지 결정
+- ✅ 포춘쿠키 신규 서비스 기획 완료
 
 **기타**
-10. **[배포]** `firebase deploy --only firestore:rules`
 11. **[비즈]** 크레딧 소모량 조정 검토 — Personal Fortune/Scenario/Compatibility 2크레딧, Yearly 3크레딧
 
 ### 핵심 파일 경로
