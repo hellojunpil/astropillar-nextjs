@@ -169,7 +169,7 @@ export default function CelticCrossPage() {
 
   const [phase, setPhase] = useState<Phase>('question')
   const [question, setQuestion] = useState('')
-  const [deck, setDeck] = useState<TarotCard[]>([])
+  const [deck, setDeck] = useState<(TarotCard | null)[]>([])
   const [exitIdxs, setExitIdxs] = useState<Set<number>>(new Set())
   const [slots, setSlots] = useState<(TarotCard | null)[]>(Array(10).fill(null))
   const [slotEntering, setSlotEntering] = useState<Set<number>>(new Set())
@@ -198,13 +198,13 @@ export default function CelticCrossPage() {
   const filledCount = slots.filter(Boolean).length
 
   function handleSelectCard(deckIdx: number) {
-    if (exitIdxs.has(deckIdx)) return
+    if (exitIdxs.has(deckIdx) || deck[deckIdx] === null) return
     const nextSlot = slots.findIndex(s => s === null)
     if (nextSlot === -1) return
     const card = deck[deckIdx]
     setExitIdxs(prev => new Set([...prev, deckIdx]))
     setTimeout(() => {
-      setDeck(prev => prev.filter((_, i) => i !== deckIdx))
+      setDeck(prev => { const n = [...prev]; n[deckIdx] = null; return n })
       setExitIdxs(prev => { const n = new Set(prev); n.delete(deckIdx); return n })
       setSlotEntering(prev => new Set([...prev, nextSlot]))
       setSlots(prev => { const n = [...prev]; n[nextSlot] = card; return n })
@@ -391,8 +391,12 @@ export default function CelticCrossPage() {
                 <p style={{ color: 'var(--text-muted)', fontSize: 11, marginBottom: 8 }}>Full deck · 78 cards · Tap to select</p>
                 <div style={{ maxHeight: 360, overflowY: 'auto', borderRadius: 10 }}>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 6 }}>
-                    {deck.map((card, i) => (
-                      <button key={card.file} onClick={() => handleSelectCard(i)} style={{
+                    {deck.map((card, i) => card === null ? (
+                      <div key={i} style={{ display: 'flex', justifyContent: 'center' }}>
+                        <div style={{ width: 36, height: 54, borderRadius: 6, border: '1px dashed rgba(201,168,76,0.2)', background: 'rgba(201,168,76,0.03)' }} />
+                      </div>
+                    ) : (
+                      <button key={i} onClick={() => handleSelectCard(i)} style={{
                         background: 'none', border: 'none', cursor: 'pointer', padding: 0,
                         transition: 'transform 0.28s, opacity 0.28s',
                         transform: exitIdxs.has(i) ? 'scale(0.5) translateY(-16px)' : 'scale(1)',
