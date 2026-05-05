@@ -68,7 +68,7 @@
     "welcome": "무료 리딩 시작하기"
   },
   "menu": {
-    "title": "나의 서비스",
+    "title": "전체 운세 서비스",
     "credits_label": "크레딧",
     "buy_credits": "크레딧 구매",
     "sign_out": "로그아웃",
@@ -77,47 +77,42 @@
     "credits_badge": "{n} 크레딧",
     "services": {
       "personal_fortune": {
-        "title": "나의 운명 리딩",
-        "subtitle": "평생 운세 완전 분석",
+        "title": "나의 운명 풀이",
+        "subtitle": "명리학 + 점성술 융합 · 평생 운세 분석",
         "desc": "삶의 주제, 커리어, 연애, 숨겨진 잠재력까지 깊이 있게 짚어드려요."
       },
       "daily": {
         "title": "오늘의 나의 운세",
-        "subtitle": "오늘 하루의 에너지",
+        "subtitle": "명리학 + 점성술 융합 · 오늘의 에너지",
         "desc": "나에게 맞춘 오늘의 운, 기회, 그리고 조심해야 할 것들."
       },
       "yearly": {
         "title": "신년 운세",
-        "subtitle": "1년 앞을 내다보기",
-        "desc": "내 차트를 바탕으로 이번 달부터 월별로 짚어주는 연간 가이드."
+        "subtitle": "{year}년 한 해를 살펴봐요",
+        "desc": "내 사주와 별자리를 바탕으로 한 달 한 달 짚어드리는 연간 운세."
       },
       "compatibility": {
-        "title": "궁합 리딩",
-        "subtitle": "연애 & 관계 케미 분석",
-        "desc": "특별한 그 사람과 나의 에너지가 얼마나 잘 맞는지 깊이 분석해드려요."
-      },
-      "scenario": {
-        "title": "시나리오 리딩",
-        "subtitle": "궁금한 것 무엇이든",
-        "desc": "특정 상황이나 고민에 대한 사주 기반 맞춤 조언."
+        "title": "궁합",
+        "subtitle": "사주와 별자리로 보는 우리 궁합",
+        "desc": "사주와 별자리로 두 사람의 에너지가 얼마나 잘 맞는지 깊이 들여다봐요."
       }
     },
     "tarot_section": "타로",
     "tarot": {
       "three_card": {
-        "title": "쓰리카드 스프레드",
+        "title": "세 장 배열",
         "subtitle": "과거 · 현재 · 미래",
-        "desc": "시간의 흐름으로 보는 집중 리딩."
+        "desc": "시간의 흐름으로 보는 타로 배열."
       },
       "relationship": {
-        "title": "관계 스프레드",
+        "title": "관계 배열",
         "subtitle": "나 · 상대방 · 관계 에너지",
         "desc": "소중한 그 사람과의 에너지를 깊이 들여다봐요."
       },
       "celtic_cross": {
         "title": "켈틱 크로스",
-        "subtitle": "10장 심층 리딩",
-        "desc": "복잡한 질문에 가장 깊이 있는 답을 드리는 스프레드."
+        "subtitle": "10장 종합 배열",
+        "desc": "복잡한 질문에 가장 깊이 있는 답을 드리는 배열."
       }
     }
   },
@@ -277,7 +272,7 @@
     "scenario_first_step": "먼저, 누구의 사주로 볼지 선택해요.",
     "scenario_next_btn": "다음 → 질문하기",
     "reveal_answer": "답 알아보기",
-    "compat_title": "궁합 리딩",
+    "compat_title": "궁합",
     "compat_sub": "두 에너지가 만났을 때 — 깊이 있는 궁합 분석",
     "compat_submit": "우리 궁합 알아보기",
     "credit_unit": "크레딧",

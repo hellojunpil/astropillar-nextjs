@@ -24,12 +24,16 @@ export default function MenuPage() {
 
   const fontFamily = locale === 'ko' ? "'Noto Sans KR', sans-serif" : locale === 'ja' ? "'Noto Sans JP', sans-serif" : "'Noto Sans', sans-serif"
 
+  function getFortuneYear() {
+    const now = new Date()
+    return now.getMonth() >= 10 ? now.getFullYear() + 1 : now.getFullYear()
+  }
+
   const SERVICE_DEFS = [
     { id: 'personal-fortune', pricingKey: 'personal_fortune', href: '/reading/personal-fortune', tKey: 'services.personal_fortune' },
     { id: 'daily', pricingKey: 'personal_daily_fortune', href: '/reading/daily', tKey: 'services.daily' },
     { id: 'yearly', pricingKey: 'yearly', href: '/reading/yearly', tKey: 'services.yearly' },
     { id: 'compatibility', pricingKey: 'compatibility', href: '/reading/compatibility', tKey: 'services.compatibility' },
-    { id: 'scenario', pricingKey: 'scenario', href: '/reading/scenario', tKey: 'services.scenario' },
   ]
 
   const TAROT_DEFS = [
@@ -123,7 +127,9 @@ export default function MenuPage() {
                     {creditBadge(cost)}
                   </span>
                 </div>
-                <div style={{ fontSize: 12, color: 'rgba(201,168,76,0.7)', marginBottom: 6 }}>{tData.subtitle}</div>
+                <div style={{ fontSize: 12, color: 'rgba(201,168,76,0.7)', marginBottom: 6 }}>
+                  {svc.id === 'yearly' ? tData.subtitle.replace('{year}', String(getFortuneYear())) : tData.subtitle}
+                </div>
                 <div style={{ fontSize: 12, color: 'rgba(200,195,220,0.6)', lineHeight: 1.6 }}>{tData.desc}</div>
               </button>
             )

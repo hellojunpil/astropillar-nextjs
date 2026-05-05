@@ -68,7 +68,7 @@
     "welcome": "Get your free reading"
   },
   "menu": {
-    "title": "My Services",
+    "title": "Fortune Services",
     "credits_label": "Credits",
     "buy_credits": "Buy Credits",
     "sign_out": "Sign Out",
@@ -78,28 +78,23 @@
     "services": {
       "personal_fortune": {
         "title": "Personal Fortune",
-        "subtitle": "Lifetime destiny reading",
+        "subtitle": "BaZi + Astrology Fusion · Lifetime Reading",
         "desc": "Deep dive into your life theme, career, love, and hidden potential."
       },
       "daily": {
-        "title": "Personal Daily Fortune",
-        "subtitle": "Today's energy for you",
+        "title": "Daily Fortune",
+        "subtitle": "BaZi + Astrology Fusion · Today's Energy",
         "desc": "Today's luck, opportunities, and things to watch out for — personalized."
       },
       "yearly": {
         "title": "New Year Fortune",
-        "subtitle": "The year ahead",
-        "desc": "Month-by-month guidance for the current year based on your chart."
+        "subtitle": "{year} — Your Year Ahead",
+        "desc": "Month-by-month guidance for {year} based on your BaZi and natal chart."
       },
       "compatibility": {
-        "title": "Compatibility Reading",
-        "subtitle": "Love & relationship synergy",
+        "title": "Compatibility",
+        "subtitle": "BaZi & Astrology Compatibility Reading",
         "desc": "How your energy aligns with someone special — deep compatibility analysis."
-      },
-      "scenario": {
-        "title": "Scenario Reading",
-        "subtitle": "Ask anything",
-        "desc": "Get chart-based guidance on any specific question or situation."
       }
     },
     "tarot_section": "Tarot",
@@ -116,7 +111,7 @@
       },
       "celtic_cross": {
         "title": "Celtic Cross",
-        "subtitle": "Deep 10-card reading",
+        "subtitle": "Deep 10-Card Spread",
         "desc": "The most comprehensive spread for complex questions."
       }
     }
@@ -277,7 +272,7 @@
     "scenario_first_step": "First, select whose chart to read for your question.",
     "scenario_next_btn": "Next → Ask Your Question",
     "reveal_answer": "Reveal the Answer",
-    "compat_title": "Compatibility Reading",
+    "compat_title": "Compatibility",
     "compat_sub": "How your energies align — deep compatibility analysis",
     "compat_submit": "Reveal Our Compatibility",
     "credit_unit": "Credit",
