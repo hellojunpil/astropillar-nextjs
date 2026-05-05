@@ -1,30 +1,23 @@
 import type { Metadata } from 'next'
 import Script from 'next/script'
+import { NextIntlClientProvider } from 'next-intl'
 import Providers from '@/components/Providers'
 import './globals.css'
+import enMessages from '../../messages/en.json'
 
 const GA_ID = process.env.NEXT_PUBLIC_GA4_ID
 
 export const metadata: Metadata = {
   title: 'AstroPillar — Where the stars meet your fate',
   description: 'Discover your destiny through Eastern BaZi and Western Astrology. Free personalized readings.',
-  verification: {
-    google: '91ba17f1e5a9c408',
-  },
+  verification: { google: '91ba17f1e5a9c408' },
   openGraph: {
     title: 'AstroPillar — Where the stars meet your fate',
     description: 'Your free BaZi + Astrology reading. Discover what your birth chart really says.',
     url: 'https://astropillar.com',
     siteName: 'AstroPillar',
     type: 'website',
-    images: [
-      {
-        url: 'https://astropillar.com/og-image.png',
-        width: 1200,
-        height: 630,
-        alt: 'AstroPillar — BaZi & Astrology Reading',
-      },
-    ],
+    images: [{ url: 'https://astropillar.com/og-image.png', width: 1200, height: 630, alt: 'AstroPillar' }],
   },
   twitter: {
     card: 'summary_large_image',
@@ -52,7 +45,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             `}</Script>
           </>
         )}
-        <Providers>{children}</Providers>
+        <NextIntlClientProvider locale="en" messages={enMessages}>
+          <Providers>{children}</Providers>
+        </NextIntlClientProvider>
       </body>
     </html>
   )

@@ -1,0 +1,152 @@
+{
+  "nav": {
+    "home": "홈",
+    "destiny": "운세",
+    "free": "무료",
+    "library": "기록",
+    "credits": "크레딧"
+  },
+  "landing": {
+    "tagline": "사주와 별자리로 읽는 나의 운명",
+    "cta": "내 운세 무료로 보기",
+    "trust": "★★★★★ 10,000명 이상이 선택했어요",
+    "counter_suffix": "명이 지금 보고 있어요",
+    "bubbles": {
+      "b1": "나의 은밀한 본성 😈",
+      "b2": "언제 인연을 만날까? 💕",
+      "b3": "별자리가 숨긴 나의 진실 🌌"
+    },
+    "rolling": {
+      "r1": "나만 더 좋아했던 건가...",
+      "r2": "이렇게 열심히 사는데, 왜 안 되는 걸까...",
+      "r3": "이 사람이 진심인지, 내가 착각하는 건지...",
+      "r4": "왜 나는 또 이러는 걸까..."
+    },
+    "reviews": {
+      "r1": { "name": "김지수", "text": "이렇게 정확한 운세는 처음이에요. 제 성격을 너무 잘 짚어줘서 소름이 돋았어요." },
+      "r2": { "name": "박서연", "text": "처음엔 반신반의했는데, 궁합 리딩이 제 연애 패턴을 정확하게 짚어줬어요. 강력 추천해요." },
+      "r3": { "name": "이민아", "text": "연간 운세가 실제로 맞아떨어지는 걸 보고 완전히 팬이 됐어요. 이제 매일 보는 앱이에요." }
+    },
+    "privacy": "입력하신 정보는 암호화되어 안전하게 보호됩니다.",
+    "form": {
+      "name": "이름",
+      "birthday": "생년월일",
+      "birth_time": "태어난 시간",
+      "gender": "성별",
+      "male": "남성",
+      "female": "여성",
+      "city": "태어난 도시",
+      "city_placeholder": "도시 검색...",
+      "submit": "내 사주 보기",
+      "unknown_time": "태어난 시간을 모릅니다"
+    },
+    "result": {
+      "your_sign": "나의 별자리×일간",
+      "unlock_title": "차트가 준비됐어요.",
+      "unlock_sub": "로그인하면 전체 리딩을 확인할 수 있어요.",
+      "unlock_cta": "전체 리딩 무료로 보기",
+      "no_card": "신용카드 불필요"
+    }
+  },
+  "login": {
+    "signin_tab": "로그인",
+    "signup_tab": "회원가입",
+    "email": "이메일",
+    "password": "비밀번호",
+    "confirm_password": "비밀번호 확인",
+    "forgot": "비밀번호를 잊으셨나요?",
+    "google": "구글로 계속하기",
+    "signin_btn": "로그인",
+    "signup_btn": "회원가입",
+    "no_account": "아직 계정이 없으신가요?",
+    "have_account": "이미 계정이 있으신가요?",
+    "signup_link": "회원가입",
+    "signin_link": "로그인",
+    "reset_sent": "비밀번호 재설정 이메일을 보냈어요. 받은 편지함을 확인해주세요.",
+    "error_weak_password": "비밀번호는 6자 이상이어야 해요.",
+    "error_mismatch": "비밀번호가 일치하지 않아요.",
+    "welcome": "무료 리딩 시작하기"
+  },
+  "menu": {
+    "title": "나의 서비스",
+    "credits_label": "크레딧",
+    "buy_credits": "크레딧 구매",
+    "sign_out": "로그아웃",
+    "free_badge": "무료",
+    "credit_badge": "{n} 크레딧",
+    "credits_badge": "{n} 크레딧",
+    "services": {
+      "personal_fortune": {
+        "title": "나의 운명 리딩",
+        "subtitle": "평생 운세 완전 분석",
+        "desc": "삶의 주제, 커리어, 연애, 숨겨진 잠재력까지 깊이 있게 짚어드려요."
+      },
+      "daily": {
+        "title": "오늘의 나의 운세",
+        "subtitle": "오늘 하루의 에너지",
+        "desc": "나에게 맞춘 오늘의 운, 기회, 그리고 조심해야 할 것들."
+      },
+      "yearly": {
+        "title": "올해의 운세",
+        "subtitle": "1년 앞을 내다보기",
+        "desc": "내 차트를 바탕으로 이번 달부터 월별로 짚어주는 연간 가이드."
+      },
+      "compatibility": {
+        "title": "궁합 리딩",
+        "subtitle": "연애 & 관계 케미 분석",
+        "desc": "특별한 그 사람과 나의 에너지가 얼마나 잘 맞는지 깊이 분석해드려요."
+      },
+      "scenario": {
+        "title": "시나리오 리딩",
+        "subtitle": "궁금한 것 무엇이든",
+        "desc": "특정 상황이나 고민에 대한 사주 기반 맞춤 조언."
+      }
+    },
+    "tarot_section": "타로",
+    "tarot": {
+      "three_card": {
+        "title": "쓰리카드 스프레드",
+        "subtitle": "과거 · 현재 · 미래",
+        "desc": "시간의 흐름으로 보는 집중 리딩."
+      },
+      "relationship": {
+        "title": "관계 스프레드",
+        "subtitle": "나 · 상대방 · 관계 에너지",
+        "desc": "소중한 그 사람과의 에너지를 깊이 들여다봐요."
+      },
+      "celtic_cross": {
+        "title": "켈틱 크로스",
+        "subtitle": "10장 심층 리딩",
+        "desc": "복잡한 질문에 가장 깊이 있는 답을 드리는 스프레드."
+      }
+    }
+  },
+  "buy": {
+    "title": "크레딧 구매",
+    "subtitle": "크레딧 1개로 리딩 1회 이용",
+    "pack1_title": "1 크레딧",
+    "pack1_price": "₩2,900",
+    "pack5_title": "5 크레딧",
+    "pack5_price": "₩12,900",
+    "pack5_save": "10% 절약",
+    "cta": "구매하기",
+    "secure": "안전한 결제",
+    "no_expiry": "크레딧 유효기간 없음"
+  },
+  "common": {
+    "back": "뒤로",
+    "loading": "불러오는 중...",
+    "error": "오류가 발생했어요. 다시 시도해주세요.",
+    "reveal": "리딩 보기",
+    "not_enough_credits": "크레딧이 부족해요",
+    "buy_credits": "크레딧 구매",
+    "login_required": "로그인이 필요해요",
+    "login_to_continue": "계속하려면 로그인해주세요.",
+    "go_login": "로그인하기"
+  },
+  "language": {
+    "en": "EN",
+    "ko": "KO",
+    "ja": "JA"
+  }
+}

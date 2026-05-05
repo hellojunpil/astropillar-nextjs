@@ -1,0 +1,152 @@
+{
+  "nav": {
+    "home": "Home",
+    "destiny": "Destiny",
+    "free": "Free",
+    "library": "Library",
+    "credits": "Credits"
+  },
+  "landing": {
+    "tagline": "Where the stars meet your fate.",
+    "cta": "Read My Stars & Fate — Free",
+    "trust": "Trusted by 10,000+ readers",
+    "counter_suffix": "people reading right now",
+    "bubbles": {
+      "b1": "My toxic trait 😈",
+      "b2": "When will I meet them? 💕",
+      "b3": "What my stars hide 🌌"
+    },
+    "rolling": {
+      "r1": "Was I always the one who cared more?",
+      "r2": "I work so hard. Why does nothing change?",
+      "r3": "Is this person real, or am I fooling myself?",
+      "r4": "Why do I keep doing this to myself?"
+    },
+    "reviews": {
+      "r1": { "name": "Sarah K.", "text": "This is the most accurate reading I've ever seen. It described my personality so precisely it was almost scary." },
+      "r2": { "name": "Emily R.", "text": "I was skeptical at first, but the compatibility reading matched my relationship patterns exactly. Highly recommend." },
+      "r3": { "name": "Mia L.", "text": "The yearly forecast predicted key events in my life with surprising accuracy. This is my go-to app now." }
+    },
+    "privacy": "Your data is encrypted and protected.",
+    "form": {
+      "name": "Your name",
+      "birthday": "Birthday",
+      "birth_time": "Birth time",
+      "gender": "Gender",
+      "male": "Male",
+      "female": "Female",
+      "city": "City of birth",
+      "city_placeholder": "Search city...",
+      "submit": "Read My Chart",
+      "unknown_time": "I don't know my birth time"
+    },
+    "result": {
+      "your_sign": "Your Sign",
+      "unlock_title": "Your chart is ready.",
+      "unlock_sub": "Sign in to unlock your full reading.",
+      "unlock_cta": "Unlock My Full Chart — Free",
+      "no_card": "No credit card required"
+    }
+  },
+  "login": {
+    "signin_tab": "Sign In",
+    "signup_tab": "Create Account",
+    "email": "Email",
+    "password": "Password",
+    "confirm_password": "Confirm Password",
+    "forgot": "Forgot password?",
+    "google": "Continue with Google",
+    "signin_btn": "Sign In",
+    "signup_btn": "Create Account",
+    "no_account": "Don't have an account?",
+    "have_account": "Already have an account?",
+    "signup_link": "Sign up",
+    "signin_link": "Sign in",
+    "reset_sent": "Reset email sent! Check your inbox.",
+    "error_weak_password": "Password must be at least 6 characters.",
+    "error_mismatch": "Passwords do not match.",
+    "welcome": "Get your free reading"
+  },
+  "menu": {
+    "title": "My Services",
+    "credits_label": "Credits",
+    "buy_credits": "Buy Credits",
+    "sign_out": "Sign Out",
+    "free_badge": "Free",
+    "credit_badge": "{n} Credit",
+    "credits_badge": "{n} Credits",
+    "services": {
+      "personal_fortune": {
+        "title": "Personal Fortune",
+        "subtitle": "Lifetime destiny reading",
+        "desc": "Deep dive into your life theme, career, love, and hidden potential."
+      },
+      "daily": {
+        "title": "Personal Daily Fortune",
+        "subtitle": "Today's energy for you",
+        "desc": "Today's luck, opportunities, and things to watch out for — personalized."
+      },
+      "yearly": {
+        "title": "Yearly Fortune",
+        "subtitle": "The year ahead",
+        "desc": "Month-by-month guidance for the current year based on your chart."
+      },
+      "compatibility": {
+        "title": "Compatibility Reading",
+        "subtitle": "Love & relationship synergy",
+        "desc": "How your energy aligns with someone special — deep compatibility analysis."
+      },
+      "scenario": {
+        "title": "Scenario Reading",
+        "subtitle": "Ask anything",
+        "desc": "Get chart-based guidance on any specific question or situation."
+      }
+    },
+    "tarot_section": "Tarot",
+    "tarot": {
+      "three_card": {
+        "title": "Three Card Spread",
+        "subtitle": "Past · Present · Future",
+        "desc": "A focused reading across time."
+      },
+      "relationship": {
+        "title": "Relationship Spread",
+        "subtitle": "You · Partner · Connection",
+        "desc": "Understand the energy between you and someone important."
+      },
+      "celtic_cross": {
+        "title": "Celtic Cross",
+        "subtitle": "Deep 10-card reading",
+        "desc": "The most comprehensive spread for complex questions."
+      }
+    }
+  },
+  "buy": {
+    "title": "Buy Credits",
+    "subtitle": "Each credit unlocks one reading",
+    "pack1_title": "1 Credit",
+    "pack1_price": "$1.99",
+    "pack5_title": "5 Credits",
+    "pack5_price": "$8.99",
+    "pack5_save": "Save 10%",
+    "cta": "Buy Now",
+    "secure": "Secure payment",
+    "no_expiry": "Credits never expire"
+  },
+  "common": {
+    "back": "Back",
+    "loading": "Loading...",
+    "error": "Something went wrong. Please try again.",
+    "reveal": "Reveal Reading",
+    "not_enough_credits": "Not enough Credits",
+    "buy_credits": "Buy Credits",
+    "login_required": "Login required",
+    "login_to_continue": "Please sign in to continue.",
+    "go_login": "Sign In"
+  },
+  "language": {
+    "en": "EN",
+    "ko": "KO",
+    "ja": "JA"
+  }
+}
