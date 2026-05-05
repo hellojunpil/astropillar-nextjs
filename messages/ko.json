@@ -78,12 +78,12 @@
     "services": {
       "personal_fortune": {
         "title": "나의 운명 풀이",
-        "subtitle": "명리학 + 점성술 융합 · 평생 운세 분석",
+        "subtitle": "사주 + 별자리운세 · 평생 운세 분석",
         "desc": "삶의 주제, 커리어, 연애, 숨겨진 잠재력까지 깊이 있게 짚어드려요."
       },
       "daily": {
         "title": "오늘의 나의 운세",
-        "subtitle": "명리학 + 점성술 융합 · 오늘의 에너지",
+        "subtitle": "사주 + 별자리운세 · 오늘의 에너지",
         "desc": "나에게 맞춘 오늘의 운, 기회, 그리고 조심해야 할 것들."
       },
       "yearly": {
@@ -100,17 +100,17 @@
     "tarot_section": "타로",
     "tarot": {
       "three_card": {
-        "title": "세 장 배열",
+        "title": "과거/현재/미래 타로",
         "subtitle": "과거 · 현재 · 미래",
         "desc": "시간의 흐름으로 보는 타로 배열."
       },
       "relationship": {
-        "title": "관계 배열",
+        "title": "나와 상대방의 관계 타로",
         "subtitle": "나 · 상대방 · 관계 에너지",
         "desc": "소중한 그 사람과의 에너지를 깊이 들여다봐요."
       },
       "celtic_cross": {
-        "title": "켈틱 크로스",
+        "title": "심층 분석 타로",
         "subtitle": "10장 종합 배열",
         "desc": "복잡한 질문에 가장 깊이 있는 답을 드리는 배열."
       }
