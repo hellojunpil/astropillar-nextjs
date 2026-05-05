@@ -821,6 +821,17 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 9. **[P3]** STEP 2 OF 2 → STEP 2 OF 3 표기 수정
 10. **[P3]** Landing Hero 소셜 프루프 강화
 
+**✅ 세션73 완료 — 2026-05-05**
+- ✅ ko.json: "명리학+점성술" → "사주+별자리운세" (personal_fortune/daily subtitle)
+- ✅ ko.json: 타로 타이틀 3종 → "과거/현재/미래 타로" / "나와 상대방의 관계 타로" / "심층 분석 타로"
+- ✅ ja.json: "四柱推命＋西洋占星術" → "四柱推命＋星座占い" (자연스러운 일반 용어)
+- ✅ ja.json: 타로 타이틀 3종 → "過去・現在・未来タロット" / "二人の関係タロット" / "深掘りタロット"
+- ✅ main.py: `get_day_master_label()` 로케일별 라벨 (ko: 굳센 나무/깊은 바다 등, ja: 大木/大海 등)
+- ✅ main.py: `_language_rule()` 일간×지배오행 이미지 지시어 추가 (전 언어)
+- ✅ main.py: 4개 call site에 `locale=req.language` 전달
+- ✅ Cloud Run 배포: revision 00200-slt
+- ✅ 커밋: 519cc45 (feature/i18n → push 완료)
+
 **✅ 세션72 완료**
 - ✅ GA4 전면 재설정 (route change page_view, 이벤트 전체 세분화, 누락 이벤트 추가)
 - ✅ AI 모델 비교 (Haiku 4.5 vs GPT-5.4-mini) → OpenAI 유지 결정
