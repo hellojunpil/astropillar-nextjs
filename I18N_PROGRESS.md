@@ -102,7 +102,36 @@ astropillar.com      → 영어 (기본값)
 - ✅ BottomNav.tsx — next-intl 번역 연동 + locale-aware Link
 - ✅ 리딩 5개 + 타로 3개 + today/library — shell re-export
 
-### 현재 진행 중: 빌드 검증
-- [ ] TypeScript 오류 수정
-- [ ] git push → Vercel 프리뷰 배포
+### 작업 4 완료 (빌드 & 배포)
+- ✅ 빌드 오류 수정 (root layout에 NextIntlClientProvider 추가)
+- ✅ npm run build 성공
+- ✅ git commit (009a4f4)
+- ✅ git push origin feature/i18n → Vercel 프리뷰 배포 시작
+
+## 테스트 URL
+Vercel 대시보드에서 feature/i18n 프리뷰 URL 확인
+- `/ko` → 한국어 랜딩
+- `/ja` → 일본어 랜딩
+- `/` → 영어 랜딩 (IP 기반 자동 감지)
+
+### 작업 5 완료 (GPT 한국어/일본어 출력)
+- ✅ main.py — `_language_rule(language)` 헬퍼 함수 추가 (ko/ja/en 동적 언어 규칙)
+- ✅ main.py — 4개 프롬프트 빌더에 `language` 파라미터 추가 + system_prompt 끝에 언어 override 주입
+  - `build_gpt_prompt` (yearly/scenario)
+  - `build_compatibility_prompt`
+  - `build_personal_fortune_prompt`
+  - `build_personal_daily_prompt`
+- ✅ main.py — 3개 request 모델에 `language: Optional[str] = None` 추가
+  - `CompatibilityRequest`, `FullReadingRequest`, `PersonalDailyRequest`
+- ✅ main.py — 4개 엔드포인트 핸들러에서 `language=req.language` 전달
+- ✅ 5개 reading 페이지에 `useLocale()` + `language: locale` API 전달
+  - personal-fortune, daily, yearly, scenario, compatibility
+- ✅ Cloud Run 재배포 완료 (revision 00199-w6p)
+- ✅ git commit + push (60953a2)
+
+## 미완료 / 향후 작업
+- [ ] 포트원 가입 완료 후 결제 연동
+- [ ] 리딩 페이지 UI 텍스트 번역 (현재 영어 — PersonPicker, BirthForm 등)
+- [ ] Today's Fortune 번역
+- [ ] 번역 검수 (특히 일본어)
 
