@@ -1,6 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { signOut } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
 import BottomNav from './BottomNav'
@@ -22,6 +23,7 @@ export default function ReadingPageShell({
   credits, requiredCredits, inProgress = false, children
 }: Props) {
   const router = useRouter()
+  const t = useTranslations('reading')
 
   async function handleSignOut() {
     await signOut(auth)
@@ -51,10 +53,10 @@ export default function ReadingPageShell({
             display: 'flex', alignItems: 'center', gap: 6,
           }}>
             <span style={{ color: 'var(--gold)', fontWeight: 700, fontSize: 14 }}>{credits ?? '—'}</span>
-            <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>Credits</span>
+            <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>{t('credits_label')}</span>
           </Link>
           <button onClick={handleSignOut} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 13, cursor: 'pointer' }}>
-            Sign out
+            {t('sign_out')}
           </button>
         </div>
       </header>
@@ -80,12 +82,12 @@ export default function ReadingPageShell({
             padding: '24px', textAlign: 'center',
           }}>
             <p style={{ fontSize: 32, marginBottom: 12 }}>✦</p>
-            <p style={{ color: '#fff', fontWeight: 600, marginBottom: 8 }}>Not enough Credits</p>
+            <p style={{ color: '#fff', fontWeight: 600, marginBottom: 8 }}>{t('not_enough_title')}</p>
             <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 20 }}>
-              This reading costs {requiredCredits} Credit{requiredCredits > 1 ? 's' : ''}. You have {credits}.
+              {t('not_enough_body', { n: requiredCredits, credits: credits ?? 0 })}
             </p>
             <Link href="/buy" className="btn-gold" style={{ fontSize: 14, padding: '12px 28px' }}>
-              Get Credits
+              {t('get_credits')}
             </Link>
           </div>
         ) : children}

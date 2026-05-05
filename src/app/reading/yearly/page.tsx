@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
 import { usePricing } from '@/hooks/usePricing'
 import { BirthData } from '@/components/BirthForm'
@@ -18,6 +18,7 @@ const currentYear = _now.getMonth() >= 10 ? _now.getFullYear() + 1 : _now.getFul
 export default function YearlyFortunePage() {
   const { user, credits, loading, refreshCredits } = useAuth()
   const locale = useLocale()
+  const t = useTranslations('reading')
   const pricing = usePricing()
   const cost = pricing.yearly
   const [submitting, setSubmitting] = useState(false)
@@ -73,14 +74,14 @@ export default function YearlyFortunePage() {
   if (loading) return <LoadingScreen />
 
   return (
-    <ReadingPageShell title="Yearly Fortune" subtitle={`Month-by-month guidance for ${currentYear} based on your chart`} emoji="📅" badge={`${cost} Credit${cost !== 1 ? 's' : ''}`} credits={credits} requiredCredits={cost} inProgress={submitting || !!result}>
+    <ReadingPageShell title={t('yearly_title')} subtitle={t('yearly_sub', { year: currentYear })} emoji="📅" badge={`${cost} ${t('credit_unit')}`} credits={credits} requiredCredits={cost} inProgress={submitting || !!result}>
       {result ? (
         <ReadingResult raw={result} onReset={() => { setResult(null); setFromCache(false); setBirthData(null); setShareId(null) }} userEmail={user?.email ?? undefined} fromCache={fromCache} birthData={birthData ?? undefined} shareId={shareId ?? undefined} />
       ) : submitting ? (
         <ReadingLoader onComplete={() => {}} />
       ) : (
         <div className="card">
-          <PersonPicker people={people} onSubmit={handleSubmit} loading={submitting} submitLabel={`Reveal My ${currentYear}`} costBadge={`${cost} Credit${cost !== 1 ? 's' : ''}`} userEmail={user?.email ?? ''} onPeopleChange={setPeople} />
+          <PersonPicker people={people} onSubmit={handleSubmit} loading={submitting} submitLabel={t('yearly_submit', { year: currentYear })} costBadge={`${cost} ${t('credit_unit')}`} userEmail={user?.email ?? ''} onPeopleChange={setPeople} />
           {error && <p style={{ color:'#ef4444', fontSize:13, marginTop:14, textAlign:'center' }}>{error}</p>}
         </div>
       )}
