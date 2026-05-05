@@ -87,7 +87,7 @@
         "desc": "나에게 맞춘 오늘의 운, 기회, 그리고 조심해야 할 것들."
       },
       "yearly": {
-        "title": "올해의 운세",
+        "title": "신년 운세",
         "subtitle": "1년 앞을 내다보기",
         "desc": "내 차트를 바탕으로 이번 달부터 월별로 짚어주는 연간 가이드."
       },
@@ -269,7 +269,7 @@
     "daily_title": "오늘의 나",
     "daily_sub": "{date}의 에너지는?",
     "daily_submit": "{date} 운세 보기",
-    "yearly_title": "올해의 운세",
+    "yearly_title": "신년 운세",
     "yearly_sub": "{year}년을 월별로 미리 보는 나의 흐름",
     "yearly_submit": "내 {year}년 운세 보기",
     "scenario_title": "별에게 물어봐",

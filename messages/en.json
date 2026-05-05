@@ -87,7 +87,7 @@
         "desc": "Today's luck, opportunities, and things to watch out for — personalized."
       },
       "yearly": {
-        "title": "Yearly Fortune",
+        "title": "New Year Fortune",
         "subtitle": "The year ahead",
         "desc": "Month-by-month guidance for the current year based on your chart."
       },
@@ -269,7 +269,7 @@
     "daily_title": "Personal Daily Fortune",
     "daily_sub": "Your energy for {date}",
     "daily_submit": "Read {date}'s Stars",
-    "yearly_title": "Yearly Fortune",
+    "yearly_title": "New Year Fortune",
     "yearly_sub": "Month-by-month guidance for {year} based on your chart",
     "yearly_submit": "Reveal My {year}",
     "scenario_title": "Scenario Reading",
