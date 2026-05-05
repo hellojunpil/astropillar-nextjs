@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { useLocale } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
 import { usePricing } from '@/hooks/usePricing'
 import { BirthData } from '@/components/BirthForm'
@@ -28,6 +29,7 @@ const DATE_OPTIONS = getDateOptions()
 
 export default function DailyFortunePage() {
   const { user, credits, loading, refreshCredits } = useAuth()
+  const locale = useLocale()
   const pricing = usePricing()
   const cost = pricing.personal_daily_fortune
   const [submitting, setSubmitting] = useState(false)
@@ -60,6 +62,7 @@ export default function DailyFortunePage() {
         birthtime, sex: data.sex, city: data.city,
         user_name: data.name, birth_year: data.year,
         target_date: targetDate,
+        language: locale,
       })
       await apiPost('/use_pouch', { email: user.email, reading_type: 'personal_daily_fortune' })
       await saveReading(user.email, { reading_type: 'daily', name: data.name, birth_date, birth_city: data.city, target_date: targetDate, result: raw })

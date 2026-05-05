@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { useLocale } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
 import { usePricing } from '@/hooks/usePricing'
 import { BirthData } from '@/components/BirthForm'
@@ -21,6 +22,7 @@ const EXAMPLE_QUESTIONS = [
 
 export default function ScenarioPage() {
   const { user, credits, loading, refreshCredits } = useAuth()
+  const locale = useLocale()
   const pricing = usePricing()
   const cost = pricing.scenario
   const [birthData, setBirthData] = useState<BirthData | null>(null)
@@ -66,6 +68,7 @@ export default function ScenarioPage() {
         birthtime, sex: birthData.sex, city: birthData.city,
         reading_type: 'situation', custom_situation: question.trim(),
         user_name: birthData.name, birth_year: birthData.year,
+        language: locale,
       })
       await apiPost('/use_pouch', { email: user.email, reading_type: 'scenario' })
       const birth_date = birthDateStr(birthData.year, birthData.month, birthData.day)

@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { useLocale } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
 import { usePricing } from '@/hooks/usePricing'
 import { BirthData } from '@/components/BirthForm'
@@ -16,6 +17,7 @@ const currentYear = _now.getMonth() >= 10 ? _now.getFullYear() + 1 : _now.getFul
 
 export default function YearlyFortunePage() {
   const { user, credits, loading, refreshCredits } = useAuth()
+  const locale = useLocale()
   const pricing = usePricing()
   const cost = pricing.yearly
   const [submitting, setSubmitting] = useState(false)
@@ -46,6 +48,7 @@ export default function YearlyFortunePage() {
         year: data.year, month: data.month, day: data.day,
         birthtime, sex: data.sex, city: data.city,
         reading_type: 'yearly', user_name: data.name, birth_year: data.year,
+        language: locale,
       })
       await apiPost('/use_pouch', { email: user.email, reading_type: 'yearly' })
       await saveReading(user.email, { reading_type: 'yearly', name: data.name, birth_date, birth_city: data.city, result: raw })

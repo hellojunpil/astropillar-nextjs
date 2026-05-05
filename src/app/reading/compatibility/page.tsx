@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { useLocale } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
 import { usePricing } from '@/hooks/usePricing'
 import ReadingResult from '@/components/ReadingResult'
@@ -64,6 +65,7 @@ function parseBirthDate(birth_date: string): { year: number; month: number; day:
 
 export default function CompatibilityPage() {
   const { user, credits, loading, refreshCredits } = useAuth()
+  const locale = useLocale()
   const pricing = usePricing()
   const cost = pricing.compatibility
   const [people, setPeople] = useState<SavedPerson[]>([])
@@ -131,6 +133,7 @@ export default function CompatibilityPage() {
         sex2: person2.sex,
         city2: person2.birth_city,
         relationship,
+        language: locale,
       })
       await apiPost('/use_pouch', { email: user.email, reading_type: 'compatibility' })
       await saveReading(user.email, { reading_type: 'compatibility', name: cacheKey, birth_date: cacheDate, birth_city: cacheCity, result: raw })
