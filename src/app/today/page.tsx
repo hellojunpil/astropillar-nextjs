@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { db } from '@/lib/firebase'
 import { doc, getDoc } from 'firebase/firestore'
 import { useAuth } from '@/hooks/useAuth'
+import { useLocale } from 'next-intl'
 import BottomNav from '@/components/BottomNav'
 import { apiGet, apiPost } from '@/lib/api'
 import { gtagEvent } from '@/lib/gtag'
@@ -131,6 +132,7 @@ const TABS: { id: ActiveTab; label: string }[] = [
 
 export default function TodayFortunePage() {
   const { user } = useAuth(false)
+  const locale = useLocale()
   const [activeTab, setActiveTab] = useState<ActiveTab>('tarot')
 
   // ── Moon phase ────────────────────────────────────────────────
@@ -181,10 +183,16 @@ export default function TodayFortunePage() {
     setLoading(true); setError('')
     try {
       const dateKey = getTodayKey()
-      const docId = mode === 'horoscope'
+      const baseId = mode === 'horoscope'
         ? `${dateKey}_horoscope_${sign.toLowerCase()}`
         : `${dateKey}_zodiac_${sign.toLowerCase()}`
-      const snap = await getDoc(doc(db, 'daily_fortunes', docId))
+      // locale별 doc 먼저 시도, 없으면 EN fallback
+      const localeSuffix = locale !== 'en' ? `_${locale}` : ''
+      const localeDocId = localeSuffix ? `${baseId}${localeSuffix}` : baseId
+      let snap = await getDoc(doc(db, 'daily_fortunes', localeDocId))
+      if (!snap.exists() && localeSuffix) {
+        snap = await getDoc(doc(db, 'daily_fortunes', baseId))
+      }
       if (!snap.exists()) { setError('No fortune available for today. Please check back later.'); return }
       setFortune(snap.data() as FortuneData)
       setStep('result')
