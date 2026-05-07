@@ -89,6 +89,7 @@ export default function LandingPage() {
   const counterRef = useRef(10847)
   const [counter, setCounter] = useState(10847)
   const [rollingIdx, setRollingIdx] = useState(0)
+  const [showPopup, setShowPopup] = useState(false)
 
   const ROLLING_TEXTS = [t('rolling.r1'), t('rolling.r2'), t('rolling.r3'), t('rolling.r4')]
   const TEASER_SETS = getTeaserSets(locale)
@@ -101,10 +102,18 @@ export default function LandingPage() {
       } else {
         setAuthChecked(true)
         ga('view_1_landing')
+        if (typeof window !== 'undefined' && !localStorage.getItem('ap_welcome_shown')) {
+          setTimeout(() => setShowPopup(true), 1500)
+        }
       }
     })
     return () => unsub()
   }, [router])
+
+  function closePopup() {
+    setShowPopup(false)
+    if (typeof window !== 'undefined') localStorage.setItem('ap_welcome_shown', '1')
+  }
 
   useEffect(() => {
     if (!authChecked) return
@@ -170,8 +179,58 @@ export default function LandingPage() {
 
   const signInLabel = locale === 'ko' ? '로그인' : locale === 'ja' ? 'ログイン' : 'Sign In'
 
+  const popupCopy = {
+    en: {
+      title: 'Welcome to AstroPillar ✨',
+      body: 'Sign up and get 1 free credit — enough for a full reading. If you have any feedback or suggestions, let us know at',
+      btn: 'Got it',
+    },
+    ko: {
+      title: 'AstroPillar에 오신 걸 환영해요 ✨',
+      body: '지금 가입하면 무료 크레딧 1개를 드려요 — 리딩 한 번을 무료로 받아보실 수 있어요. 이용하시면서 개선이 필요한 사항이 있으면 편하게 알려주세요.',
+      btn: '확인',
+    },
+    ja: {
+      title: 'AstroPillarへようこそ ✨',
+      body: '今すぐ登録すると、無料クレジット1つをプレゼント。鑑定を1回無料でお試しいただけます。ご意見・ご要望があればお気軽にご連絡ください。',
+      btn: '了解',
+    },
+  }
+  const pc = popupCopy[locale as keyof typeof popupCopy] ?? popupCopy.en
+
   return (
     <main style={{ fontFamily, background:'#07071a', color:'#F6F6F8', minHeight:'100vh' }}>
+
+      {/* ══════════ 웰컴 팝업 ══════════ */}
+      {showPopup && (
+        <div
+          onClick={closePopup}
+          style={{ position:'fixed', inset:0, zIndex:9999, background:'rgba(7,7,26,0.75)', display:'flex', alignItems:'center', justifyContent:'center', padding:24, backdropFilter:'blur(4px)' }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ background:'#0d0d2b', border:'1px solid rgba(201,168,76,0.4)', borderRadius:20, padding:'32px 28px', maxWidth:360, width:'100%', boxShadow:'0 8px 40px rgba(0,0,0,0.6)' }}
+          >
+            <div style={{ fontSize:18, fontWeight:700, color:'#C9A84C', marginBottom:14, lineHeight:1.4 }}>{pc.title}</div>
+            <div style={{ fontSize:14, color:'rgba(200,195,220,0.8)', lineHeight:1.75, marginBottom:16 }}>
+              {pc.body}
+              {locale !== 'ko' && (
+                <> <span style={{ color:'#C9A84C', fontWeight:600 }}>bbiribbiri09@gmail.com</span></>
+              )}
+            </div>
+            {locale === 'ko' && (
+              <div style={{ fontSize:13, color:'#C9A84C', fontWeight:600, marginBottom:16 }}>bbiribbiri09@gmail.com</div>
+            )}
+            <button
+              onClick={closePopup}
+              style={{ width:'100%', background:'#C9A84C', color:'#16213E', fontFamily, fontSize:14, fontWeight:700, border:'none', borderRadius:50, padding:'13px', cursor:'pointer' }}
+            >
+              {pc.btn}
+            </button>
+          </div>
+        </div>
+      )}
+
       <style>{`
         @keyframes float1 { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
         @keyframes float2 { 0%,100%{transform:translateX(0)} 50%{transform:translateX(-7px)} }
