@@ -11,6 +11,7 @@ import { gtagEvent } from '@/lib/gtag'
 import { usePricing } from '@/hooks/usePricing'
 import BottomNav from '@/components/BottomNav'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
+import LegalFooter from '@/components/LegalFooter'
 
 export default function MenuPage() {
   const router = useRouter()
@@ -168,6 +169,7 @@ export default function MenuPage() {
           })}
         </div>
       </div>
+      <LegalFooter style={{ marginTop: 28 }} />
       <BottomNav />
     </main>
   )

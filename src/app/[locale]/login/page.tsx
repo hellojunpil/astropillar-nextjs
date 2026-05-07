@@ -2,6 +2,7 @@
 
 import { useState, Suspense } from 'react'
 import { useRouter } from '@/navigation'
+import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import {
@@ -197,6 +198,12 @@ function LoginContent() {
           <button onClick={() => setMode(mode === 'login' ? 'signup' : 'login')} style={{ background: 'none', border: 'none', color: '#C9A84C', fontFamily, fontSize: 12, cursor: 'pointer', textDecoration: 'underline' }}>
             {mode === 'login' ? t('signup_link') : t('signin_link')}
           </button>
+        </div>
+
+        <div style={{ textAlign: 'center', marginTop: 20 }}>
+          <Link href="/" style={{ color: 'rgba(200,195,220,0.3)', fontSize: 12, textDecoration: 'none' }}>
+            {locale === 'ko' ? '← 홈으로 가기' : locale === 'ja' ? '← ホームへ戻る' : '← Back to Home'}
+          </Link>
         </div>
       </div>
     </main>

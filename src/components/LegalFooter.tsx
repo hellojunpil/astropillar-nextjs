@@ -7,9 +7,21 @@ export default function LegalFooter({ style }: { style?: React.CSSProperties }) 
   const prefix = locale === 'en' ? '' : `/${locale}`
 
   const labels = {
-    en: { privacy: 'Privacy Policy', terms: 'Terms of Service', refund: 'Refund Policy', copy: `© ${new Date().getFullYear()} PilLAB. All rights reserved.` },
-    ko: { privacy: '개인정보처리방침', terms: '이용약관', refund: '환불정책', copy: `© ${new Date().getFullYear()} 필랩(PilLAB). All rights reserved.` },
-    ja: { privacy: 'プライバシーポリシー', terms: '利用規約', refund: '返金ポリシー', copy: `© ${new Date().getFullYear()} PilLAB. All rights reserved.` },
+    en: {
+      privacy: 'Privacy Policy', terms: 'Terms of Service', refund: 'Refund Policy',
+      copy: `© ${new Date().getFullYear()} PilLAB. All rights reserved.`,
+      biz: 'PilLAB | CEO: Park Junpil | support: bbiribbiri09@gmail.com',
+    },
+    ko: {
+      privacy: '개인정보처리방침', terms: '이용약관', refund: '환불정책',
+      copy: `© ${new Date().getFullYear()} 필랩(PilLAB). All rights reserved.`,
+      biz: '상호: 필랩(PilLAB) | 대표: 박준필 | 고객지원: bbiribbiri09@gmail.com',
+    },
+    ja: {
+      privacy: 'プライバシーポリシー', terms: '利用規約', refund: '返金ポリシー',
+      copy: `© ${new Date().getFullYear()} PilLAB. All rights reserved.`,
+      biz: 'PilLAB | 代表: Park Junpil | サポート: bbiribbiri09@gmail.com',
+    },
   }
   const l = labels[locale as keyof typeof labels] ?? labels.en
 
@@ -25,8 +37,10 @@ export default function LegalFooter({ style }: { style?: React.CSSProperties }) 
     <div style={{
       display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
       padding: '20px 20px 10px',
+      borderTop: '1px solid rgba(201,168,76,0.08)',
       ...style,
     }}>
+      <div style={{ fontSize: 11, color: 'rgba(200,195,220,.35)', textAlign: 'center', lineHeight: 1.7 }}>{l.biz}</div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
         <Link href={`${prefix}/privacy`} style={linkSt}>{l.privacy}</Link>
         <span style={dotSt}>·</span>
