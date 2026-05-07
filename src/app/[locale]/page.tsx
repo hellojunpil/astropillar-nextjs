@@ -5,6 +5,7 @@ import { useTranslations, useLocale } from 'next-intl'
 import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
 import BottomNav from '@/components/BottomNav'
+import LegalFooter from '@/components/LegalFooter'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 import { getTeaserSets, getDmDesc } from '@/lib/landingData'
 
@@ -377,6 +378,7 @@ export default function LandingPage() {
               {locale === 'ko' ? '신규 가입 시 1 크레딧 무료 제공.\n신용카드 불필요.' : locale === 'ja' ? '新規登録で1クレジット無料。\nクレジットカード不要。' : 'New members get 1 FREE Credit on signup.\nNo credit card required.'}
             </div>
           </div>
+          <LegalFooter style={{ paddingBottom: 80 }} />
         </div>
       )}
       <BottomNav />

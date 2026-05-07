@@ -8,6 +8,7 @@ import { usePricing } from '@/hooks/usePricing'
 import { auth } from '@/lib/firebase'
 import { gtagEvent } from '@/lib/gtag'
 import BottomNav from '@/components/BottomNav'
+import LegalFooter from '@/components/LegalFooter'
 
 const GUMROAD_1 = process.env.NEXT_PUBLIC_GUMROAD_URL_1 || ''
 const GUMROAD_5 = process.env.NEXT_PUBLIC_GUMROAD_URL_5 || ''
@@ -193,6 +194,7 @@ export default function BuyPage() {
         </Link>
 
       </div>
+      <LegalFooter style={{ paddingBottom: 24 }} />
       <BottomNav />
     </main>
   )

@@ -821,6 +821,43 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 9. **[P3]** STEP 2 OF 2 → STEP 2 OF 3 표기 수정
 10. **[P3]** Landing Hero 소셜 프루프 강화
 
+**✅ 세션74 완료 — 2026-05-06**
+- ✅ Cloud Run CORS에 프리뷰 URL 추가 (revision 00201-2j4)
+- ✅ test_10 생성 완료 (1990-05-15 ♀ Seoul, 09:30-11:30)
+- ✅ [KO] Personal Fortune — 크레딧 차감 정상, 로딩/프로필 한국어, 그러나 섹션 제목 2~7 영어("Career & Life Path" 등) P1 버그
+- ✅ [KO] Three Card Tarot — UI 전부 영어(카드 포지션/이름/버튼), GPT 리딩 전부 영어 P1 버그
+- ✅ [KO] Relationship Tarot — UI 전부 영어 P1 버그 (리딩 실행 생략)
+- ✅ [KO] Celtic Cross Tarot — UI 전부 영어 P1 버그 (리딩 실행 생략, 2크레딧)
+- ✅ [KO] Today's Fortune (무료) — 3탭 전부 영어 (Daily Tarot/Horoscope/Chinese Zodiac) P1 버그
+- ✅ [KO] 신년 운세 — 로딩/제목/버튼 한국어, 프로필 탭 한국어, 그러나 GPT 리딩 전부 영어 P1 버그 (크레딧 58→56)
+- ✅ [KO] 메뉴 — 전부 한국어, 언어 전환 버튼(EN/한국어/日本語) 정상 ✅
+- ✅ test_11 생성 완료 (1988-03-20 ♀ Tokyo, 13:30-15:30)
+- ✅ [JA] 메뉴 — 전부 일본어 ✅
+- ✅ [JA] 命式・運命鑑定 — GPT 리딩 일본어 출력 ✅, 섹션 제목 7개 모두 일본어 ✅
+- ✅ [JA] Three Card Tarot UI — 영어 ❌ (한국어와 동일)
+- ✅ [JA] Today's Fortune — 전부 영어 ❌ (한국어와 동일)
+- ✅ QA 리포트 저장: C:\Users\SNOOPY\Desktop\result_20260506_1.txt
+
+**KO vs JA 핵심 차이:**
+- KO GPT 리딩: 전부 영어 출력 [P1 버그]
+- JA GPT 리딩: 일본어 정상 출력 ✅ (단 "(Bold Wood)" 등 영어 기술 용어 혼재)
+- 두 언어 공통 미번역: 타로 UI 전체, Today's Fortune 전체, BaZi 차트 레이블
+
+**세션74 QA 종합 점수:**
+| 언어 | 메뉴 | Personal Fortune | 타로 | Today's Fortune | 종합 |
+|------|------|-----------------|------|-----------------|------|
+| 한국어 | 10/10 | 3/10 | 1.25/10 | 1.33/10 | 2.2/10 ❌ |
+| 일본어 | 10/10 | 7.8/10 | -/10 | 1.5/10 | 6.3/10 ⚠️ |
+
+**KO QA 핵심 버그 요약:**
+- [P1] 모든 GPT 리딩 결과가 영어로 출력됨 (한국어 locale에서도) — language 파라미터 미전달 의심
+- [P1] 타로 UI 레이블 전부 영어 (카드 포지션명, 버튼 텍스트 등) — i18n 번역 누락
+- [P1] Today's Fortune (무료) 3탭 전부 영어 — i18n 번역 누락
+- [P1] Personal Fortune 섹션 타이틀 2~7 영어 — i18n 번역 누락
+- [OK] 메뉴 페이지: 완전 한국어 ✅
+- [OK] 크레딧 표시/차감: 정상 ✅
+- [OK] 언어 전환 버튼: 정상 ✅
+
 **✅ 세션73 완료 — 2026-05-05**
 - ✅ ko.json: "명리학+점성술" → "사주+별자리운세" (personal_fortune/daily subtitle)
 - ✅ ko.json: 타로 타이틀 3종 → "과거/현재/미래 타로" / "나와 상대방의 관계 타로" / "심층 분석 타로"
