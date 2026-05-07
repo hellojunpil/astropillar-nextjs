@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { signOut } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
 import BottomNav from './BottomNav'
@@ -24,6 +24,8 @@ export default function ReadingPageShell({
 }: Props) {
   const router = useRouter()
   const t = useTranslations('reading')
+  const locale = useLocale()
+  const buyHref = locale === 'en' ? '/buy' : `/${locale}/buy`
 
   async function handleSignOut() {
     await signOut(auth)
@@ -47,7 +49,7 @@ export default function ReadingPageShell({
           </span>
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <Link href="/buy" style={{
+          <Link href={buyHref} style={{
             background: 'var(--card)', border: '1px solid var(--gold)', borderRadius: 20,
             padding: '6px 12px', textDecoration: 'none',
             display: 'flex', alignItems: 'center', gap: 6,
@@ -86,7 +88,7 @@ export default function ReadingPageShell({
             <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 20 }}>
               {t('not_enough_body', { n: requiredCredits, credits: credits ?? 0 })}
             </p>
-            <Link href="/buy" className="btn-gold" style={{ fontSize: 14, padding: '12px 28px' }}>
+            <Link href={buyHref} className="btn-gold" style={{ fontSize: 14, padding: '12px 28px' }}>
               {t('get_credits')}
             </Link>
           </div>
