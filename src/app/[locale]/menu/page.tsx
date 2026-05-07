@@ -54,7 +54,7 @@ export default function MenuPage() {
           setCredits(0)
         }
       } else {
-        router.push('/login')
+        setIsLoggedIn(false)
       }
       setLoadingCredits(false)
     })
@@ -88,7 +88,7 @@ export default function MenuPage() {
           <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, fontWeight: 700, color: '#C9A84C', letterSpacing: 3 }}>ASTROPILLAR</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <LanguageSwitcher />
-            {!loadingCredits && (
+            {isLoggedIn && !loadingCredits && (
               <Link href="/buy" style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.35)', borderRadius: 20, padding: '6px 12px', textDecoration: 'none' }}>
                 <span style={{ fontSize: 14, fontWeight: 700, color: '#C9A84C' }}>{credits ?? 0}</span>
                 <span style={{ fontSize: 11, color: 'rgba(201,168,76,0.8)' }}>{t('credits_label')}</span>
@@ -105,9 +105,14 @@ export default function MenuPage() {
             <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 2 }}>{t('title')}</div>
             <div style={{ fontSize: 12, color: 'rgba(200,195,220,0.5)' }}>{email}</div>
           </div>
-          <button onClick={handleSignOut} style={{ background: 'none', border: '1px solid rgba(201,168,76,0.25)', borderRadius: 20, color: 'rgba(200,195,220,0.5)', fontFamily, fontSize: 11, padding: '6px 12px', cursor: 'pointer' }}>
-            {t('sign_out')}
-          </button>
+          {isLoggedIn
+            ? <button onClick={handleSignOut} style={{ background: 'none', border: '1px solid rgba(201,168,76,0.25)', borderRadius: 20, color: 'rgba(200,195,220,0.5)', fontFamily, fontSize: 11, padding: '6px 12px', cursor: 'pointer' }}>
+                {t('sign_out')}
+              </button>
+            : !loadingCredits && <Link href="/login" style={{ background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.35)', borderRadius: 20, color: '#C9A84C', fontFamily, fontSize: 11, fontWeight: 700, padding: '6px 14px', textDecoration: 'none' }}>
+                {locale === 'ko' ? '로그인' : locale === 'ja' ? 'ログイン' : 'Sign In'}
+              </Link>
+          }
         </div>
 
         {/* 서비스 카드들 */}
