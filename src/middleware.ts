@@ -33,13 +33,17 @@ export default function middleware(request: NextRequest) {
   // 루트(/) 접속 시 언어 쿠키 확인 → 없으면 IP 감지
   if (pathname === '/' || !pathname.startsWith('/en')) {
     const cookieLocale = request.cookies.get('NEXT_LOCALE')?.value
-    if (cookieLocale && ['ko', 'ja'].includes(cookieLocale)) {
-      const url = request.nextUrl.clone()
-      url.pathname = `/${cookieLocale}${pathname === '/' ? '' : pathname}`
-      return NextResponse.redirect(url)
+    if (cookieLocale && ['en', 'ko', 'ja'].includes(cookieLocale)) {
+      if (cookieLocale !== 'en') {
+        const url = request.nextUrl.clone()
+        url.pathname = `/${cookieLocale}${pathname === '/' ? '' : pathname}`
+        return NextResponse.redirect(url)
+      }
+      // 쿠키가 'en'이면 IP 감지 스킵 → EN 기본값으로 처리
+      return intlMiddleware(request)
     }
 
-    // Vercel IP 감지
+    // Vercel IP 감지 (쿠키 없을 때만)
     const country = request.headers.get('x-vercel-ip-country')
     const detectedLocale = getLocaleFromCountry(country)
     if (detectedLocale) {
