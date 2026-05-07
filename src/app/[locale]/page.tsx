@@ -294,6 +294,7 @@ export default function LandingPage() {
           </div>
         </div>
       )}
+      {view === 'v1' && <LegalFooter style={{ paddingTop: 28, paddingBottom: 96 }} />}
 
       {/* ══════════ VIEW 2: 폼 ══════════ */}
       {view === 'v2' && (
