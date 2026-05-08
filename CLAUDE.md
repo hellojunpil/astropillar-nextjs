@@ -430,9 +430,12 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 - [P2] KO/JA 타로 22장 Firestore 사전 캐싱
 - [P2] 7일치 KO/JA 별자리/띠별 Firestore 데이터 재생성
 
-**다음 작업:**
-- [ ] feature/i18n → main 머지 (오늘 오후)
-- [ ] main 머지 후 astropillar.com 프로덕션 확인
+**배포 완료:**
+- ✅ feature/i18n → master 머지 (commit `5a3446f`)
+- ✅ astropillar.com 프로덕션 반영 확인
+  - `/ko/menu`: 나의 운명 풀이/오늘의 나의 운세/신년 운세/궁합/타로 3종 전부 한국어 ✅
+  - 언어 전환 버튼 EN/한국어/日本語 정상 ✅
+  - 푸터 사업자 정보 한국어 ✅
 
 ---
 
