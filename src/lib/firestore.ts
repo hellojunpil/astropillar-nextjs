@@ -23,6 +23,7 @@ export interface ReadingRecord {
   birth_date: string   // "YYYY-MM-DD"
   birth_city: string
   target_date?: string // for daily
+  locale?: string      // 'en' | 'ko' | 'ja'
   result: unknown
   created_at?: Timestamp
 }
@@ -99,7 +100,8 @@ export async function getCachedReading(
   name: string,
   birth_date: string,
   birth_city: string,
-  target_date?: string
+  target_date?: string,
+  locale?: string
 ): Promise<ReadingRecord | null> {
   try {
     const q = query(
@@ -107,10 +109,14 @@ export async function getCachedReading(
       where('reading_type', '==', reading_type)
     )
     const snap = await getDocs(q)
+    const effectiveLocale = locale || 'en'
     const match = snap.docs.find(d => {
       const r = d.data() as ReadingRecord
       const base = r.name === name && r.birth_date === birth_date && r.birth_city === birth_city
       if (!base) return false
+      // locale 없는 기존 레코드는 'en'으로 간주
+      const recordLocale = r.locale || 'en'
+      if (recordLocale !== effectiveLocale) return false
       if (target_date) return r.target_date === target_date
       return true
     })

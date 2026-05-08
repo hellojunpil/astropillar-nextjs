@@ -52,7 +52,7 @@ export default function DailyFortunePage() {
     setBirthData(data)
     try {
       const birth_date = birthDateStr(data.year, data.month, data.day)
-      const cached = await getCachedReading(user.email, 'daily', data.name, birth_date, data.city, targetDate)
+      const cached = await getCachedReading(user.email, 'daily', data.name, birth_date, data.city, targetDate, locale)
       if (cached) { const sid = await createShare({ reading_type: 'daily', name: data.name, birth_date, birth_city: data.city, result: cached.result, birth_data: data }); setShareId(sid); setResult(cached.result); setFromCache(true); return }
       const birthtime = data.hour !== null
         ? `${String(data.hour).padStart(2,'0')}:${String(data.minute ?? 0).padStart(2,'0')}`
@@ -65,7 +65,7 @@ export default function DailyFortunePage() {
         language: locale,
       })
       await apiPost('/use_pouch', { email: user.email, reading_type: 'personal_daily_fortune' })
-      await saveReading(user.email, { reading_type: 'daily', name: data.name, birth_date, birth_city: data.city, target_date: targetDate, result: raw })
+      await saveReading(user.email, { reading_type: 'daily', name: data.name, birth_date, birth_city: data.city, target_date: targetDate, locale, result: raw })
       const sid = await createShare({ reading_type: 'daily', name: data.name, birth_date, birth_city: data.city, result: raw, birth_data: data })
       setShareId(sid)
       setResult(raw); setFromCache(false); refreshCredits(cost)

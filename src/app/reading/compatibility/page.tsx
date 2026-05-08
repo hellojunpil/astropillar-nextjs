@@ -143,7 +143,7 @@ export default function CompatibilityPage() {
       const cacheKey = `${person1.name}+${person2.name}`
       const cacheDate = `${bd1}+${bd2}`
       const cacheCity = `${person1.birth_city}+${person2.birth_city}`
-      const cached = await getCachedReading(user.email, 'compatibility', cacheKey, cacheDate, cacheCity)
+      const cached = await getCachedReading(user.email, 'compatibility', cacheKey, cacheDate, cacheCity, undefined, locale)
       if (cached) {
         const sid = await createShare({ reading_type: 'compatibility', name: cacheKey, birth_date: cacheDate, birth_city: cacheCity, result: cached.result })
         setShareId(sid)
@@ -168,7 +168,7 @@ export default function CompatibilityPage() {
         language: locale,
       })
       await apiPost('/use_pouch', { email: user.email, reading_type: 'compatibility' })
-      await saveReading(user.email, { reading_type: 'compatibility', name: cacheKey, birth_date: cacheDate, birth_city: cacheCity, result: raw })
+      await saveReading(user.email, { reading_type: 'compatibility', name: cacheKey, birth_date: cacheDate, birth_city: cacheCity, locale, result: raw })
       const sid = await createShare({ reading_type: 'compatibility', name: cacheKey, birth_date: cacheDate, birth_city: cacheCity, result: raw })
       setShareId(sid)
       setResult(raw)

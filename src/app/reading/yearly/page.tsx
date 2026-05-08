@@ -40,7 +40,7 @@ export default function YearlyFortunePage() {
     setBirthData(data)
     try {
       const birth_date = birthDateStr(data.year, data.month, data.day)
-      const cached = await getCachedReading(user.email, 'yearly', data.name, birth_date, data.city)
+      const cached = await getCachedReading(user.email, 'yearly', data.name, birth_date, data.city, undefined, locale)
       if (cached) { const sid = await createShare({ reading_type: 'yearly', name: data.name, birth_date, birth_city: data.city, result: cached.result, birth_data: data }); setShareId(sid); setResult(cached.result); setFromCache(true); return }
       const birthtime = data.hour !== null
         ? `${String(data.hour).padStart(2,'0')}:${String(data.minute ?? 0).padStart(2,'0')}`
@@ -52,7 +52,7 @@ export default function YearlyFortunePage() {
         language: locale,
       })
       await apiPost('/use_pouch', { email: user.email, reading_type: 'yearly' })
-      await saveReading(user.email, { reading_type: 'yearly', name: data.name, birth_date, birth_city: data.city, result: raw })
+      await saveReading(user.email, { reading_type: 'yearly', name: data.name, birth_date, birth_city: data.city, locale, result: raw })
       const sid = await createShare({ reading_type: 'yearly', name: data.name, birth_date, birth_city: data.city, result: raw, birth_data: data })
       setShareId(sid)
       setResult(raw); setFromCache(false); refreshCredits(cost)
