@@ -306,7 +306,7 @@ export default function RelationshipPage() {
             birth_date: '', birth_city: '',
             result: {
               content_text: res.content_text,
-              cards: slots.map((c, i) => ({ name: c?.name, position: POSITIONS[i].label, file: c?.file })),
+              cards: slots.map((c, i) => ({ name: c?.name, position: pos[i].label, file: c?.file })),
               question: question.trim(),
               relationship_type: relType,
             },
@@ -330,7 +330,7 @@ export default function RelationshipPage() {
     try {
       const res = await apiPost<{ content_text: string }>('/tarot/scenario', {
         cards: slots.map(c => c?.name ?? ''),
-        positions: POSITIONS.map(p => p.label),
+        positions: pos.map(p => p.label),
         spread_type: 'relationship',
         original_question: question.trim() || null,
         scenario_question: scenarioQ.trim(),
@@ -348,7 +348,7 @@ export default function RelationshipPage() {
             birth_date: '', birth_city: '',
             result: {
               content_text: res.content_text,
-              cards: slots.map((c, i) => ({ name: c?.name, position: POSITIONS[i].label, file: c?.file })),
+              cards: slots.map((c, i) => ({ name: c?.name, position: pos[i].label, file: c?.file })),
               spread_type: 'relationship',
               scenario_question: scenarioQ.trim(),
               original_question: question.trim() || null,
@@ -426,7 +426,7 @@ export default function RelationshipPage() {
 
             {/* 2×2 slot grid */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
-              {POSITIONS.map((pos, i) => {
+              {pos.map((position, i) => {
                 const card = slots[i]
                 const entering = slotEntering.has(i)
                 return (
@@ -440,7 +440,7 @@ export default function RelationshipPage() {
                     }}>
                       {card ? <CardBack size="md" /> : <span style={{ color: 'rgba(201,168,76,0.3)', fontSize: 22 }}>✦</span>}
                     </div>
-                    <p style={{ color: card ? 'var(--gold)' : 'var(--text-muted)', fontSize: 11, fontWeight: 600 }}>{pos[i].label}</p>
+                    <p style={{ color: card ? 'var(--gold)' : 'var(--text-muted)', fontSize: 11, fontWeight: 600 }}>{position.label}</p>
                   </div>
                 )
               })}

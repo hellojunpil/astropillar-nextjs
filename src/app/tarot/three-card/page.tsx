@@ -294,7 +294,7 @@ export default function ThreeCardPage() {
             birth_date: '', birth_city: '',
             result: {
               content_text: res.content_text,
-              cards: slots.map((c, i) => ({ name: c?.name, position: POSITIONS[i].label, file: c?.file })),
+              cards: slots.map((c, i) => ({ name: c?.name, position: pos[i].label, file: c?.file })),
               question: question.trim(),
             },
           }),
@@ -317,7 +317,7 @@ export default function ThreeCardPage() {
     try {
       const res = await apiPost<{ content_text: string }>('/tarot/scenario', {
         cards: slots.map(c => c?.name ?? ''),
-        positions: POSITIONS.map(p => p.label),
+        positions: pos.map(p => p.label),
         spread_type: 'three_card',
         original_question: question.trim() || null,
         scenario_question: scenarioQuestion.trim(),
@@ -335,7 +335,7 @@ export default function ThreeCardPage() {
             birth_date: '', birth_city: '',
             result: {
               content_text: res.content_text,
-              cards: slots.map((c, i) => ({ name: c?.name, position: POSITIONS[i].label, file: c?.file })),
+              cards: slots.map((c, i) => ({ name: c?.name, position: pos[i].label, file: c?.file })),
               spread_type: 'three_card',
               scenario_question: scenarioQuestion.trim(),
               original_question: question.trim() || null,
@@ -411,7 +411,7 @@ export default function ThreeCardPage() {
 
             {/* Slot preview */}
             <div style={{ display: 'flex', gap: 12, marginBottom: 20, justifyContent: 'center' }}>
-              {POSITIONS.map((pos, i) => {
+              {pos.map((position, i) => {
                 const card = slots[i]
                 const entering = slotEntering.has(i)
                 return (
@@ -428,7 +428,7 @@ export default function ThreeCardPage() {
                     }}>
                       {card ? <CardBack size="md" /> : <span style={{ color: 'rgba(201,168,76,0.3)', fontSize: 24 }}>✦</span>}
                     </div>
-                    <p style={{ color: card ? 'var(--gold)' : 'var(--text-muted)', fontSize: 11, fontWeight: 600 }}>{pos[i].label}</p>
+                    <p style={{ color: card ? 'var(--gold)' : 'var(--text-muted)', fontSize: 11, fontWeight: 600 }}>{position.label}</p>
                   </div>
                 )
               })}
