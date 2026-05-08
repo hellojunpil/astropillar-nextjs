@@ -3,7 +3,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { apiPost } from '@/lib/api'
 import { BirthData } from './BirthForm'
 import { usePricing } from '@/hooks/usePricing'
@@ -22,7 +22,11 @@ const ZODIAC_SYMBOL: Record<string, string> = {
   libra:'♎︎',scorpio:'♏︎',sagittarius:'♐︎',capricorn:'♑︎',aquarius:'♒︎',pisces:'♓︎',
 }
 
-const PILLAR_LABELS = ['YEAR','MONTH','DAY','HOUR']
+const PILLAR_LABELS_MAP: Record<string, string[]> = {
+  ko: ['연도','월','일','시'],
+  ja: ['年','月','日','時'],
+}
+const PILLAR_LABELS_EN = ['YEAR','MONTH','DAY','HOUR']
 const PILLAR_KEYS = ['year','month','day','hour']
 
 // Day stem → romanized key & element
@@ -322,19 +326,24 @@ function RichText({ text }: { text: string }) {
 }
 
 // ── Radar (Hexagonal) Chart ──────────────────────────────────────────
-const RADAR_AXES = ['Love','Career','Wealth','Health','Vitality','Life']
+const RADAR_AXES_MAP: Record<string, string[]> = {
+  ko: ['사랑','커리어','재물','건강','활력','인생'],
+  ja: ['恋愛','キャリア','財運','健康','活力','人生'],
+}
+const RADAR_AXES_EN = ['Love','Career','Wealth','Health','Vitality','Life']
 const RADAR_KEYS = ['love','career','wealth','health','vitality','life']
 const RADAR_COLORS = ['#f472b6','#a78bfa','#fbbf24','#34d399','#60a5fa','#C9A84C']
 
-function RadarChart({ scores }: { scores: Record<string, number> }) {
-  const N = RADAR_AXES.length
+function RadarChart({ scores, axes }: { scores: Record<string, number>; axes?: string[] }) {
+  const radarAxes = axes ?? RADAR_AXES_EN
+  const N = radarAxes.length
   const R = 72, CX = 105, CY = 105, W = 210, H = 210
   const pt = (i: number, val: number): [number, number] => {
     const angle = (i * 2 * Math.PI / N) - Math.PI / 2
     const r = (val / 100) * R
     return [CX + r * Math.cos(angle), CY + r * Math.sin(angle)]
   }
-  const axisPts = RADAR_AXES.map((_, i) => pt(i, 100))
+  const axisPts = radarAxes.map((_, i) => pt(i, 100))
   const dataPts = RADAR_KEYS.map((k, i) => pt(i, scores[k] ?? 50))
   const poly = (pts: [number,number][]) => pts.map(([x,y]) => `${x},${y}`).join(' ')
   const gridLevels = [0.25, 0.5, 0.75, 1.0]
@@ -342,7 +351,7 @@ function RadarChart({ scores }: { scores: Record<string, number> }) {
     <div style={{ display:'flex', flexDirection:'column', alignItems:'center', marginBottom:4 }}>
       <svg width={W} height={H} style={{ maxWidth:'100%', overflow:'visible' }}>
         {gridLevels.map((lv, li) => (
-          <polygon key={li} points={poly(RADAR_AXES.map((_,i) => pt(i, lv*100)))}
+          <polygon key={li} points={poly(radarAxes.map((_,i) => pt(i, lv*100)))}
             fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="1" />
         ))}
         {axisPts.map(([x,y], i) => (
@@ -352,7 +361,7 @@ function RadarChart({ scores }: { scores: Record<string, number> }) {
         {dataPts.map(([x,y], i) => (
           <circle key={i} cx={x} cy={y} r="3" fill={RADAR_COLORS[i]} />
         ))}
-        {RADAR_AXES.map((label, i) => {
+        {radarAxes.map((label, i) => {
           const [x, y] = pt(i, 112)
           const anchor = x < CX - 4 ? 'end' : x > CX + 4 ? 'start' : 'middle'
           const score = Math.round(scores[RADAR_KEYS[i]] ?? 50)
@@ -1081,6 +1090,9 @@ interface Props {
 
 export default function ReadingResult({ raw, onReset, userEmail, fromCache, birthData, shareId, isSharedView }: Props) {
   const t = useTranslations('reading')
+  const locale = useLocale()
+  const pillarLabels = PILLAR_LABELS_MAP[locale] ?? PILLAR_LABELS_EN
+  const radarAxes = RADAR_AXES_MAP[locale] ?? RADAR_AXES_EN
   const [chartTab, setChartTab] = useState<'bazi'|'elements'|'astrology'>('bazi')
   const [personTab, setPersonTab] = useState<'p1'|'p2'>('p1')
 
@@ -1214,7 +1226,7 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
                   <div style={{ display:'grid', gridTemplateColumns:`repeat(${activePillars.length},1fr)`, gap:10, marginBottom:16 }}>
                     {activePillars.map((p,i) => (
                       <div key={i} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
-                        <p style={{ color:'var(--text-muted)', fontSize:9, letterSpacing:1.5, textTransform:'uppercase' }}>{PILLAR_LABELS[i]}</p>
+                        <p style={{ color:'var(--text-muted)', fontSize:9, letterSpacing:1.5, textTransform:'uppercase' }}>{pillarLabels[i]}</p>
                         <Image src={ganImg(p.gan)} alt={p.gan} width={56} height={56} unoptimized style={{ borderRadius:8 }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
                         <p style={{ color:'rgba(201,168,76,0.75)', fontSize:8, textAlign:'center', lineHeight:1.3 }}>
                           {p.gan}{GAN_LABELS[p.gan] ? ` (${GAN_LABELS[p.gan]})` : ''}
@@ -1309,7 +1321,7 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
           <p style={{ color:'var(--gold)', fontSize:11, fontWeight:700, letterSpacing:2, textTransform:'uppercase', textAlign:'center', marginBottom:2, fontFamily:"'Cormorant Garamond', serif" }}>
             {data.reading_type === 'personal_daily_fortune' ? t('todays_fortune') : t('lifetime_fortune')}
           </p>
-          <RadarChart scores={data.overall_scores as Record<string,number>} />
+          <RadarChart scores={data.overall_scores as Record<string,number>} axes={radarAxes} />
           {data.reading_type === 'personal_daily_fortune' && data.am_pm_scores != null && (
             <div style={{ display:'flex', justifyContent:'center', marginTop:4 }}>
               <AmPmBarChart

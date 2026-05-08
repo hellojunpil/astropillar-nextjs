@@ -42,6 +42,37 @@ const RELATIONSHIPS = [
   'Celebrity Crush',
 ]
 
+const RELATIONSHIPS_DISPLAY: Record<string, Record<string, string>> = {
+  ko: {
+    'Romantic Partner': '연인',
+    'Crush': '짝사랑',
+    'Ex': '전 연인',
+    'Friend': '친구',
+    'Business Partner': '비즈니스 파트너',
+    'Parent': '부모님',
+    'Brother/Sister': '형제/자매',
+    'My Child': '내 자녀',
+    'Coworker': '동료',
+    'Boss': '상사',
+    'Junior Colleague': '부하직원',
+    'Celebrity Crush': '좋아하는 연예인',
+  },
+  ja: {
+    'Romantic Partner': '恋愛パートナー',
+    'Crush': '片思い',
+    'Ex': '元恋人',
+    'Friend': '友人',
+    'Business Partner': 'ビジネスパートナー',
+    'Parent': '親',
+    'Brother/Sister': '兄弟・姉妹',
+    'My Child': '子ども',
+    'Coworker': '同僚',
+    'Boss': '上司',
+    'Junior Colleague': '後輩',
+    'Celebrity Crush': '推し',
+  },
+}
+
 const inputStyle: React.CSSProperties = {
   background: '#0f1829', border: '1px solid var(--border)', borderRadius: 10,
   color: '#fff', padding: '11px 14px', fontSize: 14, width: '100%', outline: 'none',
@@ -232,7 +263,7 @@ export default function CompatibilityPage() {
             <div>
               <label style={labelStyle}>{t('relationship_label')}</label>
               <select style={inputStyle} value={relationship} onChange={e => setRelationship(e.target.value)}>
-                {RELATIONSHIPS.map(r => <option key={r} value={r}>{r}</option>)}
+                {RELATIONSHIPS.map(r => <option key={r} value={r}>{RELATIONSHIPS_DISPLAY[locale]?.[r] ?? r}</option>)}
               </select>
             </div>
           </div>
