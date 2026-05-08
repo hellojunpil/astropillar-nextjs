@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useLocale } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
 import { usePricing } from '@/hooks/usePricing'
 import { apiPost } from '@/lib/api'
@@ -165,6 +166,7 @@ function ProgressRing({ pct }: { pct: number }) {
 export default function CelticCrossPage() {
   const { user, credits, loading, refreshCredits } = useAuth()
   const pricing = usePricing()
+  const locale = useLocale()
   const cost = pricing.tarot_celtic_cross ?? 2
   const scenarioCost = pricing.scenario ?? 1
 
@@ -225,6 +227,7 @@ export default function CelticCrossPage() {
         spread_type: 'celtic_cross',
         original_question: question.trim() || null,
         scenario_question: scenarioQ.trim(),
+        language: locale,
       })
       gtagEvent('reading_tarot_scenario', { spread: 'celtic_cross' })
       setScenarioText(res.content_text)
@@ -257,6 +260,7 @@ export default function CelticCrossPage() {
       const res = await apiPost<{ content_text: string }>('/tarot/celtic_cross', {
         question: question.trim(),
         cards: slots.map(c => c?.name ?? ''),
+        language: locale,
       })
       setLoadPct(99)
       if (user?.email) {

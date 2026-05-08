@@ -395,7 +395,81 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 
 ## 다음 세션 시작 가이드
 
-> 마지막 작업: 2026-05-03 세션69 완료
+> 마지막 작업: 2026-05-08 세션78 완료
+
+### ✅ 세션78 완료 — 2026-05-08
+
+**작업 목록:**
+1. ✅ **KO 타로 Three Card QA** — GPT 리딩 영어 출력 P1 버그 확인
+2. ✅ **JA 타로 Three Card QA** — GPT 리딩 영어 출력 P1 버그 확인
+3. ✅ **KO 신년 운세 QA** — 섹션 타이틀 + BaZi 기둥 + 본문 전부 한국어 ✅
+4. ✅ **JA 신년 운세 QA** — 섹션 타이틀 + BaZi 기둥 + 본문 전부 일본어 ✅ (크레딧 4→2 차감)
+5. ✅ **종합 QA 보고서** — C:\Users\SNOOPY\Desktop\result_20260508_4.txt
+
+**QA 결과 (세션78):**
+| 서비스 | KO | JA | 상태 |
+|--------|----|----|------|
+| 신년 운세 섹션 | 2026 한눈에 보기 등 7개 ✅ | 2026年 総括 등 7개 ✅ | ✅ |
+| 신년 운세 BaZi | 연도/월/일/시 ✅ | 年/月/日/時 ✅ | ✅ |
+| 신년 운세 본문 | 한국어 ✅ | 일본어 ✅ | ✅ |
+| 타로 Three Card UI | 영어 ❌ | 영어 ❌ | P1 ❌ |
+| 타로 Three Card GPT | 영어 ❌ | 영어 ❌ | P1 ❌ |
+
+**P1 버그 (미수정):**
+- 타로 3종 (Three Card/Relationship/Celtic Cross): language 파라미터 미전달 → GPT 리딩 언어 고정(영어)
+  - 수정 위치: `src/app/tarot/*/page.tsx` API 호출에 `language: locale` 추가
+
+**세션77~78 i18n 완성도:**
+| 서비스 | KO | JA |
+|--------|----|----|
+| 평생 운명 | 9.5/10 ✅ | 9.5/10 ✅ |
+| 오늘의 나 | 9.5/10 ✅ | 9.5/10 ✅ |
+| 신년 운세 | 9.5/10 ✅ | 9.5/10 ✅ |
+| 궁합 | 9.5/10 ✅ | 9.5/10 ✅ |
+| Today's Fortune | 9.0/10 ✅ | 9.0/10 ✅ |
+| 타로 3종 | 2.0/10 ❌ | 2.0/10 ❌ |
+
+**남은 i18n 작업:**
+- [ ] **[P1] 타로 3종 language 파라미터 수정** — `src/app/tarot/*/page.tsx`
+- [ ] EN 전체 서비스 회귀 테스트
+- [ ] KO/JA 타로 22장 Firestore 사전 캐싱 (P2)
+- [ ] 7일치 KO/JA 별자리/띠별 Firestore 데이터 재생성 (P2)
+- [ ] feature/i18n → main 머지 타이밍 결정
+
+---
+
+### ✅ 세션77 완료 — 2026-05-08
+
+**작업 목록:**
+1. ✅ **Vercel 배포 검증** — commit `9bbe5ee` (PILLAR_LABELS/RADAR_AXES/관계 드롭다운 한국어) 정상 배포 확인
+2. ✅ **Cloud Run 최종 상태** — revision `00208-rs4` (오프닝 문장 현지화 포함)
+3. ✅ **KO 궁합 QA** — kotest_a(1987-10-05)/kotest_b(1992-03-22) 신규 인물로 캐시 없는 리딩 검증
+
+**QA 결과 (세션77 — KO 신규 리딩 기준):**
+| 서비스 | 섹션 타이틀 | 레이더 차트 | 사주 기둥 | 본문 | 상태 |
+|--------|------------|------------|---------|------|------|
+| 궁합 | 두 사람은 누구인가 등 6개 ✅ | 연결감/케미/소통/갈등 해결/성장/지속성 ✅ | 연도/월/일/시 ✅ | 한국어 ✅ | ✅ |
+| 평생 운명 | 커리어 & 인생 경로 등 7개 ✅ | 사랑/커리어/재물/건강/활력/인생 ✅ | 연도/월/일/시 ✅ | 한국어 ✅ | ✅ |
+| 오늘의 나 | 커리어 & 집중 등 6개 ✅ | 사랑/커리어/재물/건강/활력/인생 ✅ | 연도/월/일/시 ✅ | 한국어 ✅ | ✅ |
+| 관계 유형 드롭다운 | — | — | — | 연인/짝사랑 등 한국어 ✅ | ✅ |
+
+**Cloud Run 배포 이력 (세션76~77):**
+- revision `00207-cwn` — compatibility/personal_fortune/personal_daily 섹션 헤더 KO/JA 현지화
+- revision `00208-rs4` — compatibility 오프닝 문장 KO/JA 현지화
+
+**수정된 프론트엔드 (커밋 `9bbe5ee`):**
+- `ReadingResult.tsx`: PILLAR_LABELS_MAP / RADAR_AXES_MAP (ko/ja/en) 추가, RadarChart `axes` prop 추가
+- `reading/compatibility/page.tsx`: RELATIONSHIPS_DISPLAY 한국어/일본어 매핑 추가
+
+**남은 i18n 작업:**
+- [ ] JA 전체 서비스 QA (섹션 타이틀 + 레이더 + 사주 기둥)
+- [ ] EN 전체 서비스 테스트 (회귀 없음 확인)
+- [ ] KO/JA 신년 운세 섹션 타이틀 QA
+- [ ] KO/JA 타로 3종 QA
+- [ ] KO/JA 별자리/띠별 Firestore 데이터 7일치 재생성
+- [ ] KO/JA 타로 22장 Firestore 사전 캐싱
+
+---
 
 ### ✅ 세션69 완료 — 2026-05-03
 
@@ -857,6 +931,59 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 - [OK] 메뉴 페이지: 완전 한국어 ✅
 - [OK] 크레딧 표시/차감: 정상 ✅
 - [OK] 언어 전환 버튼: 정상 ✅
+
+**✅ 세션76 완료 — 2026-05-08**
+- ✅ main.py: build_compatibility_prompt() KO/JA 섹션 헤더 현지화 (두 사람은 누구인가 / 두 사람의 소통 방식 / 잘 맞는 부분 / 힘든 부분 / 함께 성장하는 방법 / 궁합 총평)
+- ✅ main.py: build_compatibility_prompt() COMPAT_SCORES 레이블 현지화 (연결감/케미/소통/갈등 해결/성장/지속성)
+- ✅ main.py: build_personal_fortune_prompt() KO/JA 섹션 헤더 현지화 (나는 누구인가 / 커리어 & 인생 경로 / 사랑 & 인간관계 / 재물 & 돈 / 건강 & 활력 / 인생 챕터 / 기억해야 할 한 가지)
+- ✅ main.py: build_personal_daily_prompt() KO/JA 섹션 헤더 현지화 (오늘의 나 / 커리어 & 집중 / 사랑 & 인간관계 / 재물 & 기회 / 건강 & 활력 / 오늘의 한 가지)
+- ✅ Cloud Run 배포: revision 00207-cwn
+
+**세션76 QA 결과:**
+| 서비스 | 언어 | 섹션 타이틀 | 본문 | 상태 |
+|--------|------|-----------|------|------|
+| 궁합 | KO | 전부 한국어 ✅ | 한국어 ✅ | 9/10 |
+| 레이더 차트 | KO | 연결감/케미/소통 등 ✅ | — | ✅ |
+| 평생 운명 | KO | 전부 한국어 ✅ | 한국어 ✅ | 9/10 |
+| 오늘의 나 | KO | 전부 한국어 ✅ | 한국어 ✅ | 9/10 |
+
+**미완료 항목 (다음 세션):**
+- [ ] KO 신년 운세 신규 리딩으로 섹션 타이틀 검증 (revision 00206-7kp에서 수정됨, 캐시로 미확인)
+- [ ] JA 궁합 / 평생 운명 / 오늘의 나 섹션 타이틀 검증
+- [ ] 레이더 차트 LOVE/CAREER/WEALTH 레이블 KO/JA 현지화 (personal fortune/daily)
+- [ ] BaZi 차트 YEAR/MONTH/DAY/HOUR 레이블 현지화
+- [ ] 관계 유형 드롭다운 KO/JA 번역
+- [ ] KO/JA 타로 22장 Firestore 사전 캐싱
+- [ ] EN 전체 서비스 테스트
+- [ ] 7일치 KO/JA 별자리/띠별 Firestore 데이터 재생성
+
+**✅ 세션75 완료 — 2026-05-07**
+- ✅ today/page.tsx: HOROSCOPE_NAMES/CHINESE_NAMES/MOON_PHASE_NAMES 3개 로케일 맵 추가
+- ✅ today/page.tsx: UI_TEXT에 moonPhaseLabel/illuminated/monthPlaceholder/dayPlaceholder/scoreLabels 추가
+- ✅ today/page.tsx: SCORE_ITEMS 하드코딩 label 제거, scoreLabels[s.key]로 동적 표시
+- ✅ today/page.tsx: 타로 Firestore EN 캐시 폴백 제거 (locale API 직접 호출)
+- ✅ main.py: generate_tarot_card_fortune() KO/JA 섹션 헤더 로케일화 (카드/오늘의 메시지/오늘 할 한 가지)
+- ✅ Cloud Run 배포: revision 00205-2zl
+- ✅ [locale]/menu/page.tsx: 헤더 크레딧 배지 /buy → locale-aware href
+- ✅ ReadingPageShell.tsx: /buy → locale-aware href (useLocale 추가)
+- ✅ middleware.ts: NEXT_LOCALE=en 쿠키 시 IP 감지 스킵 (KR IP 우회)
+- ✅ 커밋: fdd5ccd → bf1635f → 4465c0a (feature/i18n)
+
+**세션75 QA 결과 (수정 후 기준):**
+| 서비스 | 언어 | 점수 | 상태 |
+|--------|------|------|------|
+| 타로 | KO | 9/10 | ✅ 헤더+본문 한국어 |
+| 타로 | JA | 9/10 | ✅ 헤더+본문 일본어 |
+| 별자리 | KO | 9/10 | ✅ 수정 후 |
+| 별자리 | JA | 10/10 | ✅ 완전 일본어 |
+| 띠별 운세 | KO | 8/10 | ✅ |
+| 띠별 운세 | JA | 9/10 | ✅ 완전 일본어 |
+| 평생 운명 리딩 | KO | 8/10 | ✅ |
+
+**미완료 항목 (다음 세션):**
+- [ ] KO/JA 타로 22장 Firestore 사전 캐싱 (매일 API 직접 호출 → 응답 느림)
+- [ ] EN test11 전체 서비스 테스트 (Vercel 배포 후 쿠키로 EN 전환)
+- [ ] 7일치 KO/JA 별자리/띠별 Firestore 데이터 재생성
 
 **✅ 세션73 완료 — 2026-05-05**
 - ✅ ko.json: "명리학+점성술" → "사주+별자리운세" (personal_fortune/daily subtitle)

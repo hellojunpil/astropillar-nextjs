@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useLocale } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
 import { usePricing } from '@/hooks/usePricing'
 import { apiPost } from '@/lib/api'
@@ -131,6 +132,7 @@ function CardGrid({ slots, revealed }: { slots: (TarotCard | null)[]; revealed: 
 export default function RelationshipPage() {
   const { user, credits, loading, refreshCredits } = useAuth()
   const pricing = usePricing()
+  const locale = useLocale()
   const cost = pricing.tarot_relationship ?? 1
   const scenarioCost = pricing.scenario ?? 1
 
@@ -185,6 +187,7 @@ export default function RelationshipPage() {
         question: question.trim() || null,
         relationship_type: relType,
         cards: slots.map(c => c?.name ?? ''),
+        language: locale,
       })
       setLoadPct(99)
       if (user?.email) {
@@ -224,6 +227,7 @@ export default function RelationshipPage() {
         spread_type: 'relationship',
         original_question: question.trim() || null,
         scenario_question: scenarioQ.trim(),
+        language: locale,
       })
       gtagEvent('reading_tarot_scenario', { spread: 'relationship' })
       setScenarioText(res.content_text)

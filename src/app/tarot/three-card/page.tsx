@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useLocale } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
 import { usePricing } from '@/hooks/usePricing'
 import { apiPost } from '@/lib/api'
@@ -126,6 +127,7 @@ function CardStrip({ slots, revealed }: { slots: (TarotCard | null)[]; revealed:
 export default function ThreeCardPage() {
   const { user, credits, loading, refreshCredits } = useAuth()
   const pricing = usePricing()
+  const locale = useLocale()
   const cost = pricing.tarot_three_card ?? 1
   const scenarioCost = pricing.scenario ?? 1
 
@@ -178,6 +180,7 @@ export default function ThreeCardPage() {
       const res = await apiPost<{ content_text: string }>('/tarot/three_card', {
         question: question.trim(),
         cards: slots.map(c => c?.name ?? ''),
+        language: locale,
       })
       setLoadPct(99)
       if (user?.email) {
@@ -216,6 +219,7 @@ export default function ThreeCardPage() {
         spread_type: 'three_card',
         original_question: question.trim() || null,
         scenario_question: scenarioQuestion.trim(),
+        language: locale,
       })
       gtagEvent('reading_tarot_scenario', { spread: 'three_card' })
       setScenarioText(res.content_text)
