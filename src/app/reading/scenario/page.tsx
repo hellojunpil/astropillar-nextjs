@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { useLocale, useTranslations } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
 import { usePricing } from '@/hooks/usePricing'
 import { BirthData } from '@/components/BirthForm'
@@ -11,18 +12,13 @@ import { gtagEvent } from '@/lib/gtag'
 import { saveReading, createShare, birthDateStr, getPeople, SavedPerson } from '@/lib/firestore'
 import ReadingLoader from '@/components/ReadingLoader'
 
-const EXAMPLE_QUESTIONS = [
-  "Should I quit my job and start my own business?",
-  "Will I find love this year?",
-  "Is this person the right one for me?",
-  "Should I move to a new city?",
-  "When will my financial situation improve?",
-]
-
 export default function ScenarioPage() {
   const { user, credits, loading, refreshCredits } = useAuth()
+  const locale = useLocale()
+  const t = useTranslations('reading')
   const pricing = usePricing()
   const cost = pricing.scenario
+  const exampleQuestions = t.raw('scenario_questions') as string[]
   const [birthData, setBirthData] = useState<BirthData | null>(null)
   const [question, setQuestion] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -66,6 +62,7 @@ export default function ScenarioPage() {
         birthtime, sex: birthData.sex, city: birthData.city,
         reading_type: 'situation', custom_situation: question.trim(),
         user_name: birthData.name, birth_year: birthData.year,
+        language: locale,
       })
       await apiPost('/use_pouch', { email: user.email, reading_type: 'scenario' })
       const birth_date = birthDateStr(birthData.year, birthData.month, birthData.day)
@@ -84,7 +81,7 @@ export default function ScenarioPage() {
   if (loading) return <LoadingScreen />
 
   return (
-    <ReadingPageShell title="Scenario Reading" subtitle="Get cosmic guidance on a specific situation — ask anything" emoji="🔮" badge={`${cost} Credit${cost !== 1 ? 's' : ''}`} badgeColor="#a78bfa" credits={credits} requiredCredits={cost} inProgress={submitting || !!result}>
+    <ReadingPageShell title={t('scenario_title')} subtitle={t('scenario_sub')} emoji="🔮" badge={`${cost} ${t('credit_unit')}`} badgeColor="#a78bfa" credits={credits} requiredCredits={cost} inProgress={submitting || !!result}>
       {result ? (
         <ReadingResult raw={result} onReset={() => { setResult(null); setStep('form'); setBirthData(null); setQuestion(''); setShareId(null) }} userEmail={user?.email ?? undefined} shareId={shareId ?? undefined} />
       ) : submitting ? (
@@ -92,9 +89,9 @@ export default function ScenarioPage() {
       ) : step === 'form' ? (
         <div className="card">
           <p style={{ color:'var(--text-muted)', fontSize:13, marginBottom:20 }}>
-            First, select whose chart to read for your question.
+            {t('scenario_first_step')}
           </p>
-          <PersonPicker people={people} onSubmit={handlePersonSelect} loading={false} submitLabel="Next → Ask Your Question" userEmail={user?.email ?? ''} onPeopleChange={setPeople} />
+          <PersonPicker people={people} onSubmit={handlePersonSelect} loading={false} submitLabel={t('scenario_next_btn')} userEmail={user?.email ?? ''} onPeopleChange={setPeople} />
         </div>
       ) : (
         <form onSubmit={handleQuestionSubmit} style={{ display:'flex', flexDirection:'column', gap:16 }}>
@@ -105,21 +102,21 @@ export default function ScenarioPage() {
                   <p style={{ color:'var(--gold)', fontSize:13, fontWeight:600 }}>{birthData.name}</p>
                   <p style={{ color:'var(--text-muted)', fontSize:11, marginTop:2 }}>{birthData.city}</p>
                 </div>
-                <button type="button" onClick={() => setStep('form')} style={{ background:'none', border:'none', color:'var(--text-muted)', fontSize:12, cursor:'pointer' }}>Change</button>
+                <button type="button" onClick={() => setStep('form')} style={{ background:'none', border:'none', color:'var(--text-muted)', fontSize:12, cursor:'pointer' }}>{t('change')}</button>
               </div>
             )}
-            <p style={{ color:'var(--gold)', fontSize:11, letterSpacing:2, textTransform:'uppercase', marginBottom:12 }}>Your Question</p>
+            <p style={{ color:'var(--gold)', fontSize:11, letterSpacing:2, textTransform:'uppercase', marginBottom:12 }}>{t('your_question_label')}</p>
             <textarea
               value={question}
               onChange={e => setQuestion(e.target.value)}
-              placeholder="What do you want the stars to reveal?"
+              placeholder={t('question_placeholder')}
               rows={4}
               style={{ background:'#0f1829', border:'1px solid var(--border)', borderRadius:10, color:'#fff', padding:'12px 14px', fontSize:14, width:'100%', outline:'none', resize:'vertical', fontFamily:"'Noto Sans', sans-serif", lineHeight:1.6 }}
             />
             <div style={{ marginTop:14 }}>
-              <p style={{ color:'var(--text-muted)', fontSize:11, marginBottom:8 }}>Or try one of these:</p>
+              <p style={{ color:'var(--text-muted)', fontSize:11, marginBottom:8 }}>{t('try_these')}</p>
               <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-                {EXAMPLE_QUESTIONS.map((q, i) => (
+                {exampleQuestions.map((q, i) => (
                   <button key={i} type="button" onClick={() => setQuestion(q)} style={{ textAlign:'left', background:'none', border:'1px solid var(--border)', borderRadius:8, padding:'8px 12px', color:'var(--text-muted)', fontSize:12, cursor:'pointer' }}
                     onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--gold)')}
                     onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border)')}
@@ -133,11 +130,11 @@ export default function ScenarioPage() {
 
           <div style={{ display:'flex', gap:10 }}>
             <button type="button" onClick={() => setStep('form')} style={{ flex:'0 0 auto', background:'none', border:'1px solid var(--border)', color:'var(--text-muted)', borderRadius:50, padding:'13px 20px', fontSize:13, cursor:'pointer' }}>
-              ← Back
+              {t('back')}
             </button>
             <button type="submit" disabled={!question.trim() || submitting} className="btn-gold" style={{ flex:1, opacity:(!question.trim() || submitting) ? 0.5 : 1, cursor:(!question.trim() || submitting) ? 'not-allowed' : 'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
-              {submitting ? '✦ Consulting the stars...' : (
-                <>Reveal the Answer <span style={{ background:'rgba(22,33,62,0.6)', borderRadius:20, padding:'2px 10px', fontSize:12 }}>{cost} Credit{cost !== 1 ? 's' : ''}</span></>
+              {submitting ? t('consulting_stars') : (
+                <>{t('reveal_answer')} <span style={{ background:'rgba(22,33,62,0.6)', borderRadius:20, padding:'2px 10px', fontSize:12 }}>{cost} {t('credit_unit')}</span></>
               )}
             </button>
           </div>

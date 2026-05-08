@@ -1,0 +1,66 @@
+name: Generate Daily Tarot (KO/JA)
+
+on:
+  schedule:
+    - cron: '0 15 * * *'   # 매일 15:00 UTC = 자정 KST
+  workflow_dispatch:         # 수동 실행 버튼
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate KO/JA tarot for today
+        run: |
+          API_BASE="https://snap-pillar-api-944836465041.asia-northeast3.run.app"
+          IMG_BASE="https://raw.githubusercontent.com/hellojunpil/astropillar_images/main/"
+
+          declare -A CARDS
+          CARDS=(
+            ["The Fool"]="major_arcana_fool"
+            ["The Magician"]="major_arcana_magician"
+            ["The High Priestess"]="major_arcana_priestess"
+            ["The Empress"]="major_arcana_empress"
+            ["The Emperor"]="major_arcana_emperor"
+            ["The Hierophant"]="major_arcana_hierophant"
+            ["The Lovers"]="major_arcana_lovers"
+            ["The Chariot"]="major_arcana_chariot"
+            ["Strength"]="major_arcana_strength"
+            ["The Hermit"]="major_arcana_hermit"
+            ["Wheel of Fortune"]="major_arcana_fortune"
+            ["Justice"]="major_arcana_justice"
+            ["The Hanged Man"]="major_arcana_hanged"
+            ["Death"]="major_arcana_death"
+            ["Temperance"]="major_arcana_temperance"
+            ["The Devil"]="major_arcana_devil"
+            ["The Tower"]="major_arcana_tower"
+            ["The Star"]="major_arcana_star"
+            ["The Moon"]="major_arcana_moon"
+            ["The Sun"]="major_arcana_sun"
+            ["Judgement"]="major_arcana_judgement"
+            ["The World"]="major_arcana_world"
+          )
+
+          DONE=0
+          FAIL=0
+
+          for LANG in ko ja; do
+            echo "--- $LANG ---"
+            for NAME in "${!CARDS[@]}"; do
+              FILE="${CARDS[$NAME]}"
+              HTTP=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$API_BASE/tarot/daily" \
+                -H "Content-Type: application/json" \
+                -d "{\"card_name\":\"$NAME\",\"card_image_url\":\"${IMG_BASE}${FILE}.webp\",\"language\":\"$LANG\"}")
+              if [ "$HTTP" = "200" ]; then
+                echo "  ✅ $NAME ($LANG)"
+                DONE=$((DONE+1))
+              else
+                echo "  ❌ $NAME ($LANG) → HTTP $HTTP"
+                FAIL=$((FAIL+1))
+              fi
+              sleep 0.8
+            done
+          done
+
+          echo ""
+          echo "완료: $DONE 성공 / $FAIL 실패"
+          if [ "$FAIL" -gt 0 ]; then exit 1; fi

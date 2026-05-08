@@ -1,14 +1,8 @@
 'use client'
-import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { Link } from '@/navigation'
 import { useAuth } from '@/hooks/useAuth'
-
-const NAV_ITEMS = [
-  { href: '/',        icon: 'home',          label: 'Home' },
-  { href: '/menu',    icon: 'auto_awesome',  label: 'Destiny' },
-  { href: '/today',   icon: 'calendar_today',label: 'Free' },
-  { href: '/library', icon: 'local_library', label: 'Library' },
-]
+import { useTranslations } from 'next-intl'
 
 const GOLD = '#C9A84C'
 const INACTIVE = 'rgba(246,246,248,0.75)'
@@ -17,13 +11,24 @@ const GLOW = 'drop-shadow(0 0 6px rgba(201,168,76,0.6))'
 export default function BottomNav() {
   const pathname = usePathname()
   const { credits } = useAuth(false)
+  const t = useTranslations('nav')
+
+  const NAV_ITEMS = [
+    { href: '/' as const,        icon: 'home',          label: t('home') },
+    { href: '/menu' as const,    icon: 'auto_awesome',  label: t('destiny') },
+    { href: '/today' as const,   icon: 'calendar_today',label: t('free') },
+    { href: '/library' as const, icon: 'local_library', label: t('library') },
+  ]
+
+  // 로케일 prefix 제거 후 경로 비교
+  const cleanPath = pathname.replace(/^\/(ko|ja)/, '') || '/'
 
   function isActive(href: string) {
-    if (href === '/') return pathname === '/'
-    return pathname === href || pathname.startsWith(href + '/')
+    if (href === '/') return cleanPath === '/'
+    return cleanPath === href || cleanPath.startsWith(href + '/')
   }
 
-  const creditActive = pathname === '/buy'
+  const creditActive = cleanPath === '/buy'
 
   return (
     <nav style={{
@@ -54,7 +59,7 @@ export default function BottomNav() {
           )
         })}
 
-        {/* Credits tab */}
+        {/* 크레딧 탭 */}
         <Link href="/buy" style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, minWidth: 52 }}>
           <span style={{
             fontSize: 16, fontWeight: 700, lineHeight: '22px', height: 22,
@@ -65,7 +70,7 @@ export default function BottomNav() {
             {credits ?? '—'}
           </span>
           <span style={{ fontSize: 10, color: creditActive ? GOLD : INACTIVE, filter: creditActive ? GLOW : 'none' }}>
-            Credits
+            {t('credits')}
           </span>
         </Link>
       </div>

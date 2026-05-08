@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { useLocale, useTranslations } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
 import { usePricing } from '@/hooks/usePricing'
 import { BirthData } from '@/components/BirthForm'
@@ -13,6 +14,8 @@ import ReadingLoader from '@/components/ReadingLoader'
 
 export default function PersonalFortunePage() {
   const { user, credits, loading, refreshCredits } = useAuth()
+  const locale = useLocale()
+  const t = useTranslations('reading')
   const pricing = usePricing()
   const cost = pricing.personal_fortune
   const [submitting, setSubmitting] = useState(false)
@@ -34,7 +37,7 @@ export default function PersonalFortunePage() {
     setBirthData(data)
     try {
       const birth_date = birthDateStr(data.year, data.month, data.day)
-      const cached = await getCachedReading(user.email, 'personal_fortune', data.name, birth_date, data.city)
+      const cached = await getCachedReading(user.email, 'personal_fortune', data.name, birth_date, data.city, undefined, locale)
       if (cached) { const sid = await createShare({ reading_type: 'personal_fortune', name: data.name, birth_date, birth_city: data.city, result: cached.result, birth_data: data }); setShareId(sid); setResult(cached.result); setFromCache(true); return }
       const birthtime = data.hour !== null
         ? `${String(data.hour).padStart(2,'0')}:${String(data.minute ?? 0).padStart(2,'0')}`
@@ -44,9 +47,10 @@ export default function PersonalFortunePage() {
         birthtime, sex: data.sex, city: data.city,
         user_name: data.name, birth_year: data.year,
         reading_type: 'personal_fortune',
+        language: locale,
       })
       await apiPost('/use_pouch', { email: user.email, reading_type: 'personal_fortune' })
-      await saveReading(user.email, { reading_type: 'personal_fortune', name: data.name, birth_date, birth_city: data.city, result: raw })
+      await saveReading(user.email, { reading_type: 'personal_fortune', name: data.name, birth_date, birth_city: data.city, locale, result: raw })
       const sid = await createShare({ reading_type: 'personal_fortune', name: data.name, birth_date, birth_city: data.city, result: raw, birth_data: data })
       setShareId(sid)
       setResult(raw); setFromCache(false); refreshCredits(cost)
@@ -68,14 +72,14 @@ export default function PersonalFortunePage() {
   if (loading) return <LoadingScreen />
 
   return (
-    <ReadingPageShell title="Personal Fortune" subtitle="Your lifetime destiny — career, love, life theme, and hidden potential" emoji="✨" badge={`${cost} Credit${cost !== 1 ? 's' : ''}`} credits={credits} requiredCredits={cost} inProgress={submitting || !!result}>
+    <ReadingPageShell title={t('personal_fortune_title')} subtitle={t('personal_fortune_sub')} emoji="✨" badge={`${cost} ${t('credit_unit')}`} credits={credits} requiredCredits={cost} inProgress={submitting || !!result}>
       {result ? (
         <ReadingResult raw={result} onReset={() => { setResult(null); setFromCache(false); setBirthData(null); setShareId(null) }} userEmail={user?.email ?? undefined} fromCache={fromCache} birthData={birthData ?? undefined} shareId={shareId ?? undefined} />
       ) : submitting ? (
         <ReadingLoader onComplete={() => {}} />
       ) : (
         <div className="card">
-          <PersonPicker people={people} onSubmit={handleSubmit} loading={submitting} submitLabel="Reveal My Fortune" costBadge={`${cost} Credit${cost !== 1 ? 's' : ''}`} userEmail={user?.email ?? ''} onPeopleChange={setPeople} />
+          <PersonPicker people={people} onSubmit={handleSubmit} loading={submitting} submitLabel={t('personal_fortune_submit')} costBadge={`${cost} ${t('credit_unit')}`} userEmail={user?.email ?? ''} onPeopleChange={setPeople} />
           {error && <p style={{ color:'#ef4444', fontSize:13, marginTop:14, textAlign:'center' }}>{error}</p>}
         </div>
       )}

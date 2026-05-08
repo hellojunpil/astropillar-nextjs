@@ -3,6 +3,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations, useLocale } from 'next-intl'
 import { apiPost } from '@/lib/api'
 import { BirthData } from './BirthForm'
 import { usePricing } from '@/hooks/usePricing'
@@ -21,7 +22,11 @@ const ZODIAC_SYMBOL: Record<string, string> = {
   libra:'♎︎',scorpio:'♏︎',sagittarius:'♐︎',capricorn:'♑︎',aquarius:'♒︎',pisces:'♓︎',
 }
 
-const PILLAR_LABELS = ['YEAR','MONTH','DAY','HOUR']
+const PILLAR_LABELS_MAP: Record<string, string[]> = {
+  ko: ['연도','월','일','시'],
+  ja: ['年','月','日','時'],
+}
+const PILLAR_LABELS_EN = ['YEAR','MONTH','DAY','HOUR']
 const PILLAR_KEYS = ['year','month','day','hour']
 
 // Day stem → romanized key & element
@@ -321,19 +326,24 @@ function RichText({ text }: { text: string }) {
 }
 
 // ── Radar (Hexagonal) Chart ──────────────────────────────────────────
-const RADAR_AXES = ['Love','Career','Wealth','Health','Vitality','Life']
+const RADAR_AXES_MAP: Record<string, string[]> = {
+  ko: ['사랑','커리어','재물','건강','활력','인생'],
+  ja: ['恋愛','キャリア','財運','健康','活力','人生'],
+}
+const RADAR_AXES_EN = ['Love','Career','Wealth','Health','Vitality','Life']
 const RADAR_KEYS = ['love','career','wealth','health','vitality','life']
 const RADAR_COLORS = ['#f472b6','#a78bfa','#fbbf24','#34d399','#60a5fa','#C9A84C']
 
-function RadarChart({ scores }: { scores: Record<string, number> }) {
-  const N = RADAR_AXES.length
+function RadarChart({ scores, axes }: { scores: Record<string, number>; axes?: string[] }) {
+  const radarAxes = axes ?? RADAR_AXES_EN
+  const N = radarAxes.length
   const R = 72, CX = 105, CY = 105, W = 210, H = 210
   const pt = (i: number, val: number): [number, number] => {
     const angle = (i * 2 * Math.PI / N) - Math.PI / 2
     const r = (val / 100) * R
     return [CX + r * Math.cos(angle), CY + r * Math.sin(angle)]
   }
-  const axisPts = RADAR_AXES.map((_, i) => pt(i, 100))
+  const axisPts = radarAxes.map((_, i) => pt(i, 100))
   const dataPts = RADAR_KEYS.map((k, i) => pt(i, scores[k] ?? 50))
   const poly = (pts: [number,number][]) => pts.map(([x,y]) => `${x},${y}`).join(' ')
   const gridLevels = [0.25, 0.5, 0.75, 1.0]
@@ -341,7 +351,7 @@ function RadarChart({ scores }: { scores: Record<string, number> }) {
     <div style={{ display:'flex', flexDirection:'column', alignItems:'center', marginBottom:4 }}>
       <svg width={W} height={H} style={{ maxWidth:'100%', overflow:'visible' }}>
         {gridLevels.map((lv, li) => (
-          <polygon key={li} points={poly(RADAR_AXES.map((_,i) => pt(i, lv*100)))}
+          <polygon key={li} points={poly(radarAxes.map((_,i) => pt(i, lv*100)))}
             fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="1" />
         ))}
         {axisPts.map(([x,y], i) => (
@@ -351,7 +361,7 @@ function RadarChart({ scores }: { scores: Record<string, number> }) {
         {dataPts.map(([x,y], i) => (
           <circle key={i} cx={x} cy={y} r="3" fill={RADAR_COLORS[i]} />
         ))}
-        {RADAR_AXES.map((label, i) => {
+        {radarAxes.map((label, i) => {
           const [x, y] = pt(i, 112)
           const anchor = x < CX - 4 ? 'end' : x > CX + 4 ? 'start' : 'middle'
           const score = Math.round(scores[RADAR_KEYS[i]] ?? 50)
@@ -371,6 +381,7 @@ function RadarChart({ scores }: { scores: Record<string, number> }) {
 
 // ── Lifespan Chart (0~120 에너지 커브, 2-row layout) — replaces LuckCycleBarChart ──
 function LifespanChart({ points }: { points: Array<{age:number, energy:number}> }) {
+  const t = useTranslations('reading')
   if (!points?.length) return null
 
   const ROW1 = points.filter(p => p.age <= 60)
@@ -430,7 +441,7 @@ function LifespanChart({ points }: { points: Array<{age:number, energy:number}> 
 
   return (
     <div style={{ marginBottom:14 }}>
-      <p style={{ color:'#a78bfa', fontSize:10, fontWeight:700, letterSpacing:1.5, textTransform:'uppercase', marginBottom:8, fontFamily:"'Cormorant Garamond', serif" }}>Fortune by Life Chapters</p>
+      <p style={{ color:'#a78bfa', fontSize:10, fontWeight:700, letterSpacing:1.5, textTransform:'uppercase', marginBottom:8, fontFamily:"'Cormorant Garamond', serif" }}>{t('fortune_life_chapters')}</p>
       <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
         {renderRow(ROW1, '0 – 60')}
         {renderRow(ROW2, '61 – 120')}
@@ -441,12 +452,13 @@ function LifespanChart({ points }: { points: Array<{age:number, energy:number}> 
 
 // ── Luck Cycle Bar Chart (kept as fallback if lifespan data absent) ─
 function LuckCycleBarChart({ cycles }: { cycles: Array<{period:string, score:number}> }) {
+  const t = useTranslations('reading')
   if (!cycles?.length) return null
   const BAR_W = 38, GAP = 10, H = 80, PAD = 14
   const W = cycles.length * (BAR_W + GAP) + PAD * 2
   return (
     <div style={{ marginBottom:14 }}>
-      <p style={{ color:'#a78bfa', fontSize:10, fontWeight:700, letterSpacing:1.5, textTransform:'uppercase', marginBottom:4, fontFamily:"'Cormorant Garamond', serif" }}>Fortune by Luck Cycle</p>
+      <p style={{ color:'#a78bfa', fontSize:10, fontWeight:700, letterSpacing:1.5, textTransform:'uppercase', marginBottom:4, fontFamily:"'Cormorant Garamond', serif" }}>{t('fortune_luck_cycle')}</p>
       <svg width={Math.min(W, 380)} height={H + 32} style={{ maxWidth:'100%', overflow:'visible' }}>
         {cycles.map((c, i) => {
           const barH = Math.max(4, (c.score / 100) * H)
@@ -472,11 +484,12 @@ function LuckCycleBarChart({ cycles }: { cycles: Array<{period:string, score:num
 
 // ── AM/PM Bar Chart ──────────────────────────────────────────────────
 function AmPmBarChart({ am, pm }: { am:number, pm:number }) {
+  const t = useTranslations('reading')
   const colors = { am:'#fbbf24', pm:'#818cf8' }
   const H = 72, BAR_W = 52, GAP = 22
   return (
     <div style={{ marginBottom:14 }}>
-      <p style={{ color:'var(--text-muted)', fontSize:10, fontWeight:700, letterSpacing:1.5, textTransform:'uppercase', marginBottom:4, fontFamily:"'Cormorant Garamond', serif" }}>Today&apos;s Energy</p>
+      <p style={{ color:'var(--text-muted)', fontSize:10, fontWeight:700, letterSpacing:1.5, textTransform:'uppercase', marginBottom:4, fontFamily:"'Cormorant Garamond', serif" }}>{t('todays_energy')}</p>
       <svg width={BAR_W*2 + GAP + 24} height={H + 28} style={{ overflow:'visible' }}>
         {(['am','pm'] as const).map((slot, i) => {
           const score = slot === 'am' ? am : pm
@@ -503,6 +516,7 @@ function AmPmBarChart({ am, pm }: { am:number, pm:number }) {
 function WuXingChart({ soulElement, wood, fire, earth, metal, water }: {
   soulElement: string; wood: number; fire: number; earth: number; metal: number; water: number
 }) {
+  const t = useTranslations('reading')
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
@@ -620,11 +634,11 @@ function WuXingChart({ soulElement, wood, fire, earth, metal, water }: {
       <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginTop: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'Arial', fontSize: 11, color: '#D7D7D9' }}>
           <div style={{ width: 20, height: 2, borderRadius: 2, background: '#4CAF50' }} />
-          Nourishes
+          {t('nourishes')}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'Arial', fontSize: 11, color: '#D7D7D9' }}>
           <div style={{ width: 20, height: 2, borderRadius: 2, background: '#F44336' }} />
-          Restrains
+          {t('restrains')}
         </div>
       </div>
     </div>
@@ -860,6 +874,7 @@ function Divider({ label }: { label: string }) {
 }
 
 function AstrologyProfile({ western, data }: { western: WesternData | null; data: Record<string,unknown> }) {
+  const t = useTranslations('reading')
   const sunSign   = (western?.sun_sign  ?? (data.western_sun  as string) ?? '').toLowerCase().trim()
   const moonSign  = (western?.moon_sign ?? (data.western_moon as string) ?? '').toLowerCase().trim()
   const ascSign   = (
@@ -878,7 +893,7 @@ function AstrologyProfile({ western, data }: { western: WesternData | null; data
   const hasAny = sunSign || moonSign || ascSign
 
   if (!hasAny) {
-    return <p style={{ color:'var(--text-muted)', fontSize:13, textAlign:'center', padding:20 }}>No Western chart data available.</p>
+    return <p style={{ color:'var(--text-muted)', fontSize:13, textAlign:'center', padding:20 }}>{t('no_western')}</p>
   }
 
   return (
@@ -890,13 +905,13 @@ function AstrologyProfile({ western, data }: { western: WesternData | null; data
         <PlanetCardBig planet="Rising" symbol="↑"   sign={ascSign} />
       </div>
       <div style={{ display:'flex', gap:8, marginTop:10 }}>
-        {['Your core identity — the self you were born to express','Your inner world — emotions and what makes you feel safe','How the world sees you — your outer mask and first impression'].map((t,i) => (
-          <div key={i} style={{ flex:1, textAlign:'center', fontSize:10, color:'rgba(215,215,217,0.55)', lineHeight:1.6 }}>{t}</div>
+        {[t('sun_desc'), t('moon_desc'), t('rising_desc')].map((desc,i) => (
+          <div key={i} style={{ flex:1, textAlign:'center', fontSize:10, color:'rgba(215,215,217,0.55)', lineHeight:1.6 }}>{desc}</div>
         ))}
       </div>
 
       {/* Inner Planets */}
-      <Divider label="Inner Planets" />
+      <Divider label={t('inner_planets')} />
       <div style={{ display:'flex', gap:6, width:'100%' }}>
         {(['mercury','venus','mars','jupiter'] as const).map(p => (
           <PlanetCardSm key={p} planet={p.charAt(0).toUpperCase()+p.slice(1)} symbol={PLANET_SYMBOLS[p]} sign={pSign(p)} />
@@ -904,7 +919,7 @@ function AstrologyProfile({ western, data }: { western: WesternData | null; data
       </div>
 
       {/* Outer Planets */}
-      <Divider label="Outer Planets" />
+      <Divider label={t('outer_planets')} />
       <div style={{ display:'flex', gap:6, width:'100%' }}>
         {(['saturn','uranus','neptune','pluto'] as const).map(p => (
           <PlanetCardSm key={p} planet={p.charAt(0).toUpperCase()+p.slice(1)} symbol={PLANET_SYMBOLS[p]} sign={pSign(p)} />
@@ -933,6 +948,7 @@ function ZodiacBadge({ sign }: { sign: string }) {
 }
 
 function ShareButton({ userEmail, shareId }: { userEmail: string; shareId?: string }) {
+  const t = useTranslations('reading')
   const [msg, setMsg] = useState('')
   const [loading, setLoading] = useState(false)
   async function handleShare() {
@@ -954,15 +970,16 @@ function ShareButton({ userEmail, shareId }: { userEmail: string; shareId?: stri
   return (
     <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6 }}>
       <button onClick={handleShare} disabled={loading} style={{ width:'100%', background:'rgba(201,168,76,0.08)', border:'1px solid var(--gold)', color:'var(--gold)', borderRadius:50, padding:12, fontSize:14, cursor:loading?'not-allowed':'pointer', opacity:loading?0.7:1 }}>
-        {loading ? '✦ Sharing...' : '↗ Share & Earn Credits'}
+        {loading ? t('sharing') : t('share_earn')}
       </button>
       {msg && <p style={{ color:'#aaa', fontSize:12, textAlign:'center' }}>{msg}</p>}
-      <p style={{ color:'var(--text-muted)', fontSize:11, textAlign:'center' }}>Every 3 shares = 1 free Credit · Max 1 Credit per day</p>
+      <p style={{ color:'var(--text-muted)', fontSize:11, textAlign:'center' }}>{t('share_info')}</p>
     </div>
   )
 }
 
 function NatalChartViewer({ birthData }: { birthData: BirthData }) {
+  const t = useTranslations('reading')
   const [svg, setSvg] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [open, setOpen] = useState(false)
@@ -988,7 +1005,7 @@ function NatalChartViewer({ birthData }: { birthData: BirthData }) {
   return (
     <>
       <button onClick={loadChart} disabled={loading} style={{ width:'100%', background:'rgba(201,168,76,0.08)', border:'1px solid rgba(201,168,76,0.4)', color:'var(--gold)', borderRadius:50, padding:12, fontSize:14, cursor:loading?'not-allowed':'pointer', opacity:loading?0.7:1 }}>
-        {loading ? '✦ Loading chart...' : '🔭 View Birth Chart'}
+        {loading ? t('loading_chart') : t('view_birth_chart')}
       </button>
       {open && svg && (
         <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.88)', zIndex:9999, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:16 }}
@@ -998,7 +1015,7 @@ function NatalChartViewer({ birthData }: { birthData: BirthData }) {
             <div dangerouslySetInnerHTML={{ __html: svg }} style={{ width:'100%' }} />
           </div>
           <button onClick={() => setOpen(false)} style={{ marginTop:16, color:'#fff', background:'none', border:'1px solid rgba(255,255,255,0.3)', borderRadius:50, padding:'8px 24px', cursor:'pointer', fontSize:14 }}>
-            Close
+            {t('close')}
           </button>
         </div>
       )}
@@ -1007,6 +1024,7 @@ function NatalChartViewer({ birthData }: { birthData: BirthData }) {
 }
 
 function ScenarioButton({ birthData }: { birthData: BirthData }) {
+  const t = useTranslations('reading')
   const router = useRouter()
   const pricing = usePricing()
   const scenarioCost = pricing.scenario
@@ -1022,19 +1040,19 @@ function ScenarioButton({ birthData }: { birthData: BirthData }) {
   }
   if (!open) return (
     <button onClick={() => setOpen(true)} style={{ width:'100%', background:'rgba(167,139,250,0.08)', border:'1px solid #a78bfa', color:'#a78bfa', borderRadius:50, padding:12, fontSize:14, cursor:'pointer' }}>
-      🔮 Analyze This Scenario
+      {t('analyze_scenario')}
     </button>
   )
   return (
     <div style={{ background:'var(--card)', border:'1px solid #a78bfa', borderRadius:16, padding:20 }}>
-      <p style={{ color:'#a78bfa', fontSize:11, letterSpacing:2, textTransform:'uppercase', marginBottom:12 }}>Ask a Scenario Question</p>
-      <textarea value={question} onChange={e=>setQuestion(e.target.value)} placeholder="What do you want the stars to reveal about this situation?" rows={3}
+      <p style={{ color:'#a78bfa', fontSize:11, letterSpacing:2, textTransform:'uppercase', marginBottom:12 }}>{t('ask_scenario_q')}</p>
+      <textarea value={question} onChange={e=>setQuestion(e.target.value)} placeholder={t('scenario_textarea_ph')} rows={3}
         style={{ width:'100%', background:'#0f1829', border:'1px solid var(--border)', borderRadius:10, color:'#fff', padding:'12px 14px', fontSize:14, outline:'none', resize:'vertical', fontFamily:"'Noto Sans', sans-serif", lineHeight:1.6, marginBottom:12 }}
       />
       <div style={{ display:'flex', gap:8 }}>
-        <button onClick={()=>setOpen(false)} style={{ flex:1, background:'none', border:'1px solid var(--border)', borderRadius:50, color:'var(--text-muted)', fontSize:13, padding:10, cursor:'pointer' }}>Cancel</button>
+        <button onClick={()=>setOpen(false)} style={{ flex:1, background:'none', border:'1px solid var(--border)', borderRadius:50, color:'var(--text-muted)', fontSize:13, padding:10, cursor:'pointer' }}>{t('cancel')}</button>
         <button onClick={handleGo} disabled={!question.trim()} style={{ flex:2, background:'#a78bfa', border:'none', borderRadius:50, color:'#fff', fontSize:14, fontWeight:700, padding:10, cursor:'pointer', opacity:!question.trim()?0.5:1 }}>
-          Analyze <span style={{ background:'rgba(22,33,62,0.4)', borderRadius:20, padding:'2px 8px', fontSize:12 }}>{scenarioCost} {scenarioCost === 1 ? 'Credit' : 'Credits'}</span>
+          {t('analyze_btn')} <span style={{ background:'rgba(22,33,62,0.4)', borderRadius:20, padding:'2px 8px', fontSize:12 }}>{scenarioCost} {scenarioCost === 1 ? 'Credit' : 'Credits'}</span>
         </button>
       </div>
     </div>
@@ -1071,6 +1089,10 @@ interface Props {
 }
 
 export default function ReadingResult({ raw, onReset, userEmail, fromCache, birthData, shareId, isSharedView }: Props) {
+  const t = useTranslations('reading')
+  const locale = useLocale()
+  const pillarLabels = PILLAR_LABELS_MAP[locale] ?? PILLAR_LABELS_EN
+  const radarAxes = RADAR_AXES_MAP[locale] ?? RADAR_AXES_EN
   const [chartTab, setChartTab] = useState<'bazi'|'elements'|'astrology'>('bazi')
   const [personTab, setPersonTab] = useState<'p1'|'p2'>('p1')
 
@@ -1139,9 +1161,9 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
   const p2Name = (data.person2_name ?? data.partner_name ?? '') as string
 
   const TABS = [
-    { key:'bazi', label:'BaZi Chart' },
-    { key:'elements', label:'Elements' },
-    { key:'astrology', label:'Astrology Profile' },
+    { key:'bazi', label: t('tab_bazi') },
+    { key:'elements', label: t('tab_elements') },
+    { key:'astrology', label: t('tab_astrology') },
   ] as const
 
   const tabStyle = (active: boolean): React.CSSProperties => ({
@@ -1157,7 +1179,7 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
         <div className="card" style={{ marginBottom:20, padding:'16px 16px 12px' }}>
           {overallCompatScore !== null && (
             <div style={{ textAlign:'center', marginBottom:10 }}>
-              <p style={{ color:'rgba(201,168,76,0.65)', fontSize:9, letterSpacing:2, textTransform:'uppercase', fontWeight:700, marginBottom:6 }}>Compatibility Score</p>
+              <p style={{ color:'rgba(201,168,76,0.65)', fontSize:9, letterSpacing:2, textTransform:'uppercase', fontWeight:700, marginBottom:6 }}>{t('compat_score')}</p>
               <p style={{ fontSize:42, fontWeight:800, color:'#C9A84C', fontFamily:"'Cormorant Garamond', serif", lineHeight:1, margin:0 }}>
                 {overallCompatScore} <span style={{ fontSize:18, color:'rgba(201,168,76,0.45)', fontWeight:400 }}>/ 100</span>
               </p>
@@ -1181,7 +1203,7 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
                   background: personTab === p ? 'var(--gold)' : 'transparent',
                   color: personTab === p ? '#16213E' : 'var(--text-muted)',
                 }}>
-                  {p === 'p1' ? `You${p1Name ? ` (${p1Name})` : ''}` : `Partner${p2Name ? ` (${p2Name})` : ''}`}
+                  {p === 'p1' ? `${t('you_label')}${p1Name ? ` (${p1Name})` : ''}` : `${t('partner_label')}${p2Name ? ` (${p2Name})` : ''}`}
                 </button>
               ))}
             </div>
@@ -1204,7 +1226,7 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
                   <div style={{ display:'grid', gridTemplateColumns:`repeat(${activePillars.length},1fr)`, gap:10, marginBottom:16 }}>
                     {activePillars.map((p,i) => (
                       <div key={i} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
-                        <p style={{ color:'var(--text-muted)', fontSize:9, letterSpacing:1.5, textTransform:'uppercase' }}>{PILLAR_LABELS[i]}</p>
+                        <p style={{ color:'var(--text-muted)', fontSize:9, letterSpacing:1.5, textTransform:'uppercase' }}>{pillarLabels[i]}</p>
                         <Image src={ganImg(p.gan)} alt={p.gan} width={56} height={56} unoptimized style={{ borderRadius:8 }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
                         <p style={{ color:'rgba(201,168,76,0.75)', fontSize:8, textAlign:'center', lineHeight:1.3 }}>
                           {p.gan}{GAN_LABELS[p.gan] ? ` (${GAN_LABELS[p.gan]})` : ''}
@@ -1224,7 +1246,7 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
                         border:'1px solid rgba(201,168,76,0.45)',
                         borderRadius:50, padding:'8px 20px',
                       }}>
-                        <span style={{ fontSize:9, color:'rgba(201,168,76,0.65)', letterSpacing:2, textTransform:'uppercase', fontWeight:700 }}>Your Sign</span>
+                        <span style={{ fontSize:9, color:'rgba(201,168,76,0.65)', letterSpacing:2, textTransform:'uppercase', fontWeight:700 }}>{t('your_sign')}</span>
                         <span style={{ color:'#fff', fontSize:15, fontWeight:700, fontFamily:'sans-serif', letterSpacing:0.3 }}>
                           {activeYourSignName}
                           <span style={{ color:'rgba(201,168,76,0.5)', margin:'0 8px', fontWeight:400 }}>·</span>
@@ -1235,12 +1257,12 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
                   )}
                   {hasExplainData && (
                     <Link href={explainUrl} style={{ display:'block', textAlign:'center', background:'rgba(201,168,76,0.08)', border:'1px solid rgba(201,168,76,0.3)', borderRadius:10, padding:'10px 16px', color:'var(--gold)', fontSize:13, textDecoration:'none' }}>
-                      What does this mean? →
+                      {t('what_means')}
                     </Link>
                   )}
                 </>
               ) : (
-                <p style={{ color:'var(--text-muted)', fontSize:13, textAlign:'center', padding:20 }}>No BaZi chart data available.</p>
+                <p style={{ color:'var(--text-muted)', fontSize:13, textAlign:'center', padding:20 }}>{t('no_bazi')}</p>
               )}
             </div>
           )}
@@ -1251,14 +1273,14 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
               {activeDayElement ? (
                 <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
                   <div style={{ background:'rgba(201,168,76,0.04)', border:`1px solid ${ELEMENT_COLOR[activeDayElement]}40`, borderRadius:12, padding:'16px' }}>
-                    <p style={{ color:'var(--text-muted)', fontSize:10, letterSpacing:2, textTransform:'uppercase', marginBottom:8 }}>Day Master Element</p>
+                    <p style={{ color:'var(--text-muted)', fontSize:10, letterSpacing:2, textTransform:'uppercase', marginBottom:8 }}>{t('day_master_element')}</p>
                     <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:10 }}>
                       <div style={{ width:44, height:44, borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', background:`${ELEMENT_COLOR[activeDayElement]}18`, border:`1.5px solid ${ELEMENT_COLOR[activeDayElement]}`, color:ELEMENT_COLOR[activeDayElement], fontSize:20, fontWeight:700 }}>
                         {activeDayPillar?.gan}
                       </div>
                       <div>
                         <p style={{ color:'#fff', fontSize:16, fontWeight:700, textTransform:'capitalize' }}>{activeDayElement}</p>
-                        <p style={{ color:'var(--text-muted)', fontSize:12 }}>{activeDayGanKey ? activeDayGanKey.charAt(0).toUpperCase()+activeDayGanKey.slice(1) : ''} Day Master</p>
+                        <p style={{ color:'var(--text-muted)', fontSize:12 }}>{activeDayGanKey ? activeDayGanKey.charAt(0).toUpperCase()+activeDayGanKey.slice(1) : ''} {t('day_master')}</p>
                       </div>
                     </div>
                     <p style={{ color:'var(--text-muted)', fontSize:13, lineHeight:1.7, fontStyle:'italic' }}>{ELEMENT_DESC[activeDayElement]}</p>
@@ -1266,7 +1288,7 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
 
                   {/* Wu Xing Relationship Chart */}
                   <div style={{ background:'rgba(22,33,62,0.5)', border:'1px solid rgba(201,168,76,0.15)', borderRadius:12, padding:'16px 12px 12px' }}>
-                    <p style={{ color:'var(--text-muted)', fontSize:10, letterSpacing:2, textTransform:'uppercase', marginBottom:12, textAlign:'center' }}>Five Elements · Relationships</p>
+                    <p style={{ color:'var(--text-muted)', fontSize:10, letterSpacing:2, textTransform:'uppercase', marginBottom:12, textAlign:'center' }}>{t('five_elements')}</p>
                     <WuXingChart
                       soulElement={activeSoulElement}
                       wood={activeWoodScore} fire={activeFireScore} earth={activeEarthScore} metal={activeMetalScore} water={activeWaterScore}
@@ -1275,12 +1297,12 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
 
                   {hasExplainData && (
                     <Link href={explainUrl} style={{ textAlign:'center', background:'rgba(201,168,76,0.08)', border:'1px solid rgba(201,168,76,0.3)', borderRadius:10, padding:'10px 16px', color:'var(--gold)', fontSize:13, textDecoration:'none', display:'block' }}>
-                      Explore all Five Elements →
+                      {t('explore_elements')}
                     </Link>
                   )}
                 </div>
               ) : (
-                <p style={{ color:'var(--text-muted)', fontSize:13, textAlign:'center', padding:20 }}>Element data not available.</p>
+                <p style={{ color:'var(--text-muted)', fontSize:13, textAlign:'center', padding:20 }}>{t('no_elements')}</p>
               )}
             </div>
           )}
@@ -1297,9 +1319,9 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
         data.overall_scores != null && (
         <div className="card" style={{ marginBottom:16, padding:'16px 16px 8px' }}>
           <p style={{ color:'var(--gold)', fontSize:11, fontWeight:700, letterSpacing:2, textTransform:'uppercase', textAlign:'center', marginBottom:2, fontFamily:"'Cormorant Garamond', serif" }}>
-            {data.reading_type === 'personal_daily_fortune' ? "Today's Fortune" : 'Lifetime Fortune'}
+            {data.reading_type === 'personal_daily_fortune' ? t('todays_fortune') : t('lifetime_fortune')}
           </p>
-          <RadarChart scores={data.overall_scores as Record<string,number>} />
+          <RadarChart scores={data.overall_scores as Record<string,number>} axes={radarAxes} />
           {data.reading_type === 'personal_daily_fortune' && data.am_pm_scores != null && (
             <div style={{ display:'flex', justifyContent:'center', marginTop:4 }}>
               <AmPmBarChart
@@ -1355,17 +1377,17 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
       <div style={{ display:'flex', flexDirection:'column', gap:10, marginTop:8 }}>
         {fromCache && (
           <div style={{ textAlign:'center', padding:'6px 12px', background:'rgba(46,204,113,0.08)', border:'1px solid rgba(46,204,113,0.3)', borderRadius:10 }}>
-            <span style={{ color:'#2ecc71', fontSize:12 }}>✓ Cached result — no Credit charged</span>
+            <span style={{ color:'#2ecc71', fontSize:12 }}>{t('cached_result')}</span>
           </div>
         )}
         {birthData && <NatalChartViewer birthData={birthData} />}
         {!isSharedView && birthData && <ScenarioButton birthData={birthData} />}
         {!isSharedView && userEmail && <ShareButton userEmail={userEmail} shareId={shareId} />}
         <button onClick={onReset} style={{ background:'none', border:'1px solid var(--border)', color:'var(--text-muted)', borderRadius:50, padding:12, fontSize:14, cursor:'pointer' }}>
-          ← New Reading
+          {t('new_reading')}
         </button>
         <Link href="/menu" style={{ textAlign:'center', color:'var(--text-muted)', fontSize:13, textDecoration:'none' }}>
-          Back to Menu
+          {t('back_to_menu')}
         </Link>
       </div>
     </div>

@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { useLocale, useTranslations } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
 import { usePricing } from '@/hooks/usePricing'
 import ReadingResult from '@/components/ReadingResult'
@@ -41,6 +42,37 @@ const RELATIONSHIPS = [
   'Celebrity Crush',
 ]
 
+const RELATIONSHIPS_DISPLAY: Record<string, Record<string, string>> = {
+  ko: {
+    'Romantic Partner': '연인',
+    'Crush': '짝사랑',
+    'Ex': '전 연인',
+    'Friend': '친구',
+    'Business Partner': '비즈니스 파트너',
+    'Parent': '부모님',
+    'Brother/Sister': '형제/자매',
+    'My Child': '내 자녀',
+    'Coworker': '동료',
+    'Boss': '상사',
+    'Junior Colleague': '부하직원',
+    'Celebrity Crush': '좋아하는 연예인',
+  },
+  ja: {
+    'Romantic Partner': '恋愛パートナー',
+    'Crush': '片思い',
+    'Ex': '元恋人',
+    'Friend': '友人',
+    'Business Partner': 'ビジネスパートナー',
+    'Parent': '親',
+    'Brother/Sister': '兄弟・姉妹',
+    'My Child': '子ども',
+    'Coworker': '同僚',
+    'Boss': '上司',
+    'Junior Colleague': '後輩',
+    'Celebrity Crush': '推し',
+  },
+}
+
 const inputStyle: React.CSSProperties = {
   background: '#0f1829', border: '1px solid var(--border)', borderRadius: 10,
   color: '#fff', padding: '11px 14px', fontSize: 14, width: '100%', outline: 'none',
@@ -64,6 +96,8 @@ function parseBirthDate(birth_date: string): { year: number; month: number; day:
 
 export default function CompatibilityPage() {
   const { user, credits, loading, refreshCredits } = useAuth()
+  const locale = useLocale()
+  const t = useTranslations('reading')
   const pricing = usePricing()
   const cost = pricing.compatibility
   const [people, setPeople] = useState<SavedPerson[]>([])
@@ -109,7 +143,7 @@ export default function CompatibilityPage() {
       const cacheKey = `${person1.name}+${person2.name}`
       const cacheDate = `${bd1}+${bd2}`
       const cacheCity = `${person1.birth_city}+${person2.birth_city}`
-      const cached = await getCachedReading(user.email, 'compatibility', cacheKey, cacheDate, cacheCity)
+      const cached = await getCachedReading(user.email, 'compatibility', cacheKey, cacheDate, cacheCity, undefined, locale)
       if (cached) {
         const sid = await createShare({ reading_type: 'compatibility', name: cacheKey, birth_date: cacheDate, birth_city: cacheCity, result: cached.result })
         setShareId(sid)
@@ -131,9 +165,10 @@ export default function CompatibilityPage() {
         sex2: person2.sex,
         city2: person2.birth_city,
         relationship,
+        language: locale,
       })
       await apiPost('/use_pouch', { email: user.email, reading_type: 'compatibility' })
-      await saveReading(user.email, { reading_type: 'compatibility', name: cacheKey, birth_date: cacheDate, birth_city: cacheCity, result: raw })
+      await saveReading(user.email, { reading_type: 'compatibility', name: cacheKey, birth_date: cacheDate, birth_city: cacheCity, locale, result: raw })
       const sid = await createShare({ reading_type: 'compatibility', name: cacheKey, birth_date: cacheDate, birth_city: cacheCity, result: raw })
       setShareId(sid)
       setResult(raw)
@@ -175,8 +210,8 @@ export default function CompatibilityPage() {
 
   return (
     <ReadingPageShell
-      title="Compatibility" subtitle="How your energy aligns with someone special — deep compatibility analysis"
-      emoji="💞" badge={`${cost} Credit${cost !== 1 ? 's' : ''}`} credits={credits} requiredCredits={cost} inProgress={submitting || !!result}
+      title={t('compat_title')} subtitle={t('compat_sub')}
+      emoji="💞" badge={`${cost} ${t('credit_unit')}`} credits={credits} requiredCredits={cost} inProgress={submitting || !!result}
     >
       {result ? (
         <ReadingResult
@@ -195,16 +230,16 @@ export default function CompatibilityPage() {
 
           {/* Person 1 */}
           <div className="card">
-            <label style={labelStyle}>Person 1 — You</label>
+            <label style={labelStyle}>{t('person1_label')}</label>
             <select style={inputStyle} value={person1Id} onChange={e => setPerson1Id(e.target.value)}>
-              <option value="">— Select a person —</option>
+              <option value="">{t('select_person_ph')}</option>
               {people.map(p => (
                 <option key={p.id} value={p.id}>{p.name} ({p.birth_date})</option>
               ))}
             </select>
             {person1 && (
               <p style={{ color: 'var(--text-muted)', fontSize: 12, marginTop: 8 }}>
-                {person1.sex === 'F' ? '♀' : '♂'} · {person1.birth_city} · {personBirthtime(person1) === '12:00' && person1.hour === null ? 'Birth time unknown' : personBirthtime(person1)}
+                {person1.sex === 'F' ? '♀' : '♂'} · {person1.birth_city} · {personBirthtime(person1) === '12:00' && person1.hour === null ? t('birth_time_unknown') : personBirthtime(person1)}
               </p>
             )}
           </div>
@@ -212,23 +247,23 @@ export default function CompatibilityPage() {
           {/* Person 2 + Relationship */}
           <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div>
-              <label style={labelStyle}>Person 2 — Them</label>
+              <label style={labelStyle}>{t('person2_label')}</label>
               <select style={inputStyle} value={person2Id} onChange={e => setPerson2Id(e.target.value)}>
-                <option value="">— Select a person —</option>
+                <option value="">{t('select_person_ph')}</option>
                 {people.map(p => (
                   <option key={p.id} value={p.id}>{p.name} ({p.birth_date})</option>
                 ))}
               </select>
               {person2 && (
                 <p style={{ color: 'var(--text-muted)', fontSize: 12, marginTop: 8 }}>
-                  {person2.sex === 'F' ? '♀' : '♂'} · {person2.birth_city} · {personBirthtime(person2) === '12:00' && person2.hour === null ? 'Birth time unknown' : personBirthtime(person2)}
+                  {person2.sex === 'F' ? '♀' : '♂'} · {person2.birth_city} · {personBirthtime(person2) === '12:00' && person2.hour === null ? t('birth_time_unknown') : personBirthtime(person2)}
                 </p>
               )}
             </div>
             <div>
-              <label style={labelStyle}>Relationship</label>
+              <label style={labelStyle}>{t('relationship_label')}</label>
               <select style={inputStyle} value={relationship} onChange={e => setRelationship(e.target.value)}>
-                {RELATIONSHIPS.map(r => <option key={r} value={r}>{r}</option>)}
+                {RELATIONSHIPS.map(r => <option key={r} value={r}>{RELATIONSHIPS_DISPLAY[locale]?.[r] ?? r}</option>)}
               </select>
             </div>
           </div>
@@ -240,18 +275,18 @@ export default function CompatibilityPage() {
                 background: 'rgba(201,168,76,0.06)', border: '1px dashed rgba(201,168,76,0.35)',
                 borderRadius: 12, padding: '10px', color: 'var(--gold)', fontSize: 13, cursor: 'pointer',
               }}>
-                + Add New Person
+                {t('add_new_person')}
               </button>
             )
           ) : (
             <div style={{ background: 'rgba(201,168,76,0.04)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: 14, padding: '18px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <p style={{ color: 'var(--gold)', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>New Person</p>
+              <p style={{ color: 'var(--gold)', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>{t('new_person')}</p>
               <div>
-                <label style={labelStyle}>Name</label>
-                <input style={inputStyle} placeholder="e.g. Jessica" value={pName} onChange={e => setPName(e.target.value)} required />
+                <label style={labelStyle}>{t('name_label')}</label>
+                <input style={inputStyle} placeholder={t('name_placeholder')} value={pName} onChange={e => setPName(e.target.value)} required />
               </div>
               <div>
-                <label style={labelStyle}>Gender</label>
+                <label style={labelStyle}>{t('gender_label')}</label>
                 <div style={{ display: 'flex', gap: 8 }}>
                   {(['F','M'] as const).map(s => (
                     <button key={s} type="button" onClick={() => setPSex(s)} style={{
@@ -259,38 +294,38 @@ export default function CompatibilityPage() {
                       border: `1px solid ${pSex === s ? 'var(--gold)' : 'var(--border)'}`,
                       background: pSex === s ? 'rgba(201,168,76,0.12)' : 'transparent',
                       color: pSex === s ? 'var(--gold)' : 'var(--text-muted)',
-                    }}>{s === 'F' ? '♀ Female' : '♂ Male'}</button>
+                    }}>{s === 'F' ? t('female') : t('male')}</button>
                   ))}
                 </div>
               </div>
               <div>
-                <label style={labelStyle}>Birth Date</label>
+                <label style={labelStyle}>{t('birth_date_label')}</label>
                 <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 3fr', gap: 8 }}>
                   <select style={inputStyle} value={pMonth} onChange={e => setPMonth(e.target.value)}>
                     {MONTHS.map((m, i) => <option key={i} value={i+1}>{m}</option>)}
                   </select>
-                  <input style={inputStyle} placeholder="Day" type="number" min={1} max={31} value={pDay} onChange={e => setPDay(e.target.value)} required />
-                  <input style={inputStyle} placeholder="Year" type="number" min={1900} max={2025} value={pYear} onChange={e => setPYear(e.target.value)} required />
+                  <input style={inputStyle} placeholder={t('day_placeholder')} type="number" min={1} max={31} value={pDay} onChange={e => setPDay(e.target.value)} required />
+                  <input style={inputStyle} placeholder={t('year_placeholder')} type="number" min={1900} max={2025} value={pYear} onChange={e => setPYear(e.target.value)} required />
                 </div>
               </div>
               <div>
-                <label style={labelStyle}>Birth Time <span style={{ color: 'var(--text-muted)', textTransform: 'none', letterSpacing: 0 }}>(optional)</span></label>
+                <label style={labelStyle}>{t('birth_time_label')} <span style={{ color: 'var(--text-muted)', textTransform: 'none', letterSpacing: 0 }}>({t('optional')})</span></label>
                 <select style={inputStyle} value={pHourIndex} onChange={e => setPHourIndex(parseInt(e.target.value))}>
-                  {TIME_RANGES.map((t, i) => <option key={i} value={i}>{t.label}</option>)}
+                  {TIME_RANGES.map((tr, i) => <option key={i} value={i}>{tr.label}</option>)}
                 </select>
               </div>
               <div>
-                <label style={labelStyle}>Birth City</label>
-                <input style={inputStyle} placeholder="e.g. New York" value={pCity} onChange={e => setPCity(e.target.value)} required />
+                <label style={labelStyle}>{t('birth_city_label')}</label>
+                <input style={inputStyle} placeholder={t('city_placeholder')} value={pCity} onChange={e => setPCity(e.target.value)} required />
               </div>
               {saveError && <p style={{ color: '#ef4444', fontSize: 12 }}>{saveError}</p>}
               <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
                 <button type="button" onClick={() => { setShowAddForm(false); setSaveError('') }} style={{
                   flex: 1, background: 'none', border: '1px solid var(--border)', borderRadius: 50,
                   color: 'var(--text-muted)', fontSize: 13, padding: '10px', cursor: 'pointer',
-                }}>Cancel</button>
+                }}>{t('cancel')}</button>
                 <button type="button" disabled={saving || !pName || !pYear || !pDay || !pCity} onClick={handleAddPerson} className="btn-gold" style={{ flex: 2, opacity: saving ? 0.7 : 1 }}>
-                  {saving ? 'Saving...' : 'Save & Select'}
+                  {saving ? t('saving') : t('save_select')}
                 </button>
               </div>
             </div>
@@ -298,22 +333,23 @@ export default function CompatibilityPage() {
 
           {people.length < 2 && !showAddForm && (
             <p style={{ color: 'var(--text-muted)', fontSize: 12, textAlign: 'center' }}>
-              Add at least 2 people above to check compatibility.
+              {t('min_two_people')}
             </p>
           )}
 
           {person1Id && person2Id && person1Id === person2Id && (
-            <p style={{ color: '#f59e0b', fontSize: 13, textAlign: 'center' }}>Please select two different people.</p>
+            <p style={{ color: '#f59e0b', fontSize: 13, textAlign: 'center' }}>{t('diff_people_warning')}</p>
           )}
 
           {error && <p style={{ color: '#ef4444', fontSize: 13, textAlign: 'center' }}>{error}</p>}
 
           <button type="submit" disabled={!isValid || submitting} className="btn-gold"
             style={{ marginTop: 4, opacity: (!isValid || submitting) ? 0.5 : 1, cursor: (!isValid || submitting) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-            {submitting ? '✦ Reading the stars...' : (
-              <>Check Compatibility <span style={{ background: 'rgba(22,33,62,0.6)', borderRadius: 20, padding: '2px 10px', fontSize: 12 }}>{cost} Credit{cost !== 1 ? 's' : ''}</span></>
+            {submitting ? <><span style={{ display:'inline-block', animation:'spin 1s linear infinite' }}>✦</span> {t('reading_stars')}</> : (
+              <>{t('compat_submit')} <span style={{ background: 'rgba(22,33,62,0.6)', borderRadius: 20, padding: '2px 10px', fontSize: 12 }}>{cost} {t('credit_unit')}</span></>
             )}
           </button>
+          <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
         </form>
       )}
     </ReadingPageShell>

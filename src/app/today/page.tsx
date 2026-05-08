@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { db } from '@/lib/firebase'
 import { doc, getDoc } from 'firebase/firestore'
 import { useAuth } from '@/hooks/useAuth'
+import { useLocale } from 'next-intl'
 import BottomNav from '@/components/BottomNav'
 import { apiGet, apiPost } from '@/lib/api'
 import { gtagEvent } from '@/lib/gtag'
@@ -123,14 +124,153 @@ function parseTarotResult(text: string): Array<{ header: string; content: string
 
 const todayStr = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
 
-const TABS: { id: ActiveTab; label: string }[] = [
-  { id: 'tarot',     label: '🃏 Daily Tarot'   },
-  { id: 'horoscope', label: '🌙 Horoscope'      },
-  { id: 'chinese',   label: '☯ Chinese Zodiac' },
-]
+// ── UI Text (locale-aware) ──────────────────────────────────────
+const HOROSCOPE_NAMES: Record<string, Record<string, string>> = {
+  en: { Aries:'Aries', Taurus:'Taurus', Gemini:'Gemini', Cancer:'Cancer', Leo:'Leo', Virgo:'Virgo', Libra:'Libra', Scorpio:'Scorpio', Sagittarius:'Sagittarius', Capricorn:'Capricorn', Aquarius:'Aquarius', Pisces:'Pisces' },
+  ko: { Aries:'양자리', Taurus:'황소자리', Gemini:'쌍둥이자리', Cancer:'게자리', Leo:'사자자리', Virgo:'처녀자리', Libra:'천칭자리', Scorpio:'전갈자리', Sagittarius:'사수자리', Capricorn:'염소자리', Aquarius:'물병자리', Pisces:'물고기자리' },
+  ja: { Aries:'牡羊座', Taurus:'牡牛座', Gemini:'双子座', Cancer:'蟹座', Leo:'獅子座', Virgo:'乙女座', Libra:'天秤座', Scorpio:'蠍座', Sagittarius:'射手座', Capricorn:'山羊座', Aquarius:'水瓶座', Pisces:'魚座' },
+}
+
+const CHINESE_NAMES: Record<string, Record<string, string>> = {
+  en: { Rat:'Rat', Ox:'Ox', Tiger:'Tiger', Rabbit:'Rabbit', Dragon:'Dragon', Snake:'Snake', Horse:'Horse', Goat:'Goat', Monkey:'Monkey', Rooster:'Rooster', Dog:'Dog', Pig:'Pig' },
+  ko: { Rat:'쥐', Ox:'소', Tiger:'호랑이', Rabbit:'토끼', Dragon:'용', Snake:'뱀', Horse:'말', Goat:'양', Monkey:'원숭이', Rooster:'닭', Dog:'개', Pig:'돼지' },
+  ja: { Rat:'子', Ox:'丑', Tiger:'寅', Rabbit:'卯', Dragon:'辰', Snake:'巳', Horse:'午', Goat:'未', Monkey:'申', Rooster:'酉', Dog:'戌', Pig:'亥' },
+}
+
+const MOON_PHASE_NAMES: Record<string, Record<string, string>> = {
+  en: { 'new moon':'New Moon', 'waxing crescent':'Waxing Crescent', 'first quarter':'First Quarter', 'waxing gibbous':'Waxing Gibbous', 'full moon':'Full Moon', 'waning gibbous':'Waning Gibbous', 'third quarter':'Third Quarter', 'last quarter':'Last Quarter', 'waning crescent':'Waning Crescent' },
+  ko: { 'new moon':'삭', 'waxing crescent':'초승달', 'first quarter':'상현달', 'waxing gibbous':'차오르는 달', 'full moon':'보름달', 'waning gibbous':'기우는 달', 'third quarter':'하현달', 'last quarter':'그믐달', 'waning crescent':'그믐달' },
+  ja: { 'new moon':'新月', 'waxing crescent':'三日月', 'first quarter':'上弦の月', 'waxing gibbous':'十三夜月', 'full moon':'満月', 'waning gibbous':'十六夜', 'third quarter':'下弦の月', 'last quarter':'晦日月', 'waning crescent':'有明月' },
+}
+
+const UI_TEXT = {
+  en: {
+    tabs: [
+      { id: 'tarot' as ActiveTab,     label: '🃏 Daily Tarot' },
+      { id: 'horoscope' as ActiveTab, label: '🌙 Horoscope' },
+      { id: 'chinese' as ActiveTab,   label: '☯ Chinese Zodiac' },
+    ],
+    freeBadge: 'FREE — No login required',
+    signIn: 'Sign in →',
+    tarotTitle: 'Daily Tarot',
+    tarotSubtitle: 'Choose one card and reveal your message.',
+    tarotLoading: '✦ Reading the cards...',
+    tarotDestiny: 'Your first draw is closest to your destiny.',
+    tarotShare: '↗ Share Your Card',
+    tarotDrawAgain: '↺ Draw Again',
+    tarotDeeper: 'Want a deeper reading?',
+    tarotDeeperDesc: 'Three-Card, Relationship, or Celtic Cross spreads — full AI tarot interpretation.',
+    exploreBtn: 'Explore Readings →',
+    horoLabel: '✦ Horoscope',
+    chineseLabel: '✦ Chinese Zodiac',
+    bestMatch: 'Best Match Today',
+    tipLabel: 'TIP FOR TODAY',
+    seeHoro: "See Today's Horoscope",
+    seeChinese: "See Today's Fortune",
+    checkAnother: '← Check Another Sign',
+    starsLoading: '✦ Reading the stars...',
+    shareHoro: '↗ Share Your Horoscope',
+    shareFortune: '↗ Share Your Fortune',
+    personalCta: 'Want a personalized reading?',
+    personalCtaDesc: 'Get your full BaZi chart + Astrology reading tailored to your exact birth details.',
+    yourBirthday: 'Your Birthday',
+    monthPlaceholder: 'Month',
+    dayPlaceholder: 'Day',
+    moonPhaseLabel: 'Moon Phase',
+    illuminated: 'illuminated',
+    birthYear: 'Birth Year',
+    selectYear: 'Select year',
+    yearOf: (animal: string) => `✦ Year of the ${animal}`,
+    shareNote: 'Free Fortune shares do not count toward the 3-share Credit promotion.',
+    scoreLabels: { score_love:'LOVE', score_work:'WORK', score_money:'MONEY', score_health:'HEALTH', score_social:'SOCIAL', score_creative:'CREATIVE' },
+  },
+  ko: {
+    tabs: [
+      { id: 'tarot' as ActiveTab,     label: '🃏 오늘의 타로' },
+      { id: 'horoscope' as ActiveTab, label: '🌙 오늘의 별자리' },
+      { id: 'chinese' as ActiveTab,   label: '☯ 오늘의 띠별 운세' },
+    ],
+    freeBadge: '무료 — 로그인 불필요',
+    signIn: '로그인 →',
+    tarotTitle: '오늘의 타로',
+    tarotSubtitle: '카드 한 장을 선택해 오늘의 메시지를 받아보세요.',
+    tarotLoading: '✦ 카드를 읽는 중...',
+    tarotDestiny: '첫 번째 선택이 운명에 가장 가깝습니다.',
+    tarotShare: '↗ 카드 공유하기',
+    tarotDrawAgain: '↺ 다시 뽑기',
+    tarotDeeper: '더 깊은 타로 리딩을 원하세요?',
+    tarotDeeperDesc: '쓰리카드, 관계 타로, 켈틱 크로스 — 풀 AI 타로 해석.',
+    exploreBtn: '리딩 살펴보기 →',
+    horoLabel: '✦ 오늘의 별자리',
+    chineseLabel: '✦ 오늘의 띠별 운세',
+    bestMatch: '오늘의 베스트 매치',
+    tipLabel: '오늘의 팁',
+    seeHoro: '오늘의 별자리 보기',
+    seeChinese: '오늘의 운세 보기',
+    checkAnother: '← 다른 운세 보기',
+    starsLoading: '✦ 별을 읽는 중...',
+    shareHoro: '↗ 별자리 운세 공유',
+    shareFortune: '↗ 운세 공유하기',
+    personalCta: '개인 맞춤 리딩을 원하세요?',
+    personalCtaDesc: '생년월일 기반 사주+별자리 풀 리딩을 받아보세요.',
+    yourBirthday: '생년월일',
+    monthPlaceholder: '월',
+    dayPlaceholder: '일',
+    moonPhaseLabel: '달의 위상',
+    illuminated: '조도',
+    birthYear: '출생연도',
+    selectYear: '연도 선택',
+    yearOf: (animal: string) => `✦ ${animal}띠`,
+    shareNote: '무료 운세 공유는 크레딧 적립(3회) 대상에 포함되지 않습니다.',
+    scoreLabels: { score_love:'사랑', score_work:'일', score_money:'돈', score_health:'건강', score_social:'대인', score_creative:'창의' },
+  },
+  ja: {
+    tabs: [
+      { id: 'tarot' as ActiveTab,     label: '🃏 今日のタロット' },
+      { id: 'horoscope' as ActiveTab, label: '🌙 今日の星座占い' },
+      { id: 'chinese' as ActiveTab,   label: '☯ 今日の干支占い' },
+    ],
+    freeBadge: '無料 — ログイン不要',
+    signIn: 'ログイン →',
+    tarotTitle: '今日のタロット',
+    tarotSubtitle: 'カードを1枚選んでメッセージを受け取りましょう。',
+    tarotLoading: '✦ カードを読んでいます...',
+    tarotDestiny: '最初の1枚が運命に最も近い。',
+    tarotShare: '↗ カードをシェア',
+    tarotDrawAgain: '↺ もう一度引く',
+    tarotDeeper: 'より深いタロット鑑定をご希望ですか？',
+    tarotDeeperDesc: 'スリーカード・リレーションシップ・ケルト十字 — フルAIタロット鑑定。',
+    exploreBtn: '鑑定を見る →',
+    horoLabel: '✦ 今日の星座占い',
+    chineseLabel: '✦ 今日の干支占い',
+    bestMatch: '今日のベストマッチ',
+    tipLabel: '今日のアドバイス',
+    seeHoro: '今日の星座占いを見る',
+    seeChinese: '今日の運勢を見る',
+    checkAnother: '← 別の運勢を確認',
+    starsLoading: '✦ 星を読んでいます...',
+    shareHoro: '↗ 星座占いをシェア',
+    shareFortune: '↗ 運勢をシェア',
+    personalCta: 'パーソナライズされた鑑定をご希望ですか？',
+    personalCtaDesc: '生年月日から四柱推命+星座占いの完全鑑定を受けましょう。',
+    yourBirthday: '誕生日',
+    monthPlaceholder: '月',
+    dayPlaceholder: '日',
+    moonPhaseLabel: '月の位相',
+    illuminated: '照度',
+    birthYear: '生まれ年',
+    selectYear: '年を選択',
+    yearOf: (animal: string) => `✦ ${animal}年生まれ`,
+    shareNote: '無料の運勢シェアはクレジット積立（3回）の対象外です。',
+    scoreLabels: { score_love:'恋愛', score_work:'仕事', score_money:'金運', score_health:'健康', score_social:'対人', score_creative:'創造' },
+  },
+}
 
 export default function TodayFortunePage() {
   const { user } = useAuth(false)
+  const locale = useLocale()
+  const ui = UI_TEXT[locale as keyof typeof UI_TEXT] ?? UI_TEXT.en
+
   const [activeTab, setActiveTab] = useState<ActiveTab>('tarot')
 
   // ── Moon phase ────────────────────────────────────────────────
@@ -181,10 +321,16 @@ export default function TodayFortunePage() {
     setLoading(true); setError('')
     try {
       const dateKey = getTodayKey()
-      const docId = mode === 'horoscope'
+      const baseId = mode === 'horoscope'
         ? `${dateKey}_horoscope_${sign.toLowerCase()}`
         : `${dateKey}_zodiac_${sign.toLowerCase()}`
-      const snap = await getDoc(doc(db, 'daily_fortunes', docId))
+      // locale별 doc 먼저 시도, 없으면 EN fallback
+      const localeSuffix = locale !== 'en' ? `_${locale}` : ''
+      const localeDocId = localeSuffix ? `${baseId}${localeSuffix}` : baseId
+      let snap = await getDoc(doc(db, 'daily_fortunes', localeDocId))
+      if (!snap.exists() && localeSuffix) {
+        snap = await getDoc(doc(db, 'daily_fortunes', baseId))
+      }
       if (!snap.exists()) { setError('No fortune available for today. Please check back later.'); return }
       setFortune(snap.data() as FortuneData)
       setStep('result')
@@ -244,10 +390,11 @@ export default function TodayFortunePage() {
     apiCalledRef.current = true
     setTarotLoading(true); setTarotError('')
     try {
-      // Firestore 캐시 우선 조회 (실패해도 API로 폴백)
+      // Firestore 캐시 우선 조회 (locale 버전만 — EN 폴백 없음, 언어별 별도 생성)
       try {
-        const docId = `${getTodayKey()}_${card.file}`
-        const snap = await getDoc(doc(db, 'daily_tarot', docId))
+        const baseDocId = `${getTodayKey()}_${card.file}`
+        const localeDocId = locale !== 'en' ? `${baseDocId}_${locale}` : baseDocId
+        const snap = await getDoc(doc(db, 'daily_tarot', localeDocId))
         if (snap.exists()) {
           setTarotResult((snap.data() as { content_text: string }).content_text)
           if (isFirstDraw) { gtagEvent('tarot_daily_draw', { card: card.name }); setIsFirstDraw(false) }
@@ -256,10 +403,11 @@ export default function TodayFortunePage() {
       } catch {
         // Firestore 캐시 실패 시 API로 진행
       }
-      // 캐시 없으면 API 폴백
+      // 캐시 없으면 API 호출 (locale 전달)
       const data = await apiPost<{ content_text: string }>('/tarot/daily', {
         card_name: card.name,
         card_image_url: `${IMG}${card.file}.webp`,
+        language: locale,
       })
       setTarotResult(data.content_text)
       if (isFirstDraw) { gtagEvent('tarot_daily_draw', { card: card.name }); setIsFirstDraw(false) }
@@ -271,13 +419,14 @@ export default function TodayFortunePage() {
     }
   }
 
+  const scoreLabels = ui.scoreLabels as Record<string, string>
   const SCORE_ITEMS = [
-    { label: 'Love',     key: 'score_love',     color: '#f472b6' },
-    { label: 'Work',     key: 'score_work',     color: '#C9A84C' },
-    { label: 'Money',    key: 'score_money',    color: '#4ade80' },
-    { label: 'Health',   key: 'score_health',   color: '#a78bfa' },
-    { label: 'Social',   key: 'score_social',   color: '#60a5fa' },
-    { label: 'Creative', key: 'score_creative', color: '#fb923c' },
+    { key: 'score_love',     color: '#f472b6' },
+    { key: 'score_work',     color: '#C9A84C' },
+    { key: 'score_money',    color: '#4ade80' },
+    { key: 'score_health',   color: '#a78bfa' },
+    { key: 'score_social',   color: '#60a5fa' },
+    { key: 'score_creative', color: '#fb923c' },
   ] as const
 
   function FortuneResult({ fortune, mode, onBack, shareInfo }: { fortune: FortuneData; mode: 'horoscope'|'chinese'; onBack: () => void; shareInfo?: { label: string; imgFile: string } }) {
@@ -288,14 +437,14 @@ export default function TodayFortunePage() {
       <div>
         <div className="card" style={{ marginBottom: 12 }}>
           <p style={{ color: 'var(--gold)', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 14 }}>
-            {mode === 'horoscope' ? '✦ Horoscope' : '✦ Chinese Zodiac'}
+            {mode === 'horoscope' ? ui.horoLabel : ui.chineseLabel}
           </p>
           {scores.length > 0 && (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 20px', marginBottom: 16 }}>
               {scores.map(s => (
                 <div key={s.key}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-                    <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, letterSpacing: 1, textTransform: 'uppercase' }}>{s.label}</span>
+                    <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, letterSpacing: 1, textTransform: 'uppercase' }}>{scoreLabels[s.key] ?? s.key}</span>
                     <span style={{ color: s.color, fontSize: 12, fontWeight: 700 }}>{fortune[s.key] as number}</span>
                   </div>
                   <div style={{ height: 3, background: 'rgba(255,255,255,0.07)', borderRadius: 2 }}>
@@ -309,8 +458,8 @@ export default function TodayFortunePage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '10px 12px', marginBottom: 14 }}>
               {bestMatchSign && <Image src={`${IMG}${bestMatchSign.img}`} alt={bestMatch} width={32} height={32} style={{ objectFit: 'contain' }} unoptimized />}
               <div>
-                <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 9, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 2 }}>Best Match Today</p>
-                <p style={{ color: '#fff', fontSize: 13, fontWeight: 700 }}>{bestMatch}</p>
+                <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 9, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 2 }}>{ui.bestMatch}</p>
+                <p style={{ color: '#fff', fontSize: 13, fontWeight: 700 }}>{HOROSCOPE_NAMES[locale as keyof typeof HOROSCOPE_NAMES]?.[bestMatch] ?? bestMatch}</p>
               </div>
             </div>
           )}
@@ -318,7 +467,7 @@ export default function TodayFortunePage() {
           {!!fortune.fortune && <p style={{ color: '#ddd', fontSize: 14, lineHeight: 1.9, marginBottom: 14, whiteSpace: 'pre-wrap' }}>{(fortune.fortune as string).replace(/^\[[\w\s]+\]\s*/i, '')}</p>}
           {!!fortune.tip && (
             <div style={{ background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.25)', borderRadius: 10, padding: '10px 14px' }}>
-              <p style={{ color: 'var(--gold)', fontSize: 11, letterSpacing: 1, marginBottom: 4 }}>TIP FOR TODAY</p>
+              <p style={{ color: 'var(--gold)', fontSize: 11, letterSpacing: 1, marginBottom: 4 }}>{ui.tipLabel}</p>
               <p style={{ color: '#ddd', fontSize: 13, lineHeight: 1.7 }}>{fortune.tip as string}</p>
             </div>
           )}
@@ -328,20 +477,20 @@ export default function TodayFortunePage() {
             <button
               onClick={() => shareReading(shareInfo.label, mode, shareInfo.imgFile)}
               style={{ width: '100%', background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.4)', color: 'var(--gold)', borderRadius: 50, padding: '11px', fontSize: 13, cursor: 'pointer' }}>
-              ↗ Share Your {mode === 'horoscope' ? 'Horoscope' : 'Fortune'}
+              {mode === 'horoscope' ? ui.shareHoro : ui.shareFortune}
             </button>
             <p style={{ color: 'var(--text-muted)', fontSize: 10, textAlign: 'center' }}>
-              Free Fortune shares do not count toward the 3-share Credit promotion.
+              {ui.shareNote}
             </p>
           </div>
         )}
         <button onClick={onBack} style={{ width: '100%', background: 'none', border: '1px solid var(--border)', color: 'var(--text-muted)', borderRadius: 50, padding: '11px', fontSize: 13, cursor: 'pointer', marginBottom: 14 }}>
-          ← Check Another Sign
+          {ui.checkAnother}
         </button>
         <div className="card" style={{ textAlign: 'center' }}>
-          <p style={{ color: '#fff', fontWeight: 600, marginBottom: 6 }}>Want a personalized reading?</p>
-          <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 14 }}>Get your full BaZi chart + Astrology reading tailored to your exact birth details.</p>
-          <Link href="/menu" className="btn-gold" style={{ fontSize: 13, padding: '11px 24px' }}>Explore Readings →</Link>
+          <p style={{ color: '#fff', fontWeight: 600, marginBottom: 6 }}>{ui.personalCta}</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 14 }}>{ui.personalCtaDesc}</p>
+          <Link href="/menu" className="btn-gold" style={{ fontSize: 13, padding: '11px 24px' }}>{ui.exploreBtn}</Link>
         </div>
       </div>
     )
@@ -370,7 +519,7 @@ export default function TodayFortunePage() {
         </Link>
         {user
           ? <Link href="/menu" style={{ color: 'var(--text-muted)', fontSize: 13, textDecoration: 'none' }}>{user.email?.split('@')[0]} ✦</Link>
-          : <Link href="/login" style={{ color: 'var(--text-muted)', fontSize: 13, textDecoration: 'none' }}>Sign in →</Link>
+          : <Link href="/login" style={{ color: 'var(--text-muted)', fontSize: 13, textDecoration: 'none' }}>{ui.signIn}</Link>
         }
       </header>
 
@@ -380,7 +529,7 @@ export default function TodayFortunePage() {
         <div style={{ textAlign: 'center', padding: '14px 20px 0' }}>
           <p style={{ color: 'var(--text-muted)', fontSize: 12 }}>{todayStr}</p>
           <span style={{ display: 'inline-block', marginTop: 4, border: '1px solid #2ecc71', color: '#2ecc71', borderRadius: 20, padding: '2px 10px', fontSize: 10, fontWeight: 700 }}>
-            FREE — No login required
+            {ui.freeBadge}
           </span>
         </div>
 
@@ -390,7 +539,7 @@ export default function TodayFortunePage() {
           borderBottom: '2px solid var(--border)',
           margin: '14px 0 0',
         }}>
-          {TABS.map(tab => {
+          {ui.tabs.map(tab => {
             const active = activeTab === tab.id
             return (
               <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
@@ -401,11 +550,12 @@ export default function TodayFortunePage() {
                 borderBottom: active ? '2px solid var(--gold)' : '2px solid transparent',
                 marginBottom: -2,
                 color: active ? '#fff' : 'var(--text-muted)',
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: active ? 700 : 400,
                 cursor: 'pointer',
                 transition: 'all 0.18s',
                 letterSpacing: 0.2,
+                whiteSpace: 'nowrap',
               }}>
                 {tab.label}
               </button>
@@ -426,10 +576,8 @@ export default function TodayFortunePage() {
                 display: tarotPhase === 'revealed' ? 'none' : 'block',
               }}>
                 <div style={{ textAlign: 'center', marginBottom: 16 }}>
-                  <p className="font-display" style={{ color: '#fff', fontSize: 20, fontWeight: 600, marginBottom: 4 }}>Daily Tarot</p>
-                  <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>
-                    Choose one card and reveal your message.
-                  </p>
+                  <p className="font-display" style={{ color: '#fff', fontSize: 20, fontWeight: 600, marginBottom: 4 }}>{ui.tarotTitle}</p>
+                  <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>{ui.tarotSubtitle}</p>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
@@ -492,7 +640,7 @@ export default function TodayFortunePage() {
                 }}>
                   {!isFirstDraw && (
                     <p style={{ color: 'rgba(201,168,76,0.6)', fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', textAlign: 'center' }}>
-                      Your first draw is closest to your destiny.
+                      {ui.tarotDestiny}
                     </p>
                   )}
 
@@ -505,7 +653,7 @@ export default function TodayFortunePage() {
                   </p>
 
                   {tarotLoading && (
-                    <p style={{ color: 'var(--gold)', fontSize: 13 }}>✦ Reading the cards...</p>
+                    <p style={{ color: 'var(--gold)', fontSize: 13 }}>{ui.tarotLoading}</p>
                   )}
 
                   {tarotError && (
@@ -525,16 +673,16 @@ export default function TodayFortunePage() {
                       ))}
 
                       <p style={{ color: 'rgba(201,168,76,0.75)', fontSize: 13, textAlign: 'center', fontStyle: 'italic', marginTop: 4 }}>
-                        Your first draw is closest to your destiny.
+                        {ui.tarotDestiny}
                       </p>
 
                       <button
                         onClick={() => tarotCard && shareReading(tarotCard.name, 'tarot', `${tarotCard.file}.webp`)}
                         style={{ width: '100%', background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.4)', color: 'var(--gold)', borderRadius: 50, padding: '11px', fontSize: 13, cursor: 'pointer', letterSpacing: 0.5 }}>
-                        ↗ Share Your Card
+                        {ui.tarotShare}
                       </button>
                       <p style={{ color: 'var(--text-muted)', fontSize: 10, textAlign: 'center', marginTop: -4 }}>
-                        Note: Free Fortune shares do not count toward the 3-share Credit promotion.
+                        {ui.shareNote}
                       </p>
 
                       <button onClick={resetTarot} style={{
@@ -542,13 +690,13 @@ export default function TodayFortunePage() {
                         color: 'var(--text-muted)', borderRadius: 50, padding: '11px', fontSize: 13,
                         cursor: 'pointer', letterSpacing: 0.5,
                       }}>
-                        ↺ Draw Again
+                        {ui.tarotDrawAgain}
                       </button>
 
                       <div className="card" style={{ textAlign: 'center', marginTop: 4 }}>
-                        <p style={{ color: '#fff', fontWeight: 600, marginBottom: 6 }}>Want a deeper reading?</p>
-                        <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 14 }}>Three-Card, Relationship, or Celtic Cross spreads — full AI tarot interpretation.</p>
-                        <Link href="/menu" className="btn-gold" style={{ fontSize: 13, padding: '11px 24px' }}>Explore Readings →</Link>
+                        <p style={{ color: '#fff', fontWeight: 600, marginBottom: 6 }}>{ui.tarotDeeper}</p>
+                        <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 14 }}>{ui.tarotDeeperDesc}</p>
+                        <Link href="/menu" className="btn-gold" style={{ fontSize: 13, padding: '11px 24px' }}>{ui.exploreBtn}</Link>
                       </div>
                     </div>
                   )}
@@ -564,9 +712,10 @@ export default function TodayFortunePage() {
                 <div style={{ background: 'rgba(22,33,62,0.7)', border: '1px solid rgba(167,139,250,0.25)', borderRadius: 14, padding: '10px 14px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
                   <span style={{ fontSize: 28 }}>{MOON_PHASE_EMOJIS[moonPhase.phase.toLowerCase()] ?? '🌙'}</span>
                   <div>
-                    <p style={{ color: '#a78bfa', fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 2 }}>Moon Phase</p>
-                    <p style={{ color: '#fff', fontSize: 13, fontWeight: 700 }}>{moonPhase.phase}
-                      {moonPhase.illumination != null && <span style={{ color: 'var(--text-muted)', fontWeight: 400, fontSize: 11 }}> · {Math.round(moonPhase.illumination <= 1 ? moonPhase.illumination*100 : moonPhase.illumination)}% illuminated</span>}
+                    <p style={{ color: '#a78bfa', fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 2 }}>{ui.moonPhaseLabel}</p>
+                    <p style={{ color: '#fff', fontSize: 13, fontWeight: 700 }}>
+                      {MOON_PHASE_NAMES[locale as keyof typeof MOON_PHASE_NAMES]?.[moonPhase.phase.toLowerCase()] ?? moonPhase.phase}
+                      {moonPhase.illumination != null && <span style={{ color: 'var(--text-muted)', fontWeight: 400, fontSize: 11 }}> · {Math.round(moonPhase.illumination <= 1 ? moonPhase.illumination*100 : moonPhase.illumination)}% {ui.illuminated}</span>}
                     </p>
                   </div>
                 </div>
@@ -581,31 +730,32 @@ export default function TodayFortunePage() {
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div>
-                    <p style={{ color: 'var(--text-muted)', fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>Your Birthday</p>
+                    <p style={{ color: 'var(--text-muted)', fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>{ui.yourBirthday}</p>
                     <div style={{ display: 'flex', gap: 8 }}>
                       <select value={horoMonth} onChange={e => { setHoroMonth(e.target.value); const m=parseInt(e.target.value),d=parseInt(horoDay); if(m&&d) setHoroAuto(getHoroscope(m,d)); else setHoroAuto(null) }} style={selectStyle}>
-                        <option value="">Month</option>
+                        <option value="">{ui.monthPlaceholder}</option>
                         {MONTHS.map((m,i) => <option key={m} value={String(i+1)}>{m}</option>)}
                       </select>
                       <select value={horoDay} onChange={e => { setHoroDay(e.target.value); const m=parseInt(horoMonth),d=parseInt(e.target.value); if(m&&d) setHoroAuto(getHoroscope(m,d)); else setHoroAuto(null) }} style={{...selectStyle, maxWidth: 90}}>
-                        <option value="">Day</option>
+                        <option value="">{ui.dayPlaceholder}</option>
                         {DAYS.map(d => <option key={d} value={String(d)}>{d}</option>)}
                       </select>
                     </div>
-                    {horoAuto && <p style={{ color: 'var(--gold)', fontSize: 12, marginTop: 6 }}>✦ {horoAuto}</p>}
+                    {horoAuto && <p style={{ color: 'var(--gold)', fontSize: 12, marginTop: 6 }}>✦ {HOROSCOPE_NAMES[locale as keyof typeof HOROSCOPE_NAMES]?.[horoAuto] ?? horoAuto}</p>}
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
                     {HOROSCOPE_SIGNS.map(s => {
                       const isSel = horoSelected === s.name
                       const isAuto = horoAuto === s.name && !horoSelected
                       const hi = isSel || isAuto
+                      const displayName = HOROSCOPE_NAMES[locale as keyof typeof HOROSCOPE_NAMES]?.[s.name] ?? s.name
                       return (
                         <button key={s.name} type="button" onClick={() => setHoroSelected(horoSelected===s.name ? null : s.name)}
                           style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                           <div style={{ width: 72, height: 72, borderRadius: 16, background: hi ? 'rgba(201,168,76,0.12)' : 'rgba(255,255,255,0.04)', border: `2px solid ${isSel ? 'var(--gold)' : isAuto ? 'rgba(201,168,76,0.5)' : 'transparent'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: hi ? '0 0 10px rgba(201,168,76,0.25)' : 'none', transition: 'all 0.15s' }}>
                             <Image src={`${IMG}${s.img}`} alt={s.name} width={52} height={52} style={{ objectFit: 'contain' }} unoptimized />
                           </div>
-                          <span style={{ color: isSel ? 'var(--gold)' : isAuto ? 'rgba(201,168,76,0.8)' : 'var(--text-muted)', fontSize: 10, fontWeight: 600 }}>{s.name}</span>
+                          <span style={{ color: isSel ? 'var(--gold)' : isAuto ? 'rgba(201,168,76,0.8)' : 'var(--text-muted)', fontSize: 10, fontWeight: 600 }}>{displayName}</span>
                         </button>
                       )
                     })}
@@ -613,7 +763,7 @@ export default function TodayFortunePage() {
                   {horoError && <p style={{ color: '#ef4444', fontSize: 13, textAlign: 'center' }}>{horoError}</p>}
                   <button onClick={() => horoSelected && fetchFortune(horoSelected, 'horoscope')} disabled={!horoSelected || horoLoading} className="btn-gold"
                     style={{ opacity: (!horoSelected || horoLoading) ? 0.4 : 1, cursor: (!horoSelected || horoLoading) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {horoLoading ? '✦ Reading the stars...' : "See Today's Horoscope"}
+                    {horoLoading ? ui.starsLoading : ui.seeHoro}
                   </button>
                 </div>
               )}
@@ -632,12 +782,12 @@ export default function TodayFortunePage() {
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div>
-                    <p style={{ color: 'var(--text-muted)', fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>Birth Year</p>
+                    <p style={{ color: 'var(--text-muted)', fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>{ui.birthYear}</p>
                     <select value={chineseYear} onChange={e => { setChineseYear(e.target.value); const y=parseInt(e.target.value); setChineseAuto(y ? getChineseZodiac(y) : null) }} style={{...selectStyle, maxWidth: 140}}>
-                      <option value="">Select year</option>
+                      <option value="">{ui.selectYear}</option>
                       {YEARS.map(y => <option key={y} value={String(y)}>{y}</option>)}
                     </select>
-                    {chineseAuto && <p style={{ color: 'var(--gold)', fontSize: 12, marginTop: 6 }}>✦ Year of the {chineseAuto}</p>}
+                    {chineseAuto && <p style={{ color: 'var(--gold)', fontSize: 12, marginTop: 6 }}>{ui.yearOf(CHINESE_NAMES[locale as keyof typeof CHINESE_NAMES]?.[chineseAuto] ?? chineseAuto)}</p>}
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
                     {CHINESE_SIGNS.map(s => {
@@ -650,7 +800,7 @@ export default function TodayFortunePage() {
                           <div style={{ width: 72, height: 72, borderRadius: 16, background: hi ? 'rgba(167,139,250,0.12)' : 'rgba(255,255,255,0.04)', border: `2px solid ${isSel ? '#a78bfa' : isAuto ? 'rgba(167,139,250,0.5)' : 'transparent'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: hi ? '0 0 10px rgba(167,139,250,0.25)' : 'none', transition: 'all 0.15s' }}>
                             <Image src={`${IMG}${s.img}`} alt={s.name} width={52} height={52} style={{ objectFit: 'contain' }} unoptimized />
                           </div>
-                          <span style={{ color: isSel ? '#a78bfa' : isAuto ? 'rgba(167,139,250,0.8)' : 'var(--text-muted)', fontSize: 10, fontWeight: 600 }}>{s.name}</span>
+                          <span style={{ color: isSel ? '#a78bfa' : isAuto ? 'rgba(167,139,250,0.8)' : 'var(--text-muted)', fontSize: 10, fontWeight: 600 }}>{CHINESE_NAMES[locale as keyof typeof CHINESE_NAMES]?.[s.name] ?? s.name}</span>
                         </button>
                       )
                     })}
@@ -658,7 +808,7 @@ export default function TodayFortunePage() {
                   {chineseError && <p style={{ color: '#ef4444', fontSize: 13, textAlign: 'center' }}>{chineseError}</p>}
                   <button onClick={() => chineseSelected && fetchFortune(chineseSelected, 'chinese')} disabled={!chineseSelected || chineseLoading} className="btn-gold"
                     style={{ opacity: (!chineseSelected || chineseLoading) ? 0.4 : 1, cursor: (!chineseSelected || chineseLoading) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {chineseLoading ? '✦ Reading the stars...' : "See Today's Fortune"}
+                    {chineseLoading ? ui.starsLoading : ui.seeChinese}
                   </button>
                 </div>
               )}

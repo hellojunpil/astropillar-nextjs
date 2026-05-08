@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { SavedPerson } from '@/lib/firestore'
 
 export interface BirthData {
@@ -11,7 +12,7 @@ export interface BirthData {
   minute: number | null
   sex: 'M' | 'F'
   city: string
-  birth_time_label?: string  // e.g. "11:30 - 13:30" or "Unknown"
+  birth_time_label?: string
 }
 
 interface Props {
@@ -61,16 +62,19 @@ const labelStyle: React.CSSProperties = {
   display: 'block',
 }
 
-export default function BirthForm({ onSubmit, loading, submitLabel = 'Get My Reading', costBadge, savedPersons, onSavePerson }: Props) {
+export default function BirthForm({ onSubmit, loading, submitLabel, costBadge, savedPersons, onSavePerson }: Props) {
+  const t = useTranslations('reading')
   const [name, setName] = useState('')
   const [year, setYear] = useState('')
   const [month, setMonth] = useState('1')
   const [day, setDay] = useState('')
-  const [hourIndex, setHourIndex] = useState(0) // index into TIME_RANGES
+  const [hourIndex, setHourIndex] = useState(0)
   const [sex, setSex] = useState<'M' | 'F'>('F')
   const [city, setCity] = useState('')
   const [savingPerson, setSavingPerson] = useState(false)
   const [personSaved, setPersonSaved] = useState(false)
+
+  const resolvedSubmitLabel = submitLabel ?? t('reading_stars')
 
   function applyPerson(p: SavedPerson) {
     setName(p.name)
@@ -81,10 +85,10 @@ export default function BirthForm({ onSubmit, loading, submitLabel = 'Get My Rea
     setDay(String(parseInt(d)))
     setCity(p.birth_city)
     if (p.birth_time_label) {
-      const idx = TIME_RANGES.findIndex(t => t.label === p.birth_time_label)
+      const idx = TIME_RANGES.findIndex(tr => tr.label === p.birth_time_label)
       setHourIndex(idx >= 0 ? idx : 0)
     } else if (p.hour !== null) {
-      const idx = TIME_RANGES.findIndex(t => t.hour === p.hour)
+      const idx = TIME_RANGES.findIndex(tr => tr.hour === p.hour)
       setHourIndex(idx >= 0 ? idx : 0)
     } else {
       setHourIndex(0)
@@ -129,7 +133,6 @@ export default function BirthForm({ onSubmit, loading, submitLabel = 'Get My Rea
   return (
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
 
-      {/* Saved persons dropdown */}
       {savedPersons && savedPersons.length > 0 && (
         <div>
           <label style={labelStyle}>Select a Person</label>
@@ -149,15 +152,13 @@ export default function BirthForm({ onSubmit, loading, submitLabel = 'Get My Rea
         </div>
       )}
 
-      {/* Name */}
       <div>
-        <label style={labelStyle}>Your Name</label>
-        <input style={inputStyle} placeholder="e.g. Jessica" value={name} onChange={e => setName(e.target.value)} />
+        <label style={labelStyle}>{t('your_name')}</label>
+        <input style={inputStyle} placeholder={t('name_placeholder')} value={name} onChange={e => setName(e.target.value)} />
       </div>
 
-      {/* Sex */}
       <div>
-        <label style={labelStyle}>Gender</label>
+        <label style={labelStyle}>{t('gender_label')}</label>
         <div style={{ display: 'flex', gap: 10 }}>
           {(['F', 'M'] as const).map(s => (
             <button key={s} type="button" onClick={() => setSex(s)} style={{
@@ -167,58 +168,53 @@ export default function BirthForm({ onSubmit, loading, submitLabel = 'Get My Rea
               color: sex === s ? 'var(--gold)' : 'var(--text-muted)',
               fontWeight: 600, fontSize: 14, cursor: 'pointer',
             }}>
-              {s === 'F' ? '♀ Female' : '♂ Male'}
+              {s === 'F' ? t('female') : t('male')}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Birth Date */}
       <div>
-        <label style={labelStyle}>Birth Date</label>
+        <label style={labelStyle}>{t('birth_date_label')}</label>
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 3fr', gap: 8 }}>
           <select style={inputStyle} value={month} onChange={e => setMonth(e.target.value)}>
             {MONTHS.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
           </select>
-          <input style={inputStyle} placeholder="Day" type="number" min={1} max={31} value={day} onChange={e => setDay(e.target.value)} />
-          <input style={inputStyle} placeholder="Year (e.g. 1995)" type="number" min={1900} max={2025} value={year} onChange={e => setYear(e.target.value)} />
+          <input style={inputStyle} placeholder={t('day_placeholder')} type="number" min={1} max={31} value={day} onChange={e => setDay(e.target.value)} />
+          <input style={inputStyle} placeholder={t('year_placeholder')} type="number" min={1900} max={2025} value={year} onChange={e => setYear(e.target.value)} />
         </div>
       </div>
 
-      {/* Birth Time */}
       <div>
-        <label style={labelStyle}>Birth Time <span style={{ color: 'var(--text-muted)', textTransform: 'none', letterSpacing: 0 }}>(optional — improves accuracy)</span></label>
+        <label style={labelStyle}>{t('birth_time_label')} <span style={{ color: 'var(--text-muted)', textTransform: 'none', letterSpacing: 0 }}>({t('birth_time_optional')})</span></label>
         <select style={inputStyle} value={hourIndex} onChange={e => setHourIndex(parseInt(e.target.value))}>
-          {TIME_RANGES.map((t, i) => (
-            <option key={i} value={i}>{t.label}</option>
+          {TIME_RANGES.map((tr, i) => (
+            <option key={i} value={i}>{tr.label}</option>
           ))}
         </select>
       </div>
 
-      {/* City */}
       <div>
-        <label style={labelStyle}>Birth City</label>
+        <label style={labelStyle}>{t('birth_city_label')}</label>
         <input
           style={inputStyle}
-          placeholder="e.g. New York"
+          placeholder={t('city_placeholder')}
           value={city}
           onChange={e => setCity(e.target.value)}
           autoComplete="off"
         />
       </div>
 
-      {/* Save person button */}
       {onSavePerson && isValid && (
         <button type="button" onClick={handleSavePerson} disabled={savingPerson || personSaved} style={{
           background: 'none', border: '1px solid var(--border)', borderRadius: 10,
           color: personSaved ? '#2ecc71' : 'var(--text-muted)', fontSize: 12,
           padding: '8px', cursor: 'pointer', textAlign: 'center',
         }}>
-          {personSaved ? '✓ Saved to My Persons' : savingPerson ? 'Saving...' : '+ Save this person'}
+          {personSaved ? t('saved_to_persons') : savingPerson ? t('saving') : t('save_person')}
         </button>
       )}
 
-      {/* Submit */}
       <button
         type="submit"
         disabled={!isValid || loading}
@@ -231,9 +227,9 @@ export default function BirthForm({ onSubmit, loading, submitLabel = 'Get My Rea
         }}
       >
         {loading ? (
-          <><span style={{ display: 'inline-block', animation: 'spin 1s linear infinite' }}>✦</span> Reading the stars...</>
+          <><span style={{ display: 'inline-block', animation: 'spin 1s linear infinite' }}>✦</span> {t('reading_stars')}</>
         ) : (
-          <>{submitLabel}{costBadge && <span style={{ background: 'rgba(22,33,62,0.6)', borderRadius: 20, padding: '2px 10px', fontSize: 12 }}>{costBadge}</span>}</>
+          <>{resolvedSubmitLabel}{costBadge && <span style={{ background: 'rgba(22,33,62,0.6)', borderRadius: 20, padding: '2px 10px', fontSize: 12 }}>{costBadge}</span>}</>
         )}
       </button>
 

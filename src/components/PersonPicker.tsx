@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { SavedPerson, savePerson, birthDateStr } from '@/lib/firestore'
 import BirthForm, { BirthData } from './BirthForm'
 
@@ -54,14 +55,14 @@ interface Props {
 }
 
 export default function PersonPicker({
-  people, onSubmit, loading, submitLabel = 'Get My Reading',
+  people, onSubmit, loading, submitLabel,
   costBadge, headerSlot, userEmail, onPeopleChange,
 }: Props) {
+  const t = useTranslations('reading')
   const [mode, setMode] = useState<'select' | 'manual'>('select')
   const [selectedId, setSelectedId] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
 
-  // Add person form state
   const [pName, setPName] = useState('')
   const [pSex, setPSex] = useState<'M'|'F'>('F')
   const [pMonth, setPMonth] = useState('1')
@@ -72,6 +73,7 @@ export default function PersonPicker({
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
 
+  const resolvedSubmitLabel = submitLabel ?? t('reading_stars')
   const selectedPerson = people.find(p => p.id === selectedId) ?? null
 
   async function handleAddPerson(e: React.FormEvent) {
@@ -101,13 +103,13 @@ export default function PersonPicker({
 
   const addPersonForm = (
     <form onSubmit={handleAddPerson} style={{ display:'flex', flexDirection:'column', gap:12, background:'rgba(201,168,76,0.04)', border:'1px solid rgba(201,168,76,0.2)', borderRadius:14, padding:'18px 16px', marginTop:4 }}>
-      <p style={{ color:'var(--gold)', fontSize:11, letterSpacing:2, textTransform:'uppercase', marginBottom:4 }}>New Person</p>
+      <p style={{ color:'var(--gold)', fontSize:11, letterSpacing:2, textTransform:'uppercase', marginBottom:4 }}>{t('new_person')}</p>
       <div>
-        <label style={labelStyle}>Name</label>
-        <input style={inputStyle} placeholder="e.g. Jessica" value={pName} onChange={e => setPName(e.target.value)} required />
+        <label style={labelStyle}>{t('name_label')}</label>
+        <input style={inputStyle} placeholder={t('name_placeholder')} value={pName} onChange={e => setPName(e.target.value)} required />
       </div>
       <div>
-        <label style={labelStyle}>Gender</label>
+        <label style={labelStyle}>{t('gender_label')}</label>
         <div style={{ display:'flex', gap:8 }}>
           {(['F','M'] as const).map(s => (
             <button key={s} type="button" onClick={() => setPSex(s)} style={{
@@ -115,38 +117,38 @@ export default function PersonPicker({
               border:`1px solid ${pSex === s ? 'var(--gold)' : 'var(--border)'}`,
               background: pSex === s ? 'rgba(201,168,76,0.12)' : 'transparent',
               color: pSex === s ? 'var(--gold)' : 'var(--text-muted)',
-            }}>{s === 'F' ? '♀ Female' : '♂ Male'}</button>
+            }}>{s === 'F' ? t('female') : t('male')}</button>
           ))}
         </div>
       </div>
       <div>
-        <label style={labelStyle}>Birth Date</label>
+        <label style={labelStyle}>{t('birth_date_label')}</label>
         <div style={{ display:'grid', gridTemplateColumns:'2fr 2fr 3fr', gap:8 }}>
           <select style={inputStyle} value={pMonth} onChange={e => setPMonth(e.target.value)}>
             {MONTHS.map((m, i) => <option key={i} value={i+1}>{m}</option>)}
           </select>
-          <input style={inputStyle} placeholder="Day" type="number" min={1} max={31} value={pDay} onChange={e => setPDay(e.target.value)} required />
-          <input style={inputStyle} placeholder="Year" type="number" min={1900} max={2025} value={pYear} onChange={e => setPYear(e.target.value)} required />
+          <input style={inputStyle} placeholder={t('day_placeholder')} type="number" min={1} max={31} value={pDay} onChange={e => setPDay(e.target.value)} required />
+          <input style={inputStyle} placeholder={t('year_placeholder')} type="number" min={1900} max={2025} value={pYear} onChange={e => setPYear(e.target.value)} required />
         </div>
       </div>
       <div>
-        <label style={labelStyle}>Birth Time <span style={{ color:'var(--text-muted)', textTransform:'none', letterSpacing:0 }}>(optional)</span></label>
+        <label style={labelStyle}>{t('birth_time_label')} <span style={{ color:'var(--text-muted)', textTransform:'none', letterSpacing:0 }}>({t('optional')})</span></label>
         <select style={inputStyle} value={pHourIndex} onChange={e => setPHourIndex(parseInt(e.target.value))}>
-          {TIME_RANGES.map((t, i) => <option key={i} value={i}>{t.label}</option>)}
+          {TIME_RANGES.map((tr, i) => <option key={i} value={i}>{tr.label}</option>)}
         </select>
       </div>
       <div>
-        <label style={labelStyle}>Birth City</label>
-        <input style={inputStyle} placeholder="e.g. New York" value={pCity} onChange={e => setPCity(e.target.value)} required />
+        <label style={labelStyle}>{t('birth_city_label')}</label>
+        <input style={inputStyle} placeholder={t('city_placeholder')} value={pCity} onChange={e => setPCity(e.target.value)} required />
       </div>
       {saveError && <p style={{ color:'#ef4444', fontSize:12 }}>{saveError}</p>}
       <div style={{ display:'flex', gap:8, marginTop:4 }}>
         <button type="button" onClick={() => { setShowAddForm(false); setSaveError('') }} style={{
           flex:1, background:'none', border:'1px solid var(--border)', borderRadius:50,
           color:'var(--text-muted)', fontSize:13, padding:'10px', cursor:'pointer',
-        }}>Cancel</button>
+        }}>{t('cancel')}</button>
         <button type="submit" disabled={saving} className="btn-gold" style={{ flex:2, opacity: saving ? 0.7 : 1 }}>
-          {saving ? 'Saving...' : 'Save & Select'}
+          {saving ? t('saving') : t('save_select')}
         </button>
       </div>
     </form>
@@ -158,10 +160,10 @@ export default function PersonPicker({
         {headerSlot}
         {people.length > 0 && (
           <button type="button" onClick={() => setMode('select')} style={{ background:'none', border:'none', color:'var(--text-muted)', fontSize:13, cursor:'pointer', textAlign:'left', padding:0 }}>
-            ← Select a saved person
+            {t('select_saved')}
           </button>
         )}
-        <BirthForm onSubmit={onSubmit} loading={loading} submitLabel={submitLabel} costBadge={costBadge} />
+        <BirthForm onSubmit={onSubmit} loading={loading} submitLabel={resolvedSubmitLabel} costBadge={costBadge} />
       </div>
     )
   }
@@ -175,16 +177,16 @@ export default function PersonPicker({
           {!showAddForm && (
             <div style={{ textAlign:'center', padding:'36px 24px', background:'var(--card)', border:'1px solid var(--border)', borderRadius:14 }}>
               <p style={{ fontSize:28, marginBottom:12 }}>👤</p>
-              <p style={{ color:'#fff', fontSize:15, fontWeight:600, marginBottom:8 }}>No saved persons yet.</p>
+              <p style={{ color:'#fff', fontSize:15, fontWeight:600, marginBottom:8 }}>{t('no_saved_title')}</p>
               <p style={{ color:'var(--text-muted)', fontSize:13, marginBottom:20, lineHeight:1.6 }}>
-                Save yourself to get started with quick readings.
+                {t('no_saved_sub')}
               </p>
               {userEmail ? (
                 <button type="button" onClick={() => setShowAddForm(true)} className="btn-gold" style={{ padding:'11px 24px', fontSize:13 }}>
-                  + Add Person
+                  {t('add_person')}
                 </button>
               ) : (
-                <p style={{ color:'var(--text-muted)', fontSize:12 }}>Please sign in to save persons.</p>
+                <p style={{ color:'var(--text-muted)', fontSize:12 }}>{t('please_sign_in')}</p>
               )}
             </div>
           )}
@@ -226,7 +228,7 @@ export default function PersonPicker({
                 background:'rgba(201,168,76,0.06)', border:'1px dashed rgba(201,168,76,0.35)',
                 borderRadius:12, padding:'10px', color:'var(--gold)', fontSize:13, cursor:'pointer',
               }}>
-                + Add Another Person
+                {t('add_another')}
               </button>
             )
           )}
@@ -244,15 +246,15 @@ export default function PersonPicker({
             }}
           >
             {loading
-              ? <><span style={{ display:'inline-block', animation:'spin 1s linear infinite' }}>✦</span> Reading the stars...</>
-              : <>{submitLabel}{costBadge && <span style={{ background:'rgba(22,33,62,0.6)', borderRadius:20, padding:'2px 10px', fontSize:12 }}>{costBadge}</span>}</>
+              ? <><span style={{ display:'inline-block', animation:'spin 1s linear infinite' }}>✦</span> {t('reading_stars')}</>
+              : <>{resolvedSubmitLabel}{costBadge && <span style={{ background:'rgba(22,33,62,0.6)', borderRadius:20, padding:'2px 10px', fontSize:12 }}>{costBadge}</span>}</>
             }
           </button>
         </>
       )}
 
       <button type="button" onClick={() => setMode('manual')} style={{ background:'none', border:'none', color:'var(--text-muted)', fontSize:12, cursor:'pointer', textAlign:'center', padding:'4px 0', textDecoration:'underline', textUnderlineOffset:3 }}>
-        Enter manually →
+        {t('enter_manually')}
       </button>
 
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
