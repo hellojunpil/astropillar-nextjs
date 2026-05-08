@@ -132,35 +132,66 @@ const EMOJI_RE = new RegExp(`[${EMOJI_SET}]`, 'u')
 const SPLIT_RE = new RegExp(`\\n+(?=#{1,3} |\\*\\*[A-Z\\u00C0-\\uFFFF]|[${EMOJI_SET}])`, 'u')
 
 // ── Chinese character annotations ────────────────────────────────────
-const GAN_LABELS: Record<string, string> = {
-  '甲':'Bold Wood','乙':'Graceful Wood','丙':'Blazing Fire','丁':'Glowing Fire',
-  '戊':'Steady Earth','己':'Grounded Earth','庚':'Forged Metal','辛':'Pure Metal',
-  '壬':'Vast Water','癸':'Still Water',
+const ANNOTATIONS_BY_LOCALE: Record<string, Record<string, string>> = {
+  en: {
+    '甲':'Bold Wood','乙':'Graceful Wood','丙':'Blazing Fire','丁':'Glowing Fire',
+    '戊':'Steady Earth','己':'Grounded Earth','庚':'Forged Metal','辛':'Pure Metal',
+    '壬':'Vast Water','癸':'Still Water',
+    '子':'Rat','丑':'Ox','寅':'Tiger','卯':'Rabbit','辰':'Dragon','巳':'Snake',
+    '午':'Horse','未':'Goat','申':'Monkey','酉':'Rooster','戌':'Dog','亥':'Pig',
+    '比肩':'Friend Star','劫財':'Rival Star','食神':'Creative Star',
+    '傷官':'Expression Star','偏財':'Indirect Wealth','正財':'Direct Wealth',
+    '偏官':'Power Star','正官':'Direct Officer','偏印':'Shadow Wisdom','正印':'Pure Wisdom',
+    '年柱':'Year Pillar','月柱':'Month Pillar','日柱':'Day Pillar','時柱':'Hour Pillar',
+    '木':'Wood','火':'Fire','土':'Earth','金':'Metal','水':'Water',
+    '天干':'Sky Element','地支':'Earth Sign','大運':'Major Luck Cycle',
+    '流年':'Annual Luck','格局':'Chart Pattern','用神':'Guiding Star',
+    '空亡':'Void','陰':'Yin','陽':'Yang',
+  },
+  ko: {
+    '甲':'굳센 나무','乙':'부드러운 나무','丙':'타오르는 불','丁':'은은한 불',
+    '戊':'든든한 흙','己':'유연한 흙','庚':'단련된 금속','辛':'순수한 금속',
+    '壬':'드넓은 물','癸':'고요한 물',
+    '子':'쥐','丑':'소','寅':'호랑이','卯':'토끼','辰':'용','巳':'뱀',
+    '午':'말','未':'양','申':'원숭이','酉':'닭','戌':'개','亥':'돼지',
+    '比肩':'비견','劫財':'겁재','食神':'식신',
+    '傷官':'상관','偏財':'편재','正財':'정재',
+    '偏官':'편관','正官':'정관','偏印':'편인','正印':'정인',
+    '年柱':'연주','月柱':'월주','日柱':'일주','時柱':'시주',
+    '木':'목','火':'화','土':'토','金':'금','水':'수',
+    '天干':'천간','地支':'지지','大運':'대운',
+    '流年':'유년','格局':'격국','用神':'용신',
+    '空亡':'공망','陰':'음','陽':'양',
+  },
+  ja: {
+    '甲':'大木','乙':'草花','丙':'太陽','丁':'灯火',
+    '戊':'大山','己':'田園','庚':'刀剣','辛':'宝石',
+    '壬':'大海','癸':'雨露',
+    '子':'鼠','丑':'牛','寅':'虎','卯':'兎','辰':'龍','巳':'蛇',
+    '午':'馬','未':'羊','申':'猿','酉':'鶏','戌':'犬','亥':'猪',
+    '比肩':'比肩','劫財':'劫財','食神':'食神',
+    '傷官':'傷官','偏財':'偏財','正財':'正財',
+    '偏官':'偏官','正官':'正官','偏印':'偏印','正印':'正印',
+    '年柱':'年柱','月柱':'月柱','日柱':'日柱','時柱':'時柱',
+    '木':'木','火':'火','土':'土','金':'金','水':'水',
+    '天干':'天干','地支':'地支','大運':'大運',
+    '流年':'流年','格局':'格局','用神':'用神',
+    '空亡':'空亡','陰':'陰','陽':'陽',
+  },
 }
-const ZHI_LABELS: Record<string, string> = {
-  '子':'Rat','丑':'Ox','寅':'Tiger','卯':'Rabbit','辰':'Dragon','巳':'Snake',
-  '午':'Horse','未':'Goat','申':'Monkey','酉':'Rooster','戌':'Dog','亥':'Pig',
-}
-const CHINESE_ANNOTATIONS: Record<string, string> = {
-  ...GAN_LABELS, ...ZHI_LABELS,
-  '比肩':'Friend Star','劫財':'Rival Star','食神':'Creative Star',
-  '傷官':'Expression Star','偏財':'Indirect Wealth','正財':'Direct Wealth',
-  '偏官':'Power Star','正官':'Direct Officer','偏印':'Shadow Wisdom','正印':'Pure Wisdom',
-  '年柱':'Year Pillar','月柱':'Month Pillar','日柱':'Day Pillar','時柱':'Hour Pillar',
-  '木':'Wood','火':'Fire','土':'Earth','金':'Metal','水':'Water',
-  '天干':'Sky Element','地支':'Earth Sign','大運':'Major Luck Cycle',
-  '流年':'Annual Luck','格局':'Chart Pattern','用神':'Guiding Star',
-  '空亡':'Void','陰':'Yin','陽':'Yang',
-}
-// Sort entries longest-first to avoid partial matches
-const ANNOTATION_ENTRIES = Object.entries(CHINESE_ANNOTATIONS).sort((a,b) => b[0].length - a[0].length)
 
-function annotateChineseChars(text: string): string {
+const ANNOTATION_ENTRIES_BY_LOCALE: Record<string, [string, string][]> = Object.fromEntries(
+  Object.entries(ANNOTATIONS_BY_LOCALE).map(([loc, map]) => [
+    loc, Object.entries(map).sort((a, b) => b[0].length - a[0].length),
+  ])
+)
+
+function annotateChineseChars(text: string, locale: string): string {
+  const entries = ANNOTATION_ENTRIES_BY_LOCALE[locale] ?? ANNOTATION_ENTRIES_BY_LOCALE.en
   let result = text
-  for (const [char, eng] of ANNOTATION_ENTRIES) {
-    // Only replace if not already followed by " (..."
+  for (const [char, label] of entries) {
     const re = new RegExp(`${char}(?! \\()`, 'g')
-    result = result.replace(re, `${char} (${eng})`)
+    result = result.replace(re, `${char} (${label})`)
   }
   return result
 }
@@ -305,19 +336,22 @@ function normalizeTitle(t: string): string {
 }
 
 // ── Day Master Labels for bold rendering ────────────────────────────
-const DAY_MASTER_LABELS = [
-  'Bold Wood','Graceful Wood','Blazing Fire','Glowing Fire','Steady Earth',
-  'Grounded Earth','Forged Metal','Pure Metal','Vast Water','Still Water',
-]
-const DM_LABEL_RE = new RegExp(`(${DAY_MASTER_LABELS.join('|')})`, 'g')
+const DAY_MASTER_LABELS_BY_LOCALE: Record<string, string[]> = {
+  en: ['Bold Wood','Graceful Wood','Blazing Fire','Glowing Fire','Steady Earth','Grounded Earth','Forged Metal','Pure Metal','Vast Water','Still Water'],
+  ko: ['굳센 나무','부드러운 나무','타오르는 불','은은한 불','든든한 흙','유연한 흙','단련된 금속','순수한 금속','드넓은 물','고요한 물'],
+  ja: ['大木','草花','太陽','灯火','大山','田園','刀剣','宝石','大海','雨露'],
+}
 
 function RichText({ text }: { text: string }) {
-  const annotated = annotateChineseChars(text)
-  const parts = annotated.split(DM_LABEL_RE)
+  const locale = useLocale()
+  const labels = DAY_MASTER_LABELS_BY_LOCALE[locale] ?? DAY_MASTER_LABELS_BY_LOCALE.en
+  const dmRe = new RegExp(`(${labels.join('|')})`, 'g')
+  const annotated = annotateChineseChars(text, locale)
+  const parts = annotated.split(dmRe)
   return (
     <p style={{ color:'#ddd', fontSize:14, lineHeight:1.9, whiteSpace:'pre-wrap', margin:0 }}>
       {parts.map((part, i) =>
-        DAY_MASTER_LABELS.includes(part)
+        labels.includes(part)
           ? <strong key={i} style={{ color:'var(--gold)', fontWeight:700 }}>{part}</strong>
           : part
       )}
@@ -1229,11 +1263,11 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
                         <p style={{ color:'var(--text-muted)', fontSize:9, letterSpacing:1.5, textTransform:'uppercase' }}>{pillarLabels[i]}</p>
                         <Image src={ganImg(p.gan)} alt={p.gan} width={56} height={56} unoptimized style={{ borderRadius:8 }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
                         <p style={{ color:'rgba(201,168,76,0.75)', fontSize:8, textAlign:'center', lineHeight:1.3 }}>
-                          {p.gan}{GAN_LABELS[p.gan] ? ` (${GAN_LABELS[p.gan]})` : ''}
+                          {p.gan}{ANNOTATIONS_BY_LOCALE[locale]?.[p.gan] ? ` (${ANNOTATIONS_BY_LOCALE[locale][p.gan]})` : ''}
                         </p>
                         <Image src={zhiImg(p.zhi)} alt={p.zhi} width={56} height={56} unoptimized style={{ borderRadius:8 }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
                         <p style={{ color:'rgba(170,170,170,0.7)', fontSize:8, textAlign:'center', lineHeight:1.3 }}>
-                          {p.zhi}{ZHI_LABELS[p.zhi] ? ` (${ZHI_LABELS[p.zhi]})` : ''}
+                          {p.zhi}{ANNOTATIONS_BY_LOCALE[locale]?.[p.zhi] ? ` (${ANNOTATIONS_BY_LOCALE[locale][p.zhi]})` : ''}
                         </p>
                       </div>
                     ))}
