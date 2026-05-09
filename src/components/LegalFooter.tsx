@@ -10,17 +10,17 @@ export default function LegalFooter({ style }: { style?: React.CSSProperties }) 
     en: {
       privacy: 'Privacy Policy', terms: 'Terms of Service', refund: 'Refund Policy',
       copy: `© ${new Date().getFullYear()} PilLAB. All rights reserved.`,
-      biz: 'PilLAB | CEO: Park Junpil | Business Reg: 496-74-00629\n315, 5F, 61 Dongpangyo-ro, Bundang-gu, Seongnam-si, Gyeonggi-do, Korea | support: bbiribbiri09@gmail.com',
+      biz: 'PilLAB | Business Reg: 496-74-00629\n315, 5F, 61 Dongpangyo-ro, Bundang-gu, Seongnam-si, Gyeonggi-do, Korea',
     },
     ko: {
       privacy: '개인정보처리방침', terms: '이용약관', refund: '환불정책',
       copy: `© ${new Date().getFullYear()} 필랩(PilLAB). All rights reserved.`,
-      biz: '상호: 필랩(PilLAB) | 대표: 박준필 | 사업자등록번호: 496-74-00629\n주소: 경기도 성남시 분당구 동판교로 61, 5층 504,505호 내 315 (백현동, 자유퍼스트프라자2) | 고객지원: bbiribbiri09@gmail.com',
+      biz: '상호: 필랩(PilLAB) | 사업자등록번호: 496-74-00629\n주소: 경기도 성남시 분당구 동판교로 61, 5층 504,505호 내 315 (백현동, 자유퍼스트프라자2)',
     },
     ja: {
       privacy: 'プライバシーポリシー', terms: '利用規約', refund: '返金ポリシー',
       copy: `© ${new Date().getFullYear()} PilLAB. All rights reserved.`,
-      biz: 'PilLAB | 代表: Park Junpil | 事業者番号: 496-74-00629\n住所: 韓国 京畿道城南市盆唐区東板橋路61, 5階504,505号内315 | サポート: bbiribbiri09@gmail.com',
+      biz: 'PilLAB | 事業者番号: 496-74-00629\n住所: 韓国 京畿道城南市盆唐区東板橋路61, 5階504,505号内315',
     },
   }
   const l = labels[locale as keyof typeof labels] ?? labels.en

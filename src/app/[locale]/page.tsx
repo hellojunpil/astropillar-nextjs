@@ -182,17 +182,17 @@ export default function LandingPage() {
   const popupCopy = {
     en: {
       title: 'Welcome to AstroPillar ✨',
-      body: 'Sign up and get 1 free credit — enough for a full reading. If you have any feedback or suggestions, let us know at',
+      lines: ['🎁 Free credit on sign up', '🔁 Free credit for every 3 shares'],
       btn: 'Got it',
     },
     ko: {
       title: 'AstroPillar에 오신 걸 환영해요 ✨',
-      body: '지금 가입하면 무료 크레딧 1개를 드려요 — 리딩 한 번을 무료로 받아보실 수 있어요. 이용하시면서 개선이 필요한 사항이 있으면 편하게 알려주세요.',
+      lines: ['🎁 회원가입 시 무료 크레딧 지급', '🔁 3회 공유 시 무료 크레딧 지급'],
       btn: '확인',
     },
     ja: {
       title: 'AstroPillarへようこそ ✨',
-      body: '今すぐ登録すると、無料クレジット1つをプレゼント。鑑定を1回無料でお試しいただけます。ご意見・ご要望があればお気軽にご連絡ください。',
+      lines: ['🎁 新規登録で無料クレジット進呈', '🔁 3回シェアで無料クレジット進呈'],
       btn: '了解',
     },
   }
@@ -211,16 +211,12 @@ export default function LandingPage() {
             onClick={e => e.stopPropagation()}
             style={{ background:'#0d0d2b', border:'1px solid rgba(201,168,76,0.4)', borderRadius:20, padding:'32px 28px', maxWidth:360, width:'100%', boxShadow:'0 8px 40px rgba(0,0,0,0.6)' }}
           >
-            <div style={{ fontSize:18, fontWeight:700, color:'#C9A84C', marginBottom:14, lineHeight:1.4 }}>{pc.title}</div>
-            <div style={{ fontSize:14, color:'rgba(200,195,220,0.8)', lineHeight:1.75, marginBottom:16 }}>
-              {pc.body}
-              {locale !== 'ko' && (
-                <> <span style={{ color:'#C9A84C', fontWeight:600 }}>bbiribbiri09@gmail.com</span></>
-              )}
+            <div style={{ fontSize:18, fontWeight:700, color:'#C9A84C', marginBottom:16, lineHeight:1.4 }}>{pc.title}</div>
+            <div style={{ display:'flex', flexDirection:'column', gap:10, marginBottom:20 }}>
+              {pc.lines.map((line, i) => (
+                <div key={i} style={{ fontSize:15, fontWeight:600, color:'#F6F6F8', lineHeight:1.5 }}>{line}</div>
+              ))}
             </div>
-            {locale === 'ko' && (
-              <div style={{ fontSize:13, color:'#C9A84C', fontWeight:600, marginBottom:16 }}>bbiribbiri09@gmail.com</div>
-            )}
             <button
               onClick={closePopup}
               style={{ width:'100%', background:'#C9A84C', color:'#16213E', fontFamily, fontSize:14, fontWeight:700, border:'none', borderRadius:50, padding:'13px', cursor:'pointer' }}
