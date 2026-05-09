@@ -12,13 +12,20 @@ import { getPaymentProviderByLocale } from '@/lib/paymentProvider'
 
 const GUMROAD_1 = process.env.NEXT_PUBLIC_GUMROAD_URL_1 || ''
 const GUMROAD_5 = process.env.NEXT_PUBLIC_GUMROAD_URL_5 || ''
+const PORTONE_STORE_ID = process.env.NEXT_PUBLIC_PORTONE_STORE_ID || ''
+const PORTONE_KAKAOPAY_KEY = process.env.NEXT_PUBLIC_PORTONE_KAKAOPAY_CHANNEL_KEY || ''
+const PORTONE_TOSS_KEY = process.env.NEXT_PUBLIC_PORTONE_TOSS_CHANNEL_KEY || ''
+
+// 테스트 금액 (실서비스 전환 시 수정)
+const PRICES_KRW = { 1: 100, 5: 500 }
+const PRICES_JPY = { 1: 100, 5: 500 }
 
 export default function BuyPage() {
   const router = useRouter()
   const locale = useLocale()
   const t = useTranslations('buy')
   const tMenu = useTranslations('menu')
-  const { user, credits, loading } = useAuth()
+  const { user, credits, loading, refreshCredits } = useAuth()
   const pricing = usePricing()
   const provider = getPaymentProviderByLocale(locale)
 
@@ -43,21 +50,91 @@ export default function BuyPage() {
     router.push('/')
   }
 
-  function handleBuy(credits: number, gumroadUrl: string) {
-    const price = credits === 1 ? t('pack1_price') : t('pack5_price')
-    gtagEvent('credit_purchase_click', { credits: String(credits), price })
+  async function handlePortOneBuy(creditCount: 1 | 5, method: 'kakaopay' | 'card') {
+    if (!user?.email) {
+      alert(locale === 'ko' ? '로그인이 필요합니다.' : locale === 'ja' ? 'ログインが必要です。' : 'Please log in.')
+      return
+    }
 
-    if (provider === 'portone') {
-      // TODO: 포트원 가입 완료 후 구현
-      // 현재는 Gumroad fallback
-      alert(locale === 'ko' ? '포트원 결제 연동 준비 중입니다. 잠시 후 Gumroad로 안내합니다.' : locale === 'ja' ? 'PortOne決済は準備中です。Gumroadにリダイレクトします。' : 'PortOne payment coming soon.')
-      window.open(gumroadUrl, '_blank')
-    } else {
-      window.open(gumroadUrl, '_blank')
+    const amount = locale === 'ja' ? PRICES_JPY[creditCount] : PRICES_KRW[creditCount]
+    const currency = locale === 'ja' ? 'JPY' : 'KRW'
+    const paymentId = `astropillar-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+    const orderName = creditCount === 1
+      ? (locale === 'ko' ? '1 크레딧' : locale === 'ja' ? '1クレジット' : '1 Credit')
+      : (locale === 'ko' ? '5 크레딧 패키지' : locale === 'ja' ? '5クレジットパック' : '5 Credits Pack')
+
+    gtagEvent('credit_purchase_click', { credits: String(creditCount), price: `${amount}${currency}`, method })
+
+    try {
+      // PortOne browser SDK 동적 import
+      const PortOne = await import('@portone/browser-sdk/v2')
+
+      const channelKey = method === 'kakaopay' ? PORTONE_KAKAOPAY_KEY : PORTONE_TOSS_KEY
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const response = await (PortOne.requestPayment as any)({
+        storeId: PORTONE_STORE_ID,
+        channelKey,
+        paymentId,
+        orderName,
+        totalAmount: amount,
+        currency,
+        payMethod: method === 'kakaopay' ? 'EASY_PAY' : 'CARD',
+        ...(method === 'kakaopay' ? {
+          easyPay: { easyPayProvider: 'KAKAOPAY' }
+        } : {}),
+        customer: {
+          email: user.email,
+        },
+      })
+
+      if (!response || response.code) {
+        // 사용자가 취소하거나 오류 발생
+        if (response?.code !== 'USER_CANCEL') {
+          console.error('PortOne payment failed:', response)
+          alert(locale === 'ko' ? '결제 중 오류가 발생했습니다.' : locale === 'ja' ? '決済中にエラーが発生しました。' : 'Payment error occurred.')
+        }
+        return
+      }
+
+      // 서버사이드 결제 검증 + 크레딧 지급
+      const verifyRes = await fetch('/api/portone-verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paymentId: response.paymentId,
+          credits: creditCount,
+          email: user.email,
+          locale,
+        }),
+      })
+
+      const verifyData = await verifyRes.json()
+      if (!verifyData.ok) {
+        console.error('Verify failed:', verifyData)
+        alert(locale === 'ko' ? '결제 검증 실패. 고객센터로 문의해주세요.' : locale === 'ja' ? '決済の確認に失敗しました。' : 'Payment verification failed.')
+        return
+      }
+
+      // 크레딧 UI 갱신
+      refreshCredits(creditCount)
+
+      alert(locale === 'ko' ? `${creditCount} 크레딧이 충전되었습니다! 🎉` : locale === 'ja' ? `${creditCount}クレジットが追加されました！🎉` : `${creditCount} credits added! 🎉`)
+    } catch (e) {
+      console.error('PortOne buy error:', e)
+      alert(locale === 'ko' ? '결제 중 오류가 발생했습니다.' : locale === 'ja' ? '決済中にエラーが発生しました。' : 'Payment error occurred.')
     }
   }
 
+  function handleGumroadBuy(creditCount: number, gumroadUrl: string) {
+    const price = creditCount === 1 ? t('pack1_price') : t('pack5_price')
+    gtagEvent('credit_purchase_click', { credits: String(creditCount), price })
+    window.open(gumroadUrl, '_blank')
+  }
+
   if (loading) return null
+
+  const isPortOne = provider === 'portone'
 
   return (
     <main style={{ fontFamily, background: '#07071a', color: '#F6F6F8', minHeight: '100vh', paddingBottom: 96 }}>
@@ -90,11 +167,26 @@ export default function BuyPage() {
                   {locale === 'ko' ? '리딩 1회 이용 가능' : locale === 'ja' ? 'リーディング1回分' : 'One premium reading'}
                 </div>
               </div>
-              <div style={{ fontSize: 24, fontWeight: 700, color: '#C9A84C' }}>{t('pack1_price')}</div>
+              <div style={{ fontSize: 22, fontWeight: 700, color: '#C9A84C' }}>
+                {locale === 'ko' ? '₩1,900' : locale === 'ja' ? '¥300' : t('pack1_price')}
+              </div>
             </div>
-            <button onClick={() => handleBuy(1, GUMROAD_1)} style={{ width: '100%', padding: '13px', background: '#C9A84C', color: '#16213E', fontFamily, fontSize: 14, fontWeight: 700, border: 'none', borderRadius: 50, cursor: 'pointer' }}>
-              {t('cta')}
-            </button>
+            {isPortOne ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {locale === 'ko' && (
+                  <button onClick={() => handlePortOneBuy(1, 'kakaopay')} style={{ width: '100%', padding: '12px', background: '#FEE500', color: '#191919', fontFamily, fontSize: 14, fontWeight: 700, border: 'none', borderRadius: 50, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                    <span>카카오페이로 결제</span>
+                  </button>
+                )}
+                <button onClick={() => handlePortOneBuy(1, 'card')} style={{ width: '100%', padding: '12px', background: '#C9A84C', color: '#16213E', fontFamily, fontSize: 14, fontWeight: 700, border: 'none', borderRadius: 50, cursor: 'pointer' }}>
+                  {locale === 'ko' ? '카드로 결제' : locale === 'ja' ? 'カードで支払う' : t('cta')}
+                </button>
+              </div>
+            ) : (
+              <button onClick={() => handleGumroadBuy(1, GUMROAD_1)} style={{ width: '100%', padding: '13px', background: '#C9A84C', color: '#16213E', fontFamily, fontSize: 14, fontWeight: 700, border: 'none', borderRadius: 50, cursor: 'pointer' }}>
+                {t('cta')}
+              </button>
+            )}
           </div>
 
           {/* 5 크레딧 */}
@@ -109,11 +201,26 @@ export default function BuyPage() {
                   {locale === 'ko' ? '리딩 5회 이용 가능' : locale === 'ja' ? 'リーディング5回分' : 'Five premium readings'}
                 </div>
               </div>
-              <div style={{ fontSize: 24, fontWeight: 700, color: '#C9A84C' }}>{t('pack5_price')}</div>
+              <div style={{ fontSize: 22, fontWeight: 700, color: '#C9A84C' }}>
+                {locale === 'ko' ? '₩8,900' : locale === 'ja' ? '¥1,200' : t('pack5_price')}
+              </div>
             </div>
-            <button onClick={() => handleBuy(5, GUMROAD_5)} style={{ width: '100%', padding: '13px', background: '#C9A84C', color: '#16213E', fontFamily, fontSize: 14, fontWeight: 700, border: 'none', borderRadius: 50, cursor: 'pointer' }}>
-              {t('cta')}
-            </button>
+            {isPortOne ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {locale === 'ko' && (
+                  <button onClick={() => handlePortOneBuy(5, 'kakaopay')} style={{ width: '100%', padding: '12px', background: '#FEE500', color: '#191919', fontFamily, fontSize: 14, fontWeight: 700, border: 'none', borderRadius: 50, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                    <span>카카오페이로 결제</span>
+                  </button>
+                )}
+                <button onClick={() => handlePortOneBuy(5, 'card')} style={{ width: '100%', padding: '12px', background: '#C9A84C', color: '#16213E', fontFamily, fontSize: 14, fontWeight: 700, border: 'none', borderRadius: 50, cursor: 'pointer' }}>
+                  {locale === 'ko' ? '카드로 결제' : locale === 'ja' ? 'カードで支払う' : t('cta')}
+                </button>
+              </div>
+            ) : (
+              <button onClick={() => handleGumroadBuy(5, GUMROAD_5)} style={{ width: '100%', padding: '13px', background: '#C9A84C', color: '#16213E', fontFamily, fontSize: 14, fontWeight: 700, border: 'none', borderRadius: 50, cursor: 'pointer' }}>
+                {t('cta')}
+              </button>
+            )}
           </div>
         </div>
 
@@ -136,9 +243,9 @@ export default function BuyPage() {
           <span style={{ fontSize: 12, color: 'rgba(200,195,220,0.4)' }}>∞ {t('no_expiry')}</span>
         </div>
 
-        {provider === 'portone' && (
-          <div style={{ marginTop: 16, padding: '10px 14px', background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: 10, fontSize: 12, color: 'rgba(201,168,76,0.7)', textAlign: 'center' }}>
-            {locale === 'ko' ? '🚧 한국/일본 로컬 결제 연동 준비 중 · 현재 국제 카드로 결제 가능' : '🚧 ローカル決済連携準備中 · 現在は国際カードでお支払いいただけます'}
+        {isPortOne && (
+          <div style={{ marginTop: 16, padding: '10px 14px', background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: 10, fontSize: 11, color: 'rgba(201,168,76,0.5)', textAlign: 'center' }}>
+            {locale === 'ko' ? '🔒 PortOne 보안 결제 · 카카오페이 / 신용카드' : '🔒 PortOne セキュア決済 · クレジットカード'}
           </div>
         )}
       </div>
