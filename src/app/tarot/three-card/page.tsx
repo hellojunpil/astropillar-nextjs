@@ -292,6 +292,7 @@ export default function ThreeCardPage() {
             reading_type: 'tarot_three_card',
             name: question.trim() || 'Three Card Reading',
             birth_date: '', birth_city: '',
+            locale,
             result: {
               content_text: res.content_text,
               cards: slots.map((c, i) => ({ name: c?.name, position: pos[i].label, file: c?.file })),
@@ -333,6 +334,7 @@ export default function ThreeCardPage() {
             reading_type: 'tarot_scenario',
             name: scenarioQuestion.trim(),
             birth_date: '', birth_city: '',
+            locale,
             result: {
               content_text: res.content_text,
               cards: slots.map((c, i) => ({ name: c?.name, position: pos[i].label, file: c?.file })),

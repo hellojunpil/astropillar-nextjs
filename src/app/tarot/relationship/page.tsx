@@ -304,6 +304,7 @@ export default function RelationshipPage() {
             reading_type: 'tarot_relationship',
             name: question.trim() || `${relType} Reading`,
             birth_date: '', birth_city: '',
+            locale,
             result: {
               content_text: res.content_text,
               cards: slots.map((c, i) => ({ name: c?.name, position: pos[i].label, file: c?.file })),
@@ -346,6 +347,7 @@ export default function RelationshipPage() {
             reading_type: 'tarot_scenario',
             name: scenarioQ.trim(),
             birth_date: '', birth_city: '',
+            locale,
             result: {
               content_text: res.content_text,
               cards: slots.map((c, i) => ({ name: c?.name, position: pos[i].label, file: c?.file })),
