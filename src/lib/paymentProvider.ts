@@ -14,6 +14,6 @@ export function getPaymentProvider(country: string | null): PaymentProvider {
 
 // 로케일 → 결제 서비스 (클라이언트 사이드 fallback)
 export function getPaymentProviderByLocale(locale: string): PaymentProvider {
-  if (locale === 'ko' || locale === 'ja') return 'portone'
+  if (locale === 'ko') return 'portone'
   return 'gumroad'
 }

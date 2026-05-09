@@ -206,18 +206,17 @@ function BuyContent() {
                 </div>
               </div>
               <div style={{ fontSize: 22, fontWeight: 700, color: '#C9A84C' }}>
-                {locale === 'ko' ? '₩990' : locale === 'ja' ? '¥100' : t('pack1_price')}
+                {locale === 'ko' ? '₩990' : locale === 'ja' ? '$0.99' : t('pack1_price')}
               </div>
             </div>
-            {isPortOne ? (
+            {locale === 'ko' ? (
+              <div style={{ width: '100%', padding: '13px', background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.25)', borderRadius: 50, textAlign: 'center', fontSize: 14, color: 'rgba(201,168,76,0.6)' }}>
+                🚧 아직 이용이 불가합니다
+              </div>
+            ) : isPortOne ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {locale === 'ko' && (
-                  <button onClick={() => handlePortOneBuy(1, 'kakaopay')} style={{ width: '100%', padding: '12px', background: '#FEE500', color: '#191919', fontFamily, fontSize: 14, fontWeight: 700, border: 'none', borderRadius: 50, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                    <span>카카오페이로 결제</span>
-                  </button>
-                )}
                 <button onClick={() => handlePortOneBuy(1, 'card')} style={{ width: '100%', padding: '12px', background: '#C9A84C', color: '#16213E', fontFamily, fontSize: 14, fontWeight: 700, border: 'none', borderRadius: 50, cursor: 'pointer' }}>
-                  {locale === 'ko' ? '카드로 결제' : locale === 'ja' ? 'カードで支払う' : t('cta')}
+                  {t('cta')}
                 </button>
               </div>
             ) : (
@@ -240,18 +239,17 @@ function BuyContent() {
                 </div>
               </div>
               <div style={{ fontSize: 22, fontWeight: 700, color: '#C9A84C' }}>
-                {locale === 'ko' ? '₩3,900' : locale === 'ja' ? '¥400' : t('pack5_price')}
+                {locale === 'ko' ? '₩3,900' : locale === 'ja' ? '$4.95' : t('pack5_price')}
               </div>
             </div>
-            {isPortOne ? (
+            {locale === 'ko' ? (
+              <div style={{ width: '100%', padding: '13px', background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.25)', borderRadius: 50, textAlign: 'center', fontSize: 14, color: 'rgba(201,168,76,0.6)' }}>
+                🚧 아직 이용이 불가합니다
+              </div>
+            ) : isPortOne ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {locale === 'ko' && (
-                  <button onClick={() => handlePortOneBuy(5, 'kakaopay')} style={{ width: '100%', padding: '12px', background: '#FEE500', color: '#191919', fontFamily, fontSize: 14, fontWeight: 700, border: 'none', borderRadius: 50, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                    <span>카카오페이로 결제</span>
-                  </button>
-                )}
                 <button onClick={() => handlePortOneBuy(5, 'card')} style={{ width: '100%', padding: '12px', background: '#C9A84C', color: '#16213E', fontFamily, fontSize: 14, fontWeight: 700, border: 'none', borderRadius: 50, cursor: 'pointer' }}>
-                  {locale === 'ko' ? '카드로 결제' : locale === 'ja' ? 'カードで支払う' : t('cta')}
+                  {t('cta')}
                 </button>
               </div>
             ) : (
@@ -281,9 +279,9 @@ function BuyContent() {
           <span style={{ fontSize: 12, color: 'rgba(200,195,220,0.4)' }}>∞ {t('no_expiry')}</span>
         </div>
 
-        {isPortOne && (
+        {locale === 'ko' && (
           <div style={{ marginTop: 16, padding: '10px 14px', background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: 10, fontSize: 11, color: 'rgba(201,168,76,0.5)', textAlign: 'center' }}>
-            {locale === 'ko' ? '🔒 PortOne 보안 결제 · 카카오페이 / 신용카드' : '🔒 PortOne セキュア決済 · クレジットカード'}
+            한국 결제 서비스 준비 중입니다. 빠른 시일 내에 이용 가능합니다.
           </div>
         )}
       </div>
