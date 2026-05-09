@@ -37,6 +37,9 @@ export default function BuyPage() {
     yearly: (tMenu.raw('services.yearly') as { title: string }).title,
     compatibility: (tMenu.raw('services.compatibility') as { title: string }).title,
     scenario: (tMenu.raw('services.scenario') as { title: string }).title,
+    tarot_three_card: (tMenu.raw('tarot.three_card') as { title: string }).title,
+    tarot_relationship: (tMenu.raw('tarot.relationship') as { title: string }).title,
+    tarot_celtic_cross: (tMenu.raw('tarot.celtic_cross') as { title: string }).title,
   }
 
   const SERVICES = Object.entries(SERVICE_NAMES).map(([key, name]) => {
