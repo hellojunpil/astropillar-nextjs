@@ -210,19 +210,30 @@ function BuyContent() {
               </div>
             </div>
             {locale === 'ko' ? (
-              <div style={{ width: '100%', padding: '13px', background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.25)', borderRadius: 50, textAlign: 'center', fontSize: 14, color: 'rgba(201,168,76,0.6)' }}>
-                🚧 아직 이용이 불가합니다
-              </div>
+              <>
+                <div style={{ width: '100%', padding: '13px', background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.25)', borderRadius: 50, textAlign: 'center', fontSize: 14, color: 'rgba(201,168,76,0.6)' }}>
+                  🚧 아직 이용이 불가합니다
+                </div>
+                <div style={{ textAlign: 'center', fontSize: 11, color: 'rgba(200,195,220,0.35)', marginTop: 6 }}>(VAT 별도)</div>
+              </>
             ) : isPortOne ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <button onClick={() => handlePortOneBuy(1, 'card')} style={{ width: '100%', padding: '12px', background: '#C9A84C', color: '#16213E', fontFamily, fontSize: 14, fontWeight: 700, border: 'none', borderRadius: 50, cursor: 'pointer' }}>
                   {t('cta')}
                 </button>
+                <div style={{ textAlign: 'center', fontSize: 11, color: 'rgba(200,195,220,0.35)' }}>
+                  {locale === 'ja' ? '(税抜)' : '(excl. VAT)'}
+                </div>
               </div>
             ) : (
-              <button onClick={() => handleGumroadBuy(1, GUMROAD_1)} style={{ width: '100%', padding: '13px', background: '#C9A84C', color: '#16213E', fontFamily, fontSize: 14, fontWeight: 700, border: 'none', borderRadius: 50, cursor: 'pointer' }}>
-                {t('cta')}
-              </button>
+              <>
+                <button onClick={() => handleGumroadBuy(1, GUMROAD_1)} style={{ width: '100%', padding: '13px', background: '#C9A84C', color: '#16213E', fontFamily, fontSize: 14, fontWeight: 700, border: 'none', borderRadius: 50, cursor: 'pointer' }}>
+                  {t('cta')}
+                </button>
+                <div style={{ textAlign: 'center', fontSize: 11, color: 'rgba(200,195,220,0.35)', marginTop: 6 }}>
+                  {locale === 'ja' ? '(税抜)' : '(excl. VAT)'}
+                </div>
+              </>
             )}
           </div>
 
@@ -239,23 +250,34 @@ function BuyContent() {
                 </div>
               </div>
               <div style={{ fontSize: 22, fontWeight: 700, color: '#C9A84C' }}>
-                {locale === 'ko' ? '₩3,900' : locale === 'ja' ? '$4.95' : t('pack5_price')}
+                {locale === 'ko' ? '₩3,900' : locale === 'ja' ? '$3.99' : t('pack5_price')}
               </div>
             </div>
             {locale === 'ko' ? (
-              <div style={{ width: '100%', padding: '13px', background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.25)', borderRadius: 50, textAlign: 'center', fontSize: 14, color: 'rgba(201,168,76,0.6)' }}>
-                🚧 아직 이용이 불가합니다
-              </div>
+              <>
+                <div style={{ width: '100%', padding: '13px', background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.25)', borderRadius: 50, textAlign: 'center', fontSize: 14, color: 'rgba(201,168,76,0.6)' }}>
+                  🚧 아직 이용이 불가합니다
+                </div>
+                <div style={{ textAlign: 'center', fontSize: 11, color: 'rgba(200,195,220,0.35)', marginTop: 6 }}>(VAT 별도)</div>
+              </>
             ) : isPortOne ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <button onClick={() => handlePortOneBuy(5, 'card')} style={{ width: '100%', padding: '12px', background: '#C9A84C', color: '#16213E', fontFamily, fontSize: 14, fontWeight: 700, border: 'none', borderRadius: 50, cursor: 'pointer' }}>
                   {t('cta')}
                 </button>
+                <div style={{ textAlign: 'center', fontSize: 11, color: 'rgba(200,195,220,0.35)' }}>
+                  {locale === 'ja' ? '(税抜)' : '(excl. VAT)'}
+                </div>
               </div>
             ) : (
-              <button onClick={() => handleGumroadBuy(5, GUMROAD_5)} style={{ width: '100%', padding: '13px', background: '#C9A84C', color: '#16213E', fontFamily, fontSize: 14, fontWeight: 700, border: 'none', borderRadius: 50, cursor: 'pointer' }}>
-                {t('cta')}
-              </button>
+              <>
+                <button onClick={() => handleGumroadBuy(5, GUMROAD_5)} style={{ width: '100%', padding: '13px', background: '#C9A84C', color: '#16213E', fontFamily, fontSize: 14, fontWeight: 700, border: 'none', borderRadius: 50, cursor: 'pointer' }}>
+                  {t('cta')}
+                </button>
+                <div style={{ textAlign: 'center', fontSize: 11, color: 'rgba(200,195,220,0.35)', marginTop: 6 }}>
+                  {locale === 'ja' ? '(税抜)' : '(excl. VAT)'}
+                </div>
+              </>
             )}
           </div>
         </div>
