@@ -1,7 +1,9 @@
 import { defineRouting } from 'next-intl/routing'
 
+const isCapacitor = process.env.BUILD_TARGET === 'capacitor'
+
 export const routing = defineRouting({
   locales: ['en', 'ko', 'ja'],
   defaultLocale: 'en',
-  localePrefix: 'as-needed', // /en은 그냥 /, /ko는 /ko, /ja는 /ja
+  localePrefix: isCapacitor ? 'always' : 'as-needed',
 })

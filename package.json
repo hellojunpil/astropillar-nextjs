@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "build:cap": "cross-env BUILD_TARGET=capacitor next build && npx cap sync"
+    "build:cap": "cross-env BUILD_TARGET=capacitor next build && node scripts/cap-post-build.js && npx cap sync"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.3",
