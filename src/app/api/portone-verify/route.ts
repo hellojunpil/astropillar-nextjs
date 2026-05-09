@@ -5,8 +5,8 @@ const API_BASE = process.env.NEXT_PUBLIC_API_BASE || ''
 
 // 크레딧 패키지 — 테스트는 소액, 실서비스 전환 시 실제 가격으로 교체
 const CREDIT_PACKAGES: Record<string, { credits: number; amountKRW: number; amountJPY: number }> = {
-  '1': { credits: 1, amountKRW: 100, amountJPY: 100 },   // 테스트용 소액
-  '5': { credits: 5, amountKRW: 500, amountJPY: 500 },   // 테스트용 소액
+  '1': { credits: 1, amountKRW: 1900, amountJPY: 300 },
+  '5': { credits: 5, amountKRW: 8900, amountJPY: 1200 },
 }
 
 export async function POST(req: NextRequest) {
