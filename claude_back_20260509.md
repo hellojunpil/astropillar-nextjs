@@ -1,0 +1,1245 @@
+# AstroPillar — Next.js 전환 프로젝트
+
+## 프로젝트 개요
+- **서비스명**: AstroPillar (동양 사주 + 서양 점성술 통합 운세)
+- **런칭일**: 2026년 3월 22일
+- **목표**: Bubble 앱 + 기존 index.html 랜딩 전체를 Next.js로 재구축
+- **현황**: 세션49 기준 Bubble 로그인 오류(Vercel 분리 후 세션 충돌) → Next.js 전환 결정
+
+---
+
+## 인프라 구조 (전환 후)
+
+```
+astropillar.com         → Next.js 앱 전체 (Vercel) ← 이 프로젝트
+FastAPI 백엔드          → Google Cloud Run (변경 없음)
+Firebase Auth           → 로그인 (이메일 + Google OAuth)
+Firestore               → 유저 데이터 (credit 잔액 등)
+Gumroad                 → 결제 (크레딧 구매)
+```
+
+---
+
+## 환경변수 (.env.local)
+
+```env
+# Firebase (pillarfortune 프로젝트)
+NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyAWFmD7UDYuO0EErZDF3kxlmTYxw1tz9KU
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=pillarfortune.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=pillarfortune
+
+# Google OAuth Client ID (로그인용)
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=944836465041-ofkua0sdrnabng4nq6laaiu1sa1n7vbl.apps.googleusercontent.com
+
+# FastAPI 백엔드 (Cloud Run)
+NEXT_PUBLIC_API_BASE=https://snap-pillar-api-xxxx.run.app  # ← Cloud Run URL 실제값 확인 필요
+
+# Gumroad
+NEXT_PUBLIC_GUMROAD_URL_1=https://junpil.gumroad.com/l/gveeli
+NEXT_PUBLIC_GUMROAD_URL_5=https://junpil.gumroad.com/l/idksv
+GUMROAD_SELLER_ID=0DwFvQOjnySBKZVYvOzIJg==
+
+# GA4 (전 페이지 추적 중 — layout.tsx 전역 삽입, 개별 페이지 커스텀 이벤트 발송)
+NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
+```
+
+---
+
+## 디자인 시스템
+
+**색상:**
+- 배경: `#0a0a0f` (거의 검정)
+- 카드 배경: `#16213E` (다크 네이비)
+- 골드 포인트: `#C9A84C`
+- 텍스트 주: `#ffffff`
+- 텍스트 보조: `#aaaaaa`
+- 테두리: `#2a2a3e`
+
+**폰트 (Google Fonts):**
+- 제목: `Cormorant Garamond` (ASTROPILLAR 로고)
+- 히어로 카피: `Playfair Display`
+- 본문: `Inter` 또는 시스템 폰트
+
+**랜딩 페이지 확정 내용:**
+- 상단 태그라인: "Where the stars meet your fate."
+- 큰 제목: "ASTROPILLAR" (Cormorant Garamond)
+- 캐릭터 이미지: `p_1_main.webp` (GitHub: hellojunpil/astropillar_images)
+- 버블 3개: "My toxic trait 😈" / "When will I meet them? 💕" / "What my stars hide 🌌"
+- 카운터: 10,847명 (1.2~2초마다 1~4씩 증가)
+- CTA 버튼: "Read My Stars & Fate — Free"
+- 신뢰 배지: ★★★★★ "Trusted by 10,000+ readers"
+- 후기 3개: Sarah K. / Emily R. / Mia L.
+- 롤링 문구 4개 (혼잣말 톤 찔림 문구)
+
+---
+
+## 페이지 구조
+
+| 경로 | 설명 | 인증 필요 | 비용 |
+|------|------|-----------|------|
+| `/` | 랜딩 페이지 | ❌ | 무료 |
+| `/login` | 로그인/회원가입 | ❌ | 무료 |
+| `/menu` | 서비스 목록 + Credit 잔액 | ✅ | 무료 |
+| `/reading/full` | Full Reading (기본 사주) | ✅ | 무료 | **종료된 서비스 — 페이지 없음** |
+| `/reading/personal-fortune` | Personal Fortune (평생 리딩) | ✅ | 1 Credit |
+| `/reading/daily` | Personal Daily Fortune | ✅ | 1 Credit |
+| `/reading/yearly` | Yearly Fortune | ✅ | 1 Credit |
+| `/reading/compatibility` | Compatibility (궁합) | ✅ | 1 Credit |
+| `/reading/scenario` | Scenario Reading | ✅ | 1 Credit |
+| `/today` | Today's Fortune (별자리+띠+타로) | ❌ | 무료 |
+| `/tarot/three-card` | Three Card Spread | ✅ | 1 Credit |
+| `/tarot/relationship` | Relationship Spread | ✅ | 1 Credit |
+| `/tarot/celtic-cross` | Celtic Cross | ✅ | 2 Credits |
+| `/buy` | Credit 구매 (Gumroad 연결) | ✅ | — |
+
+---
+
+## 타로 서비스 기획
+
+### 서비스 구조
+```
+하단 네비 "Daily" → "Free" 로 명칭 변경
+  └── /today
+        ├── Horoscope (기존)
+        ├── Chinese Zodiac (기존)
+        └── Tarot (신규 — 원카드 무료, 하루 1회 제한)
+
+메뉴 "Tarot" 섹션 (신규)
+  ├── Three Card Spread — 1 Credit
+  ├── Relationship Spread — 1 Credit
+  └── Celtic Cross — 2 Credits
+```
+
+### 스프레드 상세
+
+| 서비스 | 스프레드 | 카드 수 | 비용 | 인증 |
+|--------|---------|---------|------|------|
+| 원카드 데일리 | 오늘의 에너지 + 조언 | 1장 | 무료 | ✅ (하루 1회 제한) |
+| Three Card Spread | 과거 / 현재 / 미래 | 3장 | 1 Credit | ✅ |
+| Relationship Spread | 나 / 상대방 / 관계에너지 / 조언 | 4장 | 1 Credit | ✅ |
+| Celtic Cross | 현재상황/장애물/내면/외부영향/결과 등 | 10장 | 2 Credits | ✅ |
+
+### 카드 이미지
+- **덱**: Rider-Waite (퍼블릭 도메인)
+- **포맷**: `.webp` 사용
+- **호스팅**: `https://raw.githubusercontent.com/hellojunpil/astropillar_images/main/` (루트, tarot/ 서브폴더 없음)
+- **파일명 컨벤션**: `major_arcana_[name].webp`
+  - 예: `major_arcana_fool.webp`, `major_arcana_chariot.webp`, `major_arcana_death.webp`
+- Minor Arcana 업로드 여부 확인 필요 (현재 Major Arcana 22장 확인)
+
+### 해석 방식
+- **BaZi/Western 융합 없음** — 모든 타로 서비스는 순수 타로 해석만
+- 사주/별자리와 완전 분리된 독립 서비스
+
+### 입력 구성
+
+| 서비스 | 입력 |
+|--------|------|
+| 원카드 (무료) | 없음 — 그냥 뽑기 |
+| Three Card | Your Question (선택) |
+| Relationship | 관계 유형 드롭다운 (필수) + Your Question (선택) |
+| Celtic Cross | Your Question (필수) |
+
+- 입력 필드 레이블: **"Your Question"** ("시나리오" X — 타로 고유 용어)
+- Relationship 관계 유형: 기존 Compatibility 드롭다운 12종 재활용
+  - Romantic Partner / Crush / Spouse / Friend / Family / Colleague 등
+
+### 개발 순서
+1. ✅ 원카드 무료 — `/today` Daily Tarot 탭 추가 (커밋 922baec)
+2. ✅ 하단 네비 "Daily" → "Free" 변경 (커밋 922baec)
+3. ✅ main.py `POST /tarot/daily` 엔드포인트 추가 (Cloud Run revision 00191-msr)
+4. Three Card Spread (`/tarot/three-card`)
+5. Relationship Spread (`/tarot/relationship`)
+6. Celtic Cross (`/tarot/celtic-cross`)
+7. menu 페이지에 Tarot 섹션 추가
+
+### 원카드 하루 1회 제한
+- 로그인 불필요 → **localStorage**로 날짜 저장 (`tarot_daily_date` 키)
+- 오늘 날짜와 비교해서 이미 뽑았으면 결과 화면 유지, 재뽑기 불가
+
+### 미결 사항
+- [ ] Minor Arcana 파일명 컨벤션 확인 (업로드 완료 후)
+- [ ] Minor Arcana 업로드 여부 확인 (Major Arcana 22장은 확인 완료)
+
+---
+
+## FastAPI 백엔드 엔드포인트 (Cloud Run)
+
+| 엔드포인트 | 메서드 | 설명 |
+|-----------|--------|------|
+| `/health` | GET | 헬스체크 |
+| `/geo/search` | GET | 도시 검색 |
+| `/full_reading` | POST | 사주 계산 + GPT 해석 (reading_type: basic/yearly/situation) |
+| `/personal_fortune` | POST | 평생 리딩 (BaZi+서양 출생차트) |
+| `/personal_daily_fortune` | POST | 하루 운세 (BaZi+Transit) |
+| `/compatibility_reading` | POST | 궁합 리딩 |
+| `/daily_fortune` | GET | 띠/별자리 일일운세 (Firebase 캐시) |
+| `/register_user` | POST | 신규 유저 등록 (Credit 1개 자동 지급) |
+| `/get_pouch` | GET | Credit 잔액 조회 |
+| `/use_pouch` | POST | Credit 차감 |
+| `/gumroad_webhook` | POST | 결제 완료 → Credit 지급 |
+| `/record_share` | POST | 공유 카운트 (3회→1 Credit) |
+
+**full_reading 요청 예시:**
+```json
+{
+  "year": 1990, "month": 3, "day": 15,
+  "birthtime": "14:30",
+  "sex": "M",
+  "city": "Seoul",
+  "reading_type": "basic",
+  "user_name": "John",
+  "birth_year": 1990
+}
+```
+
+---
+
+## Firebase 설정
+
+- **프로젝트 ID**: pillarfortune
+- **계정**: bbiribbiri09@gmail.com
+- **Auth 방식**: Email/Password + Google OAuth
+- **Firestore 컬렉션**:
+  - `users/{email}` → `{ pouch_count, created_at, updated_at, share_count }`
+  - `daily_fortunes/{date_type_key}` → 일일운세 데이터
+  - `service_config/pricing` → 서비스별 Credit 비용
+  - `transactions/{sale_id}` → Gumroad 거래 내역
+
+---
+
+## Credit 시스템
+
+- **DB 필드명**: `pouch_count` (UI에서는 "Credit"으로 표기)
+- **신규 가입**: 1 Credit 무료 지급 (register_user API 호출)
+- **서비스 비용**:
+  - Full Reading: 무료
+  - Personal Fortune / Daily / Yearly / Compatibility: 1 Credit
+  - Scenario Reading: 1 Credit
+- **구매**: Gumroad ($1.99=1개 `gveeli`, $8.99=5개 `idksv`)
+- **공유 보상**: 3회 공유 → 1 Credit (record_share API)
+
+---
+
+## 기술 주의사항
+
+- **일간 오프셋 앵커**: 2024-12-31 = 戊寅일 (절대 변경 금지)
+- **Feb 경계**: cutoff[1] = 20
+- **CORS**: FastAPI `main.py`에 `astropillar.com` CORS 추가 필요
+  - 현재: `hellojunpil.bubbleapps.io`, `astropillar.com` (app.astropillar.com 없음)
+- **GPT 모델**: gpt-4.1 → gpt-4o-mini 순으로 fallback
+- **캐릭터 이미지 URL**: `https://raw.githubusercontent.com/hellojunpil/astropillar_images/main/p_1_main.webp`
+
+---
+
+## GitHub
+
+- **이 프로젝트 레포**: hellojunpil/astropillar-nextjs (신규 생성)
+- **기존 레포**: hellojunpil/astropillar-web (index.html — 전환 완료 후 폐기)
+- **이미지 레포**: hellojunpil/astropillar_images
+
+---
+
+## 진행 상황
+
+### ✅ 완료 — 인프라 & 기반
+- ✅ CLAUDE.md 작성
+- ✅ Next.js 프로젝트 초기화 (TypeScript + Tailwind + App Router)
+- ✅ Firebase 패키지 설치 및 초기화 (`src/lib/firebase.ts`)
+- ✅ 레이아웃 & 글로벌 스타일 (다크 테마, `src/app/globals.css`)
+- ✅ GA4 설치 — `layout.tsx` Script 태그, `src/lib/gtag.ts`, reading_completed 이벤트
+- ✅ 폰트 전체 Noto Sans 교체 — 로고만 Cormorant Garamond 유지
+- ✅ 하단 내비게이션 바 (`BottomNav.tsx`) — 5탭
+- ✅ Firestore 연동 전체 검증 (pouch_count, register_user, use_pouch, get_pouch, gumroad webhook)
+- ✅ Firestore 보안 규칙 파일 생성 (`firestore.rules`)
+- ✅ git 초기화 + 커밋 (master 브랜치), GitHub 레포 연결, Vercel 자동 배포 연결
+
+### ✅ 완료 — 페이지
+- ✅ 랜딩 페이지 (`/`) — index.html 전체 Next.js 변환, Firebase Auth 세션 유지, 3-view SPA
+- ✅ 로그인/회원가입 (`/login`) — 비밀번호 확인, Forgot password, Google OAuth
+- ✅ 메뉴 페이지 (`/menu`)
+- ✅ Personal Fortune (`/reading/personal-fortune`) — 1 Credit
+- ✅ Personal Daily Fortune (`/reading/daily`) — 1 Credit, 날짜 선택
+- ✅ Yearly Fortune (`/reading/yearly`) — 1 Credit
+- ✅ Compatibility (`/reading/compatibility`) — 1 Credit, Firestore 인물 드롭다운, 관계 선택 12종
+- ✅ Scenario Reading (`/reading/scenario`) — 1 Credit, 2단계 플로우
+- ✅ Today's Fortune (`/today`) — 무료, 로그인 불필요
+- ✅ Credit 구매 (`/buy`) — Gumroad 연결
+- ✅ Library (`/library`) — Reading History + My Persons, Firestore 연동
+- ✅ /explain 페이지 — Day Stem/Elements/Planets 아코디언, 오행 canvas 차트
+- ✅ Gumroad Webhook (`/api/gumroad-webhook`)
+
+### ✅ 완료 — UX & 버그픽스
+- ✅ PersonPicker 컴포넌트 — 인물 카드 선택, 인라인 Add Person 폼, Enter manually 토글
+- ✅ ReadingResult.tsx 전면 개편 — 탭 3개(BaZi/Elements/Astrology Profile), GPT 섹션 아코디언
+- ✅ 리딩 로딩 화면 (`ReadingLoader.tsx`) — 골드 프로그레스 바, 롤링 문구 20개
+- ✅ 결과 캐싱 — getCachedReading() → 캐시 히트 시 Credit 미차감
+- ✅ 공유 보상 UI — ShareButton, `/record_share` 연동, "3회 공유 → 1 Credit"
+- ✅ Credit 차감 순서 수정 — 리딩 완료 후 /use_pouch 호출
+- ✅ API 오류 메시지 개선 — Pydantic 배열/객체 오류 시 사용자 친화적 메시지
+- ✅ register_user 버그 수정 — Google OAuth isNewUser getAdditionalUserInfo()로 교체
+- ✅ FastAPI CORS 수정 — localhost:3000, astropillar-nextjs.vercel.app 추가
+
+### ✅ 완료 — Western Astrology
+- ✅ `main.py` `_extract_western_fields` 강건화 — planet id→name, sign→sign_id→sign_name fallback, ASC angles_details→angles fallback
+- ✅ `main.py` personal_fortune 응답에 `western` 중첩 키 추가 (`sun_sign`, `moon_sign`, `ascendant`, `planets`)
+- ✅ `main.py` `fetch_natal_western` 디버그 로그 추가
+- ✅ Cloud Run 재배포 완료 (revision 00164-sml)
+- ✅ Astrology Profile 탭 전면 교체 — Big Three 큰 카드 + Inner/Outer Planets 작은 카드 4열
+- ✅ Astrology Profile "No Western chart data available." 버그 수정 — flat 필드 파싱 로직 추가
+- ✅ Astrology Profile SVG filter 완전 제거 — 별자리 이미지 원본 색상 유지
+- ✅ Astrology Profile ASC 키 탐색 강화 — `ascendant→rising→asc→ascendant_sign→western_asc`, 없으면 "Unknown", console.log 추가
+
+### ✅ 완료 — Birth Time 수정
+- ✅ Birth Time 드롭다운 → 2시간 범위 슬롯 13개로 교체
+- ✅ PersonPicker / Library Add Person 폼 Birth Time 드롭다운 추가
+- ✅ PersonPicker Birth Time 로컬 state 버그 수정 (`hour: null` 하드코딩 → pHour 반영)
+- ✅ Birth time 저장 구조 전면 개선 — `birth_time_label` 필드 추가, TIME_RANGES start 시간(hour:minute) 사용, Firestore에 범위 문자열 저장, API에 `11:30` 형식 전송
+
+### ✅ 완료 — 크레딧 & 가격 시스템 (2026-04-21)
+- ✅ 파비콘 교체 — `favicon_ap3.png` → `src/app/icon.png`
+- ✅ `firebase.json` 생성 → `firebase deploy --only firestore:rules` 가능
+- ✅ 버그 수정: ReadingPageShell `inProgress` prop 추가 — 리딩 완료 후 credits=0 되면 "Not enough Credits" 표시되던 문제 해결 (5개 페이지 전부 적용)
+- ✅ 버그 수정: `refreshCredits(decrement)` — 즉시 로컬 차감 후 백그라운드 서버 동기화 (크레딧 UI 지연 표시 해결)
+- ✅ 가격 Firestore 연동 — `service_config/pricing` 문서에서 동적 로드 (`src/hooks/usePricing.ts`, `src/lib/firestore.ts` getPricing 추가)
+  - 연동 위치: 5개 reading 페이지 헤더 배지, Reveal 버튼, menu 서비스 카드, buy 페이지 서비스 목록
+  - 필드명: `personal_fortune`, `personal_daily_fortune`, `yearly`, `compatibility`, `scenario`
+
+### ✅ 완료 — QA 테스트 (2026-04-21)
+- ✅ k@k.com 계정으로 전체 서비스 Playwright 자동 테스트 완료
+- ✅ 상세 리포트: `D:\snap_pillar bck\result\result_20260421_1.txt`
+
+### ✅ 완료 — 결과 품질 전면 개선 + QA 2차 + Scenario 융합 업그레이드 (2026-04-22)
+
+**작업 완료:**
+1. **[완료]** SECTION FORMAT 전면 교체 — 모든 프롬프트에서 "Do NOT output any text before the first header" 추가
+2. **[완료]** FIRST LINE 인스트럭션 제거 — 인트로 문장을 첫 번째 섹션 설명 안으로 이동 (5개 프롬프트 전부)
+3. **[완료]** Compatibility SECTION FORMAT에 누락된 🔥 Where You Work Well Together 헤더 추가
+4. **[완료]** Yearly Fortune — Monthly Highlights 섹션 내 4개 SVG 라인 차트 (2×2 그리드)
+5. **[완료]** 차트 ≤390px 폭 제한, 아코디언 섹션 안에 포함
+6. **[완료]** normalizeTitle 키 길이 내림차순 정렬 — 구체적 키 우선 매칭
+7. **[완료]** Cloud Run 배포: revision 00173-xkc (compatibility fix), revision 00174-bkv (all prompts)
+8. **[완료]** QA 테스트 전체 완료 → `D:\snap_pillar bck\result\result_20260422_1.txt`
+9. **[완료]** Standalone Scenario Reading — BaZi+Western 완전 융합 업그레이드 (revision 00175-hdk)
+   - `/full_reading` 엔드포인트: 모든 situation 리딩에서 Western natal 데이터 fetch
+   - `build_gpt_prompt()` else 블록: western_data 있으면 "one fused eye" context_intro 생성
+   - `use_western` 플래그: `source == "basic" and western_data is not None` 조건 추가
+   - 결과: standalone 시나리오도 Sun/Moon/Rising/행성/Saturn return/Jupiter transit 전부 융합
+
+**QA 최종 결과 (전 서비스 $1.99 기준):**
+- Personal Daily Fortune: ✅ PASS — BaZi+Western 10/10, 가독성 10/10
+- Yearly Fortune: ✅ PASS — 차트 포함, Monthly Highlights 정상
+- Compatibility: ✅ PASS — 내용 10/10, Section 1 버그 수정 완료
+- Scenario Reading: ✅ PASS — BaZi+Western 10/10 (업그레이드 완료), 가독성 10/10
+- Personal Fortune: ✅ PASS — 내용 10/10, Section 1 버그 수정 완료
+- **전체 서비스 5/5 PASS — 모두 10/10, $1.99 대비 3~4배 가치 over-deliver**
+
+**가격 분석 ($1.99/크레딧 기준):**
+- Personal Fortune ($1.99) → 실제 가치 $6~8 (4배 저평가)
+- Scenario Reading ($1.99) → 실제 가치 $5~7 (3.5배 저평가)
+- Compatibility ($1.99) → 실제 가치 $5~6 (3배 저평가)
+- Yearly Fortune ($3.98) → 실제 가치 $10~15 (3~4배 저평가)
+- Personal Daily ($1.99) → 실제 가치 $1.99~2.50 (적정, 단 매일 과금 구조 재검토 필요)
+- **향후 크레딧 소모량 조정 검토**: Personal Fortune/Scenario/Compatibility → 2크레딧, Yearly → 3크레딧
+
+**미수정 버그:**
+- [P1] 랜딩 "100% Private. Never stored. Never shared." — 교체 필요
+- ~~[P2] 하단 네비게이션 Credits 수치 갱신 안 됨~~ ✅ 수정 완료 (커밋 1d9c82f)
+- [P2] Astrology Profile RISING 카드 "ASC" 텍스트 → 별자리 이미지
+- [P3] PersonPicker 저장 인물 auto-select 안 됨
+
+**향후 개선 사항 (버그 아님):**
+- 각 섹션 상단 TL;DR 콜아웃 박스 추가
+- Personal Daily — 구독 모델 검토 ($9.99/월 무제한 Daily)
+
+### ⏳ 확인 필요
+- [ ] ASC 이미지 로드 실패 원인 — `r_cancer.svg` 파일 존재 여부 및 키 파싱 확인
+
+### 📋 남은 작업
+- [ ] `firebase deploy --only firestore:rules` — Firebase CLI 설치 후 실행 (`npm install -g firebase-tools`)
+- [ ] Vercel 환경변수 세팅 확인 (`NEXT_PUBLIC_FIREBASE_APP_ID`, `NEXT_PUBLIC_GOOGLE_CLIENT_ID`)
+- [x] 하단 네비게이션 Credits 갱신 버그 수정 ✅ (AuthContext로 전역 상태 공유, 커밋 1d9c82f)
+- [ ] "Never stored." 문구 교체
+- [ ] PersonPicker 저장 인물 1명일 때 auto-select
+
+---
+
+## 포춘쿠키 서비스 기획 (`/fortune`)
+
+### 컨셉
+매일 사주 Day Master + 별자리 기반 **웃긴 영어 한 줄 운세**. 진지한 AstroPillar 브랜드와 대비되는 바이럴 훅.
+
+### 톤 샘플
+- "Mercury retrograde hid your charger. It's not lost. Mercury just doesn't like you."
+- "Your chart says don't text them. Your chart also knows you already did."
+- "Jupiter is staring at your wallet. Jupiter is worried."
+- "Today's forecast: opening the fridge 6 times, finding nothing, opening it again."
+- "Your Fierce Metal Day Master told you to be decisive today. You've been on the same menu for 20 minutes."
+
+### 구현 방향
+- **GPT 생성** (gpt-4o-mini, mini_only=True) — 날짜 + Day Master + 별자리 기반 맞춤 생성
+- **별도 `/fortune` 페이지** — 공유 링크 깔끔, 랜딩 CTA 연결 가능
+- 로그인 불필요 (생년월일 입력만)
+- 공유 가능한 이미지 카드 형태 (인스타/카톡 바이럴)
+- 매일 1회 무료
+
+### 바이럴 퍼널
+`/fortune (무료)` → 웃긴 카드 공유 → 신규 유입 → 회원가입 → 유료 리딩 전환
+
+### 미결 사항
+- [ ] 완전 익명(날짜만) vs 생년월일 입력 방식 결정
+- [ ] 공유 카드 디자인 방향
+- [ ] 랜딩 페이지 포춘쿠키 CTA 노출 여부
+
+---
+
+## 다음 세션 시작 가이드
+
+> 마지막 작업: 2026-05-09 세션81 완료
+
+### ✅ 세션81 완료 — 2026-05-09
+
+**JA 타로 GPT 언어 버그 완전 수정 + Cloud Run IAM 복구**
+
+**작업 목록:**
+1. ✅ **JA 타로 GPT 영어 출력 근본 원인 파악** — 타로 시스템 프롬프트에 "ALWAYS write entirely in English. No exceptions." 하드코딩 → append 방식으로는 override 불가
+2. ✅ **수정 (revision 00213-zjb)** — `_EN_TAROT_LANG_RULE` 상수 추가, KO/JA 시 `system_prompt.replace()` 로 영어 언어룰을 KO/JA 룰로 완전 교체 (4개 엔드포인트: three_card/relationship/celtic_cross/scenario)
+3. ✅ **JA Three Card 검증** — 恋愛運 질문, ペンタクルのペイジ/ナイト/皇帝 → GPT 해석 전부 일본어 출력 확인 ✅
+4. ✅ **크레딧 0 버그 수정** — Cloud Run `--no-allow-unauthenticated` 배포 시마다 `allUsers invoker` IAM 제거됨 → `get_pouch` GET API 403 → CORS 오류로 표시 → 165 크레딧 정상 복구
+5. ✅ **재발 방지** — CLAUDE.md 배포 명령어에 `--allow-unauthenticated` 명시, 메모리 저장
+
+**Cloud Run 배포 이력:**
+- revision `00212-h4g` — 타로 4종 language 파라미터 적용 (1차 수정 — 미완)
+- revision `00213-zjb` — **타로 EN 언어룰 replace 방식으로 완전 수정** ✅
+
+**올바른 배포 명령어 (필수):**
+```bash
+cd "D:\snap pillar" && gcloud run deploy snap-pillar-api --source . --project snap-pillar --region asia-northeast3 --allow-unauthenticated
+```
+
+6. ✅ **KO 타로 GPT 언어 확인** — revision 00213-zjb에서 KO도 동일 replace 로직 적용 → 정상 (JA 수정 시 함께 처리)
+7. ✅ **모바일 카카오페이 결제 버그 수정** — PC 카카오톡 간편결제 푸시 발송 버그
+   - 원인: `requestPayment`에 `redirectUrl` 없음 → KakaoPay가 모바일 앱 대신 PC 카카오톡으로 푸시
+   - 수정: `buy/page.tsx` — `redirectUrl` 추가 + `useEffect`로 URL 파라미터 감지 후 자동 검증
+   - `useSearchParams` 사용으로 `Suspense` 래퍼 필수 → `BuyPage` → `BuyContent` + `BuyPage(Suspense 래퍼)` 분리
+   - commit `47e7e5a`, master 푸시 완료 ✅, 테스트 결제 확인 ✅
+8. ✅ **포트원 실연동 신청 상태 확인** — admin.portone.io
+   - KG이니시스 해외결제: 입점 심사중
+   - KG이니시스 신용카드: 신청 접수 및 계약 진행 중
+   - 카카오페이: 진행중
+   - 실 채널키 발급까지 PG사 승인 대기 중 (hellojunpil@gmail.com 이메일로 계약서 수신 예정)
+   - JA 결제(JPY) 수단은 별도 신청 필요 (현재 신청 내역 없음)
+
+**포트원 라이브 전환 절차 (심사 완료 후):**
+1. admin.portone.io → 채널 관리 → 실연동 채널 추가 (실 채널키 자동 발급)
+2. Vercel 환경변수 교체: `NEXT_PUBLIC_PORTONE_CHANNEL_KEY`, `PORTONE_API_SECRET`
+3. Vercel 재배포
+
+**잔존 이슈:**
+- [P3] 타로 "What To Do" 섹션 헤더 영어 유지 (GPT 포맷 지시어 — 본문은 KO/JA 정상)
+- [P1] Celtic Cross 가격 배지 "3 Credits" (Firestore `service_config/pricing.tarot_celtic_cross` 값 확인 필요)
+- [P2] KO/JA 타로 22장 Firestore 사전 캐싱 미완료
+
+---
+
+### ✅ 세션80 완료 — 2026-05-09
+
+**전체 서비스 QA (EN/KO/JA 3개 언어 × 8종 서비스 = 24종)**
+
+**작업 목록:**
+1. ✅ **JA 궁합** — 크레딧 174→172, 전부 일본어(레이더 차트 일본어), 10/10
+2. ✅ **JA 시나리오** — 크레딧 172→171, 전부 일본어, 9.3/10 (SECTION 1 라벨 P2)
+3. ✅ **JA Three Card** — 크레딧 171→170, 포지션 라벨 일본어, GPT 본문 영어(P2 캐시)
+4. ✅ **JA Relationship** — 크레딧 170→169, 포지션 라벨 일본어, GPT 본문 영어(P2 캐시)
+5. ✅ **JA Celtic Cross** — 크레딧 캐시(미차감), 포지션 라벨 일본어, GPT 본문 영어(P2 캐시)
+6. ✅ **최종 QA 보고서** — `D:\snap_pillar bck\result\result_20260509_4.txt`
+
+**QA 종합 결과:**
+| 서비스 | EN | KO | JA | 평균 |
+|--------|----|----|----|----|
+| Personal Fortune | 9.3 | 9.5 | 10.0 | 9.6 ✅ |
+| Daily Fortune | 9.3 | 9.5 | 10.0 | 9.6 ✅ |
+| Yearly Fortune | 8.7 | 9.5 | 10.0 | 9.4 ✅ |
+| Compatibility | 9.3 | 9.5 | 10.0 | 9.6 ✅ |
+| Scenario Reading | 9.7 | 9.3 | 9.3 | 9.4 ✅ |
+| Three Card | 9.3 | 6.7 | 6.7 | 7.6 ⚠️ |
+| Relationship | 9.7 | 6.7 | 6.7 | 7.7 ⚠️ |
+| Celtic Cross | 9.7 | 6.7 | 6.7 | 7.7 ⚠️ |
+| **전체 평균** | **9.4** | **8.4** | **8.7** | **8.8/10** |
+
+**잔존 버그:**
+- [P1] Celtic Cross 가격 배지 "3 Credits" (Firestore 값 확인 필요)
+- [P2] KO/JA 타로 3종 GPT 본문 영어 (Firestore 캐시 영어 저장 → 언어별 분기 필요)
+- [P2] EN Yearly "SECTION 3" 라벨 (normalizeTitle 맵 미등록)
+- [P2] JA/KO 시나리오 "SECTION 1" 라벨 (첫 섹션 헤더 파싱 이슈)
+
+**다음 작업:**
+- [ ] 포트원(PortOne) KO/JA 결제 연동 (계정 정보 수령 후)
+- [ ] P1 Celtic Cross 가격 버그 수정
+- [ ] P2 KO/JA 타로 캐시 영어 이슈 수정
+
+### ✅ 세션79 완료 — 2026-05-09
+
+**작업 목록:**
+1. ✅ **타로 3종 i18n TypeScript 오류 수정** — three-card/relationship/celtic-cross `POSITIONS` → `pos` 치환, `pos` 맵 콜백 → `position` 리네임 (naming conflict 해결)
+2. ✅ **Vercel 빌드 수정** — TS 오류로 빌드 실패하던 문제 해결, commit `c5fab4a` → Ready ✅
+3. ✅ **KO 타로 3종 UI QA** — 27/27 항목 전부 한국어 PASS
+4. ✅ **JA 타로 3종 UI QA** — 27/27 항목 전부 일본어 PASS
+5. ✅ **EN 타로 3종 회귀 QA** — 영어 정상 (회귀 없음)
+6. ✅ **QA 보고서 저장** — C:\Users\SNOOPY\Desktop\tarot_20260509_2.txt
+
+**QA 결과 (세션79):**
+| 서비스 | KO UI | JA UI | EN UI |
+|--------|-------|-------|-------|
+| Three Card | 10/10 ✅ | 10/10 ✅ | 10/10 ✅ |
+| Relationship | 10/10 ✅ | 10/10 ✅ | 10/10 ✅ |
+| Celtic Cross | 10/10 ✅ | 10/10 ✅ | 10/10 ✅ |
+
+**i18n 완성도 (세션79 기준):**
+| 서비스 | KO | JA |
+|--------|----|----|
+| 평생 운명 | 9.5/10 ✅ | 9.5/10 ✅ |
+| 오늘의 나 | 9.5/10 ✅ | 9.5/10 ✅ |
+| 신년 운세 | 9.5/10 ✅ | 9.5/10 ✅ |
+| 궁합 | 9.5/10 ✅ | 9.5/10 ✅ |
+| Today's Fortune | 9.0/10 ✅ | 9.0/10 ✅ |
+| 타로 3종 UI | 10/10 ✅ | 10/10 ✅ |
+| 타로 GPT 본문 | ⚠️ 캐시 영어 (P2) | ⚠️ 캐시 영어 (P2) |
+
+**잔존 이슈:**
+- [P2] KO/JA 타로 GPT 본문 — Firestore 캐시 영어 결과 잔존 (신규 질문은 정상 동작)
+- [P2] KO/JA 타로 22장 Firestore 사전 캐싱
+- [P2] 7일치 KO/JA 별자리/띠별 Firestore 데이터 재생성
+
+**배포 완료:**
+- ✅ feature/i18n → master 머지 (commit `5a3446f`)
+- ✅ astropillar.com 프로덕션 반영 확인
+  - `/ko/menu`: 나의 운명 풀이/오늘의 나의 운세/신년 운세/궁합/타로 3종 전부 한국어 ✅
+  - 언어 전환 버튼 EN/한국어/日本語 정상 ✅
+  - 푸터 사업자 정보 한국어 ✅
+
+---
+
+### ✅ 세션79 추가 작업 — 2026-05-09
+
+**BaZi 한자 주석 현지화 + 십성 툴팁 (commit `c86f25f`, `55738d1`)**
+
+1. ✅ **해석 한자 주석 현지화** — `ReadingResult.tsx` `ANNOTATIONS_BY_LOCALE` 추가
+   - EN: 甲(Bold Wood), 子(Rat) 등 영어 주석
+   - KO: 甲(굳센 나무), 子(쥐), 比肩(비견) 등 한국어 주석
+   - JA: 甲(大木), 子(鼠) 등 일본어 주석, 십성은 툴팁으로 처리
+   - BaZi 차트 이미지 하단 라벨도 동일하게 로케일별 적용
+
+2. ✅ **십성 툴팁 (B방식)** — hover/tap 시 별 의미 설명 팝업
+   - EN: Friend Star, Rival Star, Creative Star 등 10개
+   - KO: 비견, 겁재, 식신 등 10개
+   - JA: 比肩, 劫財, 食神 등 10개 (한자 직접 감지)
+   - 스타일: 골드 밑줄 텍스트 → 클릭/호버 시 220px 다크 팝업
+   - 팝업 내용: 용어명(골드) + 한 줄 설명
+
+**십성 설명 내용:**
+| 한자 | EN | KO | JA |
+|------|----|----|-----|
+| 比肩 | Same element & polarity. Self-reliance... | 나와 같은 오행·음양. 자존심·독립심... | 同じ五行・陰陽。自立心... |
+| 劫財 | Same element, opposite polarity. Bold action... | 같은 오행, 반대 음양. 추진력... | 同じ五行、逆の陰陽。行動力... |
+| (나머지 8개 동일 패턴) | | | |
+
+**다음 작업:**
+- [ ] 포트원(PortOne) KO/JA 결제 연동 (계정 정보 수령 후)
+
+---
+
+### ✅ 세션78 완료 — 2026-05-08
+
+**작업 목록:**
+1. ✅ **KO 타로 Three Card QA** — GPT 리딩 영어 출력 P1 버그 확인
+2. ✅ **JA 타로 Three Card QA** — GPT 리딩 영어 출력 P1 버그 확인
+3. ✅ **KO 신년 운세 QA** — 섹션 타이틀 + BaZi 기둥 + 본문 전부 한국어 ✅
+4. ✅ **JA 신년 운세 QA** — 섹션 타이틀 + BaZi 기둥 + 본문 전부 일본어 ✅ (크레딧 4→2 차감)
+5. ✅ **종합 QA 보고서** — C:\Users\SNOOPY\Desktop\result_20260508_4.txt
+
+**QA 결과 (세션78):**
+| 서비스 | KO | JA | 상태 |
+|--------|----|----|------|
+| 신년 운세 섹션 | 2026 한눈에 보기 등 7개 ✅ | 2026年 総括 등 7개 ✅ | ✅ |
+| 신년 운세 BaZi | 연도/월/일/시 ✅ | 年/月/日/時 ✅ | ✅ |
+| 신년 운세 본문 | 한국어 ✅ | 일본어 ✅ | ✅ |
+| 타로 Three Card UI | 영어 ❌ | 영어 ❌ | P1 ❌ |
+| 타로 Three Card GPT | 영어 ❌ | 영어 ❌ | P1 ❌ |
+
+**P1 버그 (미수정):**
+- 타로 3종 (Three Card/Relationship/Celtic Cross): language 파라미터 미전달 → GPT 리딩 언어 고정(영어)
+  - 수정 위치: `src/app/tarot/*/page.tsx` API 호출에 `language: locale` 추가
+
+**세션77~78 i18n 완성도:**
+| 서비스 | KO | JA |
+|--------|----|----|
+| 평생 운명 | 9.5/10 ✅ | 9.5/10 ✅ |
+| 오늘의 나 | 9.5/10 ✅ | 9.5/10 ✅ |
+| 신년 운세 | 9.5/10 ✅ | 9.5/10 ✅ |
+| 궁합 | 9.5/10 ✅ | 9.5/10 ✅ |
+| Today's Fortune | 9.0/10 ✅ | 9.0/10 ✅ |
+| 타로 3종 | 2.0/10 ❌ | 2.0/10 ❌ |
+
+**남은 i18n 작업:**
+- [ ] **[P1] 타로 3종 language 파라미터 수정** — `src/app/tarot/*/page.tsx`
+- [ ] EN 전체 서비스 회귀 테스트
+- [ ] KO/JA 타로 22장 Firestore 사전 캐싱 (P2)
+- [ ] 7일치 KO/JA 별자리/띠별 Firestore 데이터 재생성 (P2)
+- [ ] feature/i18n → main 머지 타이밍 결정
+
+---
+
+### ✅ 세션77 완료 — 2026-05-08
+
+**작업 목록:**
+1. ✅ **Vercel 배포 검증** — commit `9bbe5ee` (PILLAR_LABELS/RADAR_AXES/관계 드롭다운 한국어) 정상 배포 확인
+2. ✅ **Cloud Run 최종 상태** — revision `00208-rs4` (오프닝 문장 현지화 포함)
+3. ✅ **KO 궁합 QA** — kotest_a(1987-10-05)/kotest_b(1992-03-22) 신규 인물로 캐시 없는 리딩 검증
+
+**QA 결과 (세션77 — KO 신규 리딩 기준):**
+| 서비스 | 섹션 타이틀 | 레이더 차트 | 사주 기둥 | 본문 | 상태 |
+|--------|------------|------------|---------|------|------|
+| 궁합 | 두 사람은 누구인가 등 6개 ✅ | 연결감/케미/소통/갈등 해결/성장/지속성 ✅ | 연도/월/일/시 ✅ | 한국어 ✅ | ✅ |
+| 평생 운명 | 커리어 & 인생 경로 등 7개 ✅ | 사랑/커리어/재물/건강/활력/인생 ✅ | 연도/월/일/시 ✅ | 한국어 ✅ | ✅ |
+| 오늘의 나 | 커리어 & 집중 등 6개 ✅ | 사랑/커리어/재물/건강/활력/인생 ✅ | 연도/월/일/시 ✅ | 한국어 ✅ | ✅ |
+| 관계 유형 드롭다운 | — | — | — | 연인/짝사랑 등 한국어 ✅ | ✅ |
+
+**Cloud Run 배포 이력 (세션76~77):**
+- revision `00207-cwn` — compatibility/personal_fortune/personal_daily 섹션 헤더 KO/JA 현지화
+- revision `00208-rs4` — compatibility 오프닝 문장 KO/JA 현지화
+
+**수정된 프론트엔드 (커밋 `9bbe5ee`):**
+- `ReadingResult.tsx`: PILLAR_LABELS_MAP / RADAR_AXES_MAP (ko/ja/en) 추가, RadarChart `axes` prop 추가
+- `reading/compatibility/page.tsx`: RELATIONSHIPS_DISPLAY 한국어/일본어 매핑 추가
+
+**남은 i18n 작업:**
+- [ ] JA 전체 서비스 QA (섹션 타이틀 + 레이더 + 사주 기둥)
+- [ ] EN 전체 서비스 테스트 (회귀 없음 확인)
+- [ ] KO/JA 신년 운세 섹션 타이틀 QA
+- [ ] KO/JA 타로 3종 QA
+- [ ] KO/JA 별자리/띠별 Firestore 데이터 7일치 재생성
+- [ ] KO/JA 타로 22장 Firestore 사전 캐싱
+
+---
+
+### ✅ 세션69 완료 — 2026-05-03
+
+**작업 목록:**
+1. ✅ **GA4 전면 재설정** — 서비스 확장에 맞춰 누락 이벤트 전부 추가
+   - `gtag.ts`: `gtagPageview()` 함수 추가
+   - `Providers.tsx`: `usePathname` + `useEffect` → 클라이언트 라우팅 시 자동 `page_view` 발송
+   - `tarot/three-card`: `reading_completed` (tarot_three_card) + 시나리오 (tarot_scenario, spread: three_card)
+   - `tarot/relationship`: `reading_completed` (tarot_relationship) + 시나리오 (tarot_scenario, spread: relationship)
+   - `tarot/celtic-cross`: `reading_completed` (tarot_celtic_cross) + 시나리오 (tarot_scenario, spread: celtic_cross)
+   - `today/page.tsx`: `tarot_daily_draw` (card 파라미터 포함, 첫 뽑기 시만)
+   - `login/page.tsx`: `login`/`sign_up` + `{ method: email|google }`
+
+**GA4 이벤트 전체 맵:**
+| 이벤트 | 발생 위치 | 파라미터 |
+|--------|-----------|---------|
+| page_view | 모든 라우트 변경 | page_path |
+| view_1_landing / view_2_form / view_3_result | 랜딩 | — |
+| calculation_complete | 랜딩 birth form | zodiac, day_master |
+| cta_click_v1 | 랜딩 메인 CTA | — |
+| login_attempt | 랜딩 Sign In | — |
+| service_view | 랜딩 V3 unlock CTA | service_type |
+| login | /login | method |
+| sign_up | /login | method |
+| reading_completed | 5개 reading 페이지 + 타로 3개 | reading_type |
+| tarot_daily_draw | /today 타로 탭 | card |
+| tarot_scenario | 타로 3개 페이지 GO DEEPER | spread |
+| credit_purchase_click | /buy | credits, price |
+
+### ✅ 세션68 완료 — 2026-05-02
+
+**작업 목록:**
+1. ✅ **Celtic Cross 결과 렌더링 업데이트** — `parseResult().map()` 에서 `i < 10` → CardSection, `i >= 10` → Section(defaultOpen=true) (커밋 07b576d)
+2. ✅ **parseResult 타로 파싱 버그 3개 수정**:
+   - `59a480e`: `🂠`(카드뒤 이모지) + `✦` EMOJI_SET 추가 → Three Card/Relationship 섹션 분리
+   - `4abea60`: `✦` EMOJI_SET 추가 → "The Answer" 제목 정상 파싱
+   - `6c775f0`: Celtic Cross 전용 이모지 9개(`🌀⚔⏪💭🌊🪞🌐🌗⭐`) + `️?` variation selector 처리
+3. ✅ **Playwright 타로 서비스 QA** — 3개 서비스 직접 테스트 및 점수 평가
+
+- **Cloud Run**: 변경 없음
+- **Credit 변화**: 104 → 99 (Three Card ×2 + Relationship ×1 + Celtic Cross ×1)
+
+**QA 결과 (세션68 — k@k.com 기준):**
+| 서비스 | 점수 | 비고 |
+|--------|------|------|
+| Three Card Spread | 9.0/10 | 카드별 섹션 분리, The Answer 질문 연동 우수 |
+| Relationship Spread | 9.5/10 | 4장 섹션 완벽, What This Means 합산 탁월 |
+| Celtic Cross | 9.3/10 | 10장 전부 분리, The Bigger Picture 수트 패턴 분석 |
+| **평균** | **9.3/10** | |
+
+**수정된 버그:**
+- parseResult EMOJI_SET 미등록으로 모든 카드 내용이 첫 번째 섹션에 뭉치는 버그 → 3회 커밋으로 완전 해결
+
+**미결 사항 → 모두 해결 완료 (세션69)**
+
+### ✅ 세션67 완료 — 2026-05-02
+
+**작업 목록:**
+1. ✅ **Cloud Run IAM 복구** — allUsers roles/run.invoker 추가 → 크레딧 정상(118개) 표시
+2. ✅ **타로카드 버그 수정** — `firestore.rules` daily_tarot read 추가 + `firebase deploy` 완료
+3. ✅ **today/page.tsx 폴백 처리** — Firestore 권한 오류 시 API로 silent fallback (커밋 7b25e62)
+4. ✅ **전체 서비스 QA** — test07 기준 8개 서비스 전수 검증 (전체 PASS)
+5. ✅ **QA 리포트 작성** — `D:\snap_pillar bck\result\result_20260502_1.txt`
+
+- **Cloud Run**: 변경 없음
+- **Credit 변화**: 118 → 115 (Compatibility 2cr + Scenario 1cr)
+
+**QA 결과 요약 (세션67 — test07 기준):**
+| 서비스 | 결과 | 점수 |
+|--------|------|------|
+| Daily Tarot | ✅ PASS | 4.8/5 (이전: 버그 → 정상화) |
+| Horoscope | ✅ PASS | 4.7/5 |
+| Chinese Zodiac | ✅ PASS | 4.2/5 (점수바 없음 지적) |
+| Personal Fortune | ✅ PASS | 5.0/5 |
+| Personal Daily | ✅ PASS | 4.83/5 |
+| Yearly Fortune | ✅ PASS | 5.0/5 |
+| Compatibility | ✅ PASS | 5.0/5 |
+| Scenario Reading | ✅ PASS | 5.0/5 |
+| **전체 평균** | **8/8 PASS** | **4.85/5 (97%)** |
+
+**수정된 버그 (3개):**
+- Bug#1: Cloud Run IAM 차단 → allUsers 권한 추가
+- Bug#2: Firestore daily_tarot 규칙 없음 → rules 추가 + firebase deploy
+- Bug#3: today/page.tsx 권한 오류 시 에러 표시 → silent fallback
+
+**미수정 이슈 (P2):**
+- Moon Phase "Waning Gibbous · 100% illuminated" 데이터 오류 (외부 API)
+- Chinese Zodiac 점수 바 없음 (Horoscope와 격차)
+
+> 마지막 작업: 2026-04-26 세션66 완료
+
+### ✅ 세션66 완료 — 2026-04-26
+
+**작업 목록:**
+1. ✅ **GA4 설치 확인** — `layout.tsx` Script 태그 + `NEXT_PUBLIC_GA4_ID` 정상 확인
+2. ✅ **Meta/Instagram 광고 분석** — ₩20,000/일, 영/미/캐 타겟, 15 link clicks (2.5시간 기준)
+3. ✅ **Instagram in-app browser GA4 미추적 확인** — LTE 모바일 2회 접속(크롬+인스타), GA4 카운트 변화 없음 → Meta↔GA4 수치 차이 원인 확인
+4. ✅ **MCP Computer Use 서버 구축** — `E:\My Team\mcp-computer-use\server.py` 생성
+   - 6개 툴: screenshot / click / type_text / key / scroll / move
+   - pyautogui + mss + Pillow 기반 (화면 50% 축소 PNG 전송)
+   - `claude mcp add my-computer-use` 등록 → ✓ Connected
+
+- **Cloud Run**: 변경 없음
+- **Credit 변화**: 없음
+
+**MCP Computer Use 사용법 (재시작 후):**
+- `screenshot` — 현재 화면 캡처
+- `click(x, y, button)` — 좌/우/더블 클릭
+- `type_text(text)` — 키보드 입력
+- `key(key)` — enter, ctrl+c 등 키 조합
+- `scroll(x, y, amount)` — 스크롤 (양수=위)
+- `move(x, y)` — 마우스 이동
+
+**등록 위치**: `C:\Users\SNOOPY\.claude.json` (project: E:\My Team\astropillar)
+
+**다음 세션 우선순위:**
+1. 🔴 [P1] Claude Code 재시작 후 MCP screenshot 툴 동작 확인
+2. 🟡 [P2] 광고 1일치 데이터 확인 (다음날 아침)
+
+---
+
+### ✅ 세션65 완료 — 2026-04-26
+
+**작업 목록:**
+1. ✅ **CRO 전환 퍼널 전체 평가** — 로그아웃 상태에서 Landing → View2(Birth Form) → View3(Teaser Result) → /login 전 단계 Playwright 실측
+2. ✅ **CRO 평가 리포트 작성** — `D:\snap_pillar bck\result\result_20260426_6.txt` (4단계별 강/약점, 우선순위별 수정 권고)
+3. ✅ **/login?tab=signup 지원 추가** — useSearchParams + Suspense 래퍼, 퍼널 CTA 두 곳 링크 수정 (커밋 e2827b6)
+4. ✅ **Gender 버튼 선택 피드백 강화** — aria-pressed, ✓ 체크마크, 2px 골드 보더 + glow (커밋 b2227f9)
+
+- **Cloud Run**: 변경 없음
+- **Credit 변화**: 없음 (비회원 상태 테스트)
+
+**CRO 평가 핵심 발견:**
+| 단계 | 점수 | 핵심 이슈 |
+|------|------|-----------|
+| V1: Landing | ★★★★☆ | 소셜 프루프 부재 |
+| V2: Birth Form | ★★★★☆ | Gender 버튼 피드백 불명 (→ 수정 완료) |
+| V3: Teaser Result | ★★★★☆ | STEP 2/2 단계 불일치 |
+| /login | ★★★☆☆ | Sign In 탭 기본값 (→ 수정 완료) |
+
+**퍼널 강점:**
+- "Gemini × Fierce Earth" + "The Grounded Talker" 아이덴티티 → 강력한 차별화
+- "Unlock My Full Chart — Free" + "No credit card required" 조합
+- "Continue with Google" 원클릭 소셜 로그인
+
+**다음 세션 우선순위:**
+1. 🟡 [P2] **PersonPicker 저장 인물 1명일 때 auto-select**
+2. 🟡 [P2] **STEP 2 OF 2 → STEP 2 OF 3 표기 수정** (또는 STEP 표시 제거)
+3. 🟡 [P2] **Share CTA 위치 조정** — 회원가입 전제 명확화
+4. 🟡 [P3] **Landing Hero 소셜 프루프 강화** (별점, 리뷰 수)
+
+---
+
+### ✅ 세션64 완료 — 2026-04-26
+
+**작업 목록:**
+1. ✅ **Yearly Fortune 아코디언 버그 수정** — `parseYearlyFallback()` 신규 추가, `parseResult()` 시그니처에 `readingType?` 파라미터 추가, yearly 타입일 때 키워드 기반 fallback 파싱 (커밋 02f3aa8)
+2. ✅ **test06 전체 서비스 7항목 평가 QA** — test06(2001-09-05 ♀ Miami 07:30-09:30) 신규 생성 후 6개 서비스 전수 검증
+3. ✅ **평가 리포트 작성** — `D:\snap_pillar bck\result\result_20260426_5.txt` (7개 기준 항목별 채점)
+
+- **Cloud Run**: 변경 없음 (revision 00190-ksf)
+- **Credit 변화**: 128 → 122 (6개 서비스 × 1 Credit, Yearly는 2 Credit)
+
+**QA 결과 요약 (세션64 — test06 기준):**
+| 서비스 | 결과 | 평균점수 |
+|--------|------|---------|
+| Personal Fortune | ✅ PASS | 4.75/5 |
+| Personal Daily | ✅ PASS | 4.50/5 |
+| Yearly Fortune | ✅ PASS | 4.75/5 (아코디언 버그 수정 확인) |
+| Compatibility | ✅ PASS | 4.83/5 (77/100) |
+| Scenario | ✅ PASS | 5.0/5 |
+| Today's Fortune | ✅ PASS | 4.3/5 (Moon Phase 정상 확인) |
+
+**종합 품질: 4.69/5.0 (93.8%) ★★★★★**
+
+**기존 대비 주요 개선:**
+- Yearly Fortune: 8.5→9.5/10 (+1.0점, 아코디언 7섹션 완전 정상화)
+- Scenario: 9.5→9.8/10 (+0.3점)
+- Moon Phase API: 이전 405 오류 → 현재 정상 (Waxing Gibbous 70%)
+
+**다음 세션 우선순위:**
+1. 🟡 [P2] **PersonPicker 저장 인물 1명일 때 auto-select**
+2. 🟡 [P2] **Yearly Monthly Highlights 월별 수치 검증**
+3. 🟡 [P3] **Today's Fortune 중국 별자리 클릭 테스트**
+4. 🟡 [P3] **명리 용어 설명 툴팁** (Rob Wealth, 7 Killings 등)
+
+---
+
+### ✅ 세션63 완료 — 2026-04-26
+
+**작업 목록:**
+1. ✅ **Windows 이모지 렌더링 방지** — `ZODIAC_SYMBOL` / `PLANET_SYMBOLS` 모든 값에 `︎` 추가, Rising 카드 심볼 `↑`으로 교체 (커밋 4b1030a)
+2. ✅ **Firestore 스코어 완전 활용** — `today/page.tsx`에 6개 바 차트(Love/Work/Money/Health/Social/Creative) + Best Match 조디악 이미지 카드 추가 (커밋 27be960)
+3. ✅ **test04 전체 서비스 최종 QA** — 6개 서비스 6/6 PASS
+
+- **테스트 리포트**: `D:\snap_pillar bck\result\result_20260426_3.txt`
+- **Cloud Run**: 변경 없음 (revision 00190-ksf)
+- **Credit 변화**: 140 → 134 (6개 서비스 × 1 Credit, Today's Fortune은 무료)
+
+**QA 결과 요약 (세션63 — test04 기준):**
+| 서비스 | 결과 | 비고 |
+|--------|------|------|
+| Today's Fortune | ✅ PASS | 6개 스코어 바, Best Match Scorpio 조디악 카드 |
+| Personal Fortune | ✅ PASS | 7섹션, Rising ↑ 심볼 (Windows 이모지 없음) |
+| Personal Daily | ✅ PASS | 날짜 인젝션, AM/PM 바차트 |
+| Yearly Fortune | ✅ PASS | Jan-Dec Overall 라인 차트, 아코디언 정상 |
+| Compatibility | ✅ PASS | 74/100 레이더, You/Partner 스위처, 6섹션 |
+| Scenario Reading | ✅ PASS | 4섹션 (Short Answer 기본 열림 확인) |
+
+**다음 세션 우선순위:**
+1. 🟡 [P2] **Yearly Fortune 월별 점수 숫자 표시** — 차트에 수치 직접 표기
+2. 🟡 [P3] **PersonPicker 저장 인물 1명일 때 auto-select**
+3. 🟡 [P3] **LifespanChart 신규 리딩 확인** (lifespan_points 포함 여부)
+
+---
+
+### ✅ 세션62 완료 — 2026-04-26
+
+**작업 목록:**
+1. ✅ **Compatibility UI 전면 구현** — BaZi/Elements/Astrology 3탭 + You/Partner 인물 스위처 + COMPAT_SCORES 레이더 차트(6차원) + 6개 아코디언 섹션
+2. ✅ **TypeScript 빌드 에러 수정** — `today/page.tsx` FortuneData `[key: string]: unknown` → `!!fortune.xxx` boolean 코어션 (커밋 78b3a74)
+3. ✅ **Scenario Reading 아코디언 전환** — `situation` flat-text 분기 제거, 모든 reading_type AccordionSection 통일 (커밋 ea56fcd)
+4. ✅ **Scenario 섹션 파싱 fallback** — `parseScenarioFallback()` + `SCENARIO_SPLIT_RE` 신규 도입 (커밋 5152dbc)
+5. ✅ **SCENARIO_SPLIT_RE non-capturing group** — `split()` 아티팩트 제거 (커밋 a9c8bf0)
+6. ✅ **Scenario trigger 조건 수정** — `includes(t + ' ')` → `includes(t + ' ') || includes(t + '\n')` (커밋 1473278)
+7. ✅ **전체 서비스 QA** — test03(1991-07-15 ♂ London 09:30) 기준 5개 서비스 전수 검증
+
+- **테스트 리포트**: `D:\snap_pillar bck\result\result_20260426_2.txt`
+- **Cloud Run**: revision 00190-ksf (변경 없음)
+- **Credit 변화**: 145 → 140
+
+**QA 결과 요약 (세션62 — test03 기준):**
+| 서비스 | 결과 | 비고 |
+|--------|------|------|
+| Personal Fortune | ✅ PASS | BaZi/Elements/Astrology 탭, 아코디언 정상 |
+| Personal Daily | ✅ PASS | 날짜 인젝션, 아코디언 정상 |
+| Yearly Fortune | ✅ PASS | 월별 차트, 아코디언 정상 |
+| Compatibility | ✅ PASS | 레이더 차트 72/100, You/Partner 스위처, 6섹션 |
+| Scenario Reading | ✅ PASS | 4섹션 (Short Answer/In-Depth/Best Timing/Action Steps) |
+
+**수정된 버그 (5개):**
+- Bug#1: TypeScript `unknown` ReactNode 에러 → `!!` 코어션
+- Bug#2: Scenario flat-text 렌더링 → AccordionSection 통일
+- Bug#3: GPT 평문 섹션명 파싱 실패 → parseScenarioFallback 추가
+- Bug#4: SCENARIO_SPLIT_RE 캡처그룹 아티팩트 → non-capturing group
+- Bug#5: `includes(t + ' ')` 공백 체크가 `\n\n` 구분자에 실패 → `\n` 조건 추가
+
+**다음 세션 우선순위:**
+1. 🟡 [P2] **Yearly Fortune 월별 점수 숫자 표시** — 차트에 수치 직접 표기
+2. 🟡 [P3] **LifespanChart 신규 리딩 확인** (lifespan_points 포함 여부)
+3. 🟡 [P3] **PersonPicker 저장 인물 1명일 때 auto-select**
+
+---
+
+### ✅ 세션61 완료 — 2026-04-26
+
+**작업 목록:**
+1. ✅ **ANTI-METAPHOR RULE 추가** — 5개 서비스 프롬프트 전체에 Grade 9-10 제약 + 금지 예시 삽입 (revision 00188-qb2)
+2. ✅ **LANGUAGE RULE 추가** — `situation_system_prompt`에 "Output ONLY in English. Never insert words from any other language" 삽입 (Scenario Arabic 단어 주입 버그 수정, revision 00189-kxq)
+3. ✅ **Today's Fortune 메타데이터 노출 확인** — page.tsx 코드 검증 완료, intro/fortune/tip 3개만 렌더링 정상 (세션60 커밋 ea5ff4a 적용 확인)
+4. ✅ **전체 서비스 QA** — test02(1997-03-20 ♀ Chicago 11:30-13:30) 기준 6개 평가항목 한국어 결과 작성
+- **테스트 리포트**: `D:\snap_pillar bck\result\result_20260426_1.txt`
+- **Cloud Run**: revision 00189-kxq
+
+**QA 결과 요약 (세션61 — test02 기준):**
+| 서비스 | 점수 | 비고 |
+|--------|------|------|
+| Personal Fortune | ★★★★★ 9.2/10 | 가독성 개선 확인 |
+| Personal Daily | ★★★★★ 9.2/10 | AM/PM 바차트 정상 |
+| Yearly Fortune | ★★★★☆ 8.5/10 | 월별 숫자 표시 없음 |
+| Compatibility | ★★★☆☆ 7.8/10 | 그래프/BaZi탭 없음, 4섹션만 |
+| Scenario Reading | ★★★★☆ 8.8/10 | Arabic 버그 수정 완료 |
+| Today's Fortune | 🚨 재확인 | 메타데이터 노출 재확인 필요 |
+
+**다음 세션 우선순위:**
+1. 🟡 [P2] **Compatibility 개선** — 그래프 추가 + BaZi 탭 추가 + 섹션 4→6개 확장
+2. 🟡 [P2] **Yearly Fortune 월별 점수 숫자 표시** — 차트에 수치 직접 표기
+3. 🟡 [P2] **Scenario Reading 섹션 분리** — 단일 장문 → 4섹션 아코디언 (Short Answer / In-Depth / Timing / Action Steps)
+4. 🟡 [P3] **LifespanChart 신규 리딩 확인**
+
+---
+
+### ✅ 세션60 완료 — 2026-04-26
+
+**작업 목록:**
+1. ✅ **rrr 전체 서비스 QA**: k@k.com 계정, rrr(1992-11-08 ♀ LA 05:30-07:30) 5개 서비스 신규 테스트 완료
+2. ✅ **Today's Fortune UI 버그 수정**: 메타데이터 필드(date/generated_at/type/key) 노출 → intro/fortune/tip 3개만 렌더링 (커밋 ea5ff4a)
+3. ✅ **Your Sign 배지 수정**: 이모지 제거 + `×`를 `<span fontFamily:sans-serif>&times;</span>`으로 JSX 렌더링 — Cormorant Garamond 폰트 깨짐 해결 (커밋 4b4b077)
+4. ✅ **Personal Daily "Who You Are Today" 날짜 표시**: `data.target_date` 파싱 → `(Apr 26, 2026)` 형식으로 섹션 제목 옆 표시 (커밋 4b4b077)
+- **테스트 리포트**: `D:\snap_pillar bck\result\result_20260426_3.txt`
+- **개발계획서**: `D:\snap_pillar bck\개발계획서들\d-20260425_1.md`
+
+**다음 세션 최우선 과제:**
+1. 🟡 [내일 P1] **해석 가독성 개선** — 현재 대학생+ 수준(복잡한 은유·추상어 다수) → 25~35세 일반 독자 수준으로 프롬프트 조정
+   - 목표: Flesch-Kincaid Grade 9~10 (현재 추정 12~14)
+   - 방법: 프롬프트에 "plain English" 제약 추가, 추상 은유 금지 예시 삽입
+   - 잘 된 예시(유지): "Say less, finish more." / "Don't chase. Confirm." / "mountain with a knife in it"
+   - 개선 대상: "emotionally audited" / "late-blooming consolidation story" / "neither of you insists on being the thermostat" 류
+2. 🟡 [P2] LifespanChart 신규 리딩으로 실제 작동 확인 (lifespan_points 포함 여부)
+
+---
+
+> 마지막 작업: 2026-04-25 세션59 완료
+
+### ✅ 세션59 완료 — 2026-04-25
+
+**작업 목록 (10개):**
+1. ✅ **Daily V3 업그레이드**: `/api/v2/` → `/api/v3/horoscope/daily/personal` + V3 필드 파싱
+2. ✅ **RISING 버그**: `symbol="ASC"` → `ZODIAC_SYMBOL[ascSign] ?? '↑'` 교체 완료
+3. ✅ **BaZi Synastry**: `fetch_bazi_synastry()` + `build_compatibility_prompt` synastry_data 파라미터 추가
+4. ✅ **BaZi Flow + Yearly 그래프 차별화**: `fetch_bazi_flow()` 추가, `build_gpt_prompt` 연동, SCORES_JSON 차별화 지시 추가
+5. ⚠️ **Moon Phase → Today's Fortune**: 코드 배포 완료, BUT `/moon_phase` API upstream 405 오류 → 카드 미표시. FreeAstroAPI 엔드포인트 재확인 필요
+6. ✅ **SVG Chart**: `/natal_chart_svg` POST 엔드포인트 + `NatalChartViewer` 컴포넌트 (모달, "View Birth Chart" 버튼 확인)
+7. ✅ **Lifespan Chart**: `fetch_lifespan()` + `LifespanChart` 컴포넌트 (2줄 레이아웃), LuckCycleBarChart 폴백 유지 (캐시 결과는 폴백 사용)
+8. ✅ **추가a**: SPLIT_RE `\\n+` 수정 + `\r\n` 정규화 — 섹션 파싱 버그 완전 해결 (7개 섹션 정상 분리)
+9. ✅ **추가b**: "Your Sign" (별자리×일간) BaZi Chart 탭 내부 표시 (전 서비스 작동 확인)
+10. ✅ **최종 테스트**: astropillar.com k@k.com 로그인 후 전 서비스 테스트 완료
+- **Cloud Run**: revision 00185-mgn 배포 완료
+- **테스트 리포트**: `D:\snap_pillar bck\result\result_20260425_1.txt`
+- **개발계획서**: `D:\snap_pillar bck\개발계획서들\d-20260424_3.md`
+
+**다음 세션 최우선 과제:**
+1. 🔴 [P1] Moon Phase API 405 오류 수정 (FreeAstroAPI /api/v1/moon/phase POST 시도 또는 대체 API)
+2. 🟡 [P2] LifespanChart 신규 리딩으로 실제 작동 확인 (lifespan_points 포함 여부)
+
+---
+
+> 마지막 작업: 2026-04-24 세션58 완료
+
+### ✅ 세션58 완료 — 2026-04-24
+
+**완료된 작업:**
+1. **[완료]** Elements 탭 — 오행 관계 차트(WuXingChart) 추가 (커밋 14cd90e)
+   - 캔버스 기반 오각형 차트: 상생(초록 실선) / 상극(빨강 점선) 화살표
+   - 노드 크기 `wood_points` / `fire_points` 등 API 점수에 비례 (없으면 균등)
+   - Day Master element에 ★ You 골드 마커 표시
+   - "Five Elements · Relationships" 레이블로 Day Master 카드 아래 배치
+
+2. **[완료]** 프롬프트 30/30/40 규칙 전수 적용 — 5개 서비스 27개 섹션 전부 (Cloud Run revision 00184-4xj)
+   - 적용 방식: 각 섹션 설명 끝에 `SECTION RATIO` 지시어 추가
+   - Personal Fortune: ✨Who You Are / 💼Career / ❤️Love / 💰Wealth / 🌿Health / 📊Life Chapters (6개)
+   - Personal Daily: system prompt CONTENT RATIO RULE + ✨Who You Are Today / 💼Career / ❤️Love / 💰Money / 🌿Health (6개)
+   - Yearly Fortune: ✨at a Glance / 💼Career&Money / ❤️Love / 🌿Health / 📊Growth / 📅Monthly Highlights / 💡Strategy (7개)
+   - Scenario Reading (use_western): 🎯What / ✅Working / ⚠️Watch Out / 📅Timing / 💡How / 🔮Bottom Line (6개)
+   - Compatibility: FUSION REMINDER + ✨Who / 🔥Works Well / ⚡Complicated / 💫Bottom Line (5개)
+   - **규칙**: ~30% BaZi + ~30% Western + ~40% 두 시스템만 합쳤을 때 보이는 융합 진실. 병렬 서술 절대 금지.
+
+3. **[완료]** Scenario 버튼 크레딧 수치 Firebase 연동 (커밋 ee48564)
+   - `ScenarioButton` 내 `usePricing()` 훅 추가
+   - 하드코딩 "2 Credits" → `service_config/pricing.scenario` 동적 로드
+   - 1이면 "Credit" (단수), 복수면 "Credits" 자동 표기
+
+### ✅ 세션57 완료 — 2026-04-23
+
+**완료된 작업:**
+1. **[완료]** 일간 표현 10개 전면 교체 — `get_day_master_label()` 함수 새 매핑 적용
+   - 甲→Bold Wood, 乙→Graceful Wood, 丙→Blazing Fire, 丁→Glowing Fire, 戊→Steady Earth, 己→Grounded Earth, 庚→Forged Metal, 辛→Pure Metal, 壬→Vast Water, 癸→Still Water
+   - 모든 프롬프트 예시 "Fierce Metal" → "Forged Metal", "Flowing Wood" → "Graceful Wood" 등 전부 교체
+2. **[완료]** Personal Fortune 그래프 추가 — 육각 RadarChart(Love/Career/Wealth/Health/Vitality/Life) + LuckCycleBarChart
+   - SCORES_JSON 지시어 프롬프트에 추가 + 백엔드 파싱 로직 추가
+3. **[완료]** Personal Daily Fortune 그래프 추가 — 육각 RadarChart + AmPmBarChart(오전/오후)
+   - SCORES_JSON 지시어 프롬프트에 추가 + 백엔드 파싱 로직 추가
+4. **[완료]** Yearly SCORES_JSON 일관성 규칙 추가 — 텍스트 긍정 → 점수 높게, 부정 → 낮게 강제
+5. **[완료]** 일간 표현 Bold 처리 (프론트엔드) — `RichText` 컴포넌트로 10개 표현 골드 bold 렌더링
+6. **[완료]** 별자리 카드 뉴스 엑셀 12개 — A열 일간 표현 전면 교체 (120개 셀)
+
+7. **[완료]** QA 수정사항 (2026-04-23 세션56 추가작업):
+   - Compatibility 페이지 — 인라인 Add Person 폼 추가 (Library 이동 없이 직접 추가 가능)
+   - Yearly 아코디언 버그 수정 — SPLIT_RE/eMatch에 `u` 플래그 추가 (non-BMP 이모지 파싱 실패 → 단일 Section 1 표시 버그 수정)
+   - 한자 영어 병기 — BaZi 차트 이미지 아래 `甲 (Bold Wood)` / `子 (Rat)` 형식 라벨 추가, RichText 한자 annotation 함수 추가
+   - 랜딩 페이지 이미지 교체 — p_1_main.webp → home.png (로컬 파일)
+
+8. **[완료]** Yearly 섹션명 중복 수정 — "Career & Learning" → "Growth & Learning" (Cloud Run revision 00178-dz9)
+
+**세션57 QA 진행상황 (2026-04-23):**
+- [x] Personal Fortune (qewr) — 완료 (이전 세션)
+- [x] Daily Fortune (qewr) — 완료 (이전 세션)
+- [x] Yearly Fortune (qewr) — 완료, "Career & Learning" 중복 버그 발견 및 수정
+- [x] Compatibility (qewr + parkjp) — 완료
+- [x] Scenario Reading (qewr) — 완료
+- [x] QA 보고서 작성 → `D:\snap_pillar bck\result\result_20260423_1.txt` ✅ 완료
+- [x] Daily Fortune P1 버그 수정 — 날짜줄 헤더 안으로 이동 (Cloud Run revision 00180-wsl)
+- [x] QA Round 2 (test01) — Personal + Daily 신규 테스트, 보고서: `result_20260423_2.txt`
+  - P1 수정 확인 ✅
+  - 신규 발견: Personal Fortune 레이더 차트 저점 문제 (7 Killings 차트에서 전 영역 20~30점대)
+
+### 직전 세션에서 완료한 것 (2026-04-22)
+1. **Section 1 아코디언 버그 수정** — 모든 프롬프트에 "Do NOT output any text before first header" + FIRST LINE 인스트럭션 첫 섹션 안으로 이동
+2. **Compatibility SECTION FORMAT 누락 헤더 추가** — 🔥 Where You Work Well Together
+3. **Scenario Reading BaZi+Western 완전 융합** (revision 00175-hdk)
+4. **하단 네비게이션 Credits 갱신 버그 수정** — AuthContext 도입, 전역 상태 공유 (커밋 1d9c82f)
+5. **Yearly Fortune 차트 레이아웃 개선** (커밋 c4c106e)
+   - Career & Money: 가로 → 세로 배치 (Career 위, Money 아래), 각 330px 풀사이즈
+   - At a Glance: 총운(Overall) 차트 추가 — career/love/health/money 평균, 골드색
+6. **프롬프트 Fierce/Flowing 명칭 통일** — "Geng Metal" → "Fierce Metal", "Gui Water" → "Flowing Water" (revision 00176-76j)
+7. **융합 구조 전면 강화 + 비율 규칙** (revision 00177-xfp)
+   - "Option B" (BaZi 먼저 → Western → 결론) 병렬 구조 허용 조항 완전 삭제
+   - 모든 프롬프트에 구체적 ❌/✅ 예시 추가: "Fierce Metal with Scorpio Sun" 형식 강제
+   - **콘텐츠 비율 규칙**: 명리학 30% + 점성술 30% + 융합 결론 40% — 5개 서비스 전부 적용
+   - 적용 범위: situation_system_prompt / personal_fortune / yearly_western_block / western_fusion_rules / anti_parallel
+8. **QA 전체 완료** — 5개 서비스 모두 PASS, 10/10
+   - 상세 리포트: `D:\snap_pillar bck\result\result_20260422_1.txt`
+
+### 다음 세션 우선순위
+
+> 세션72 기준 최신화 (2026-05-03)
+
+**버그 수정**
+1. **[P1]** Celtic Cross 요금 버그 — Firestore `service_config/pricing.tarot_celtic_cross` 값 2로 수정
+2. **[P1]** 랜딩 "100% Private. Never stored. Never shared." 문구 교체 (법적 리스크) ← 광고 집행 중 필수
+3. **[P3]** Astrology Profile RISING 카드 "ASC" 텍스트 → 별자리 이미지 수정
+
+**신규 기능**
+4. **[P2]** 포춘쿠키 `/fortune` 페이지 — GPT 생성, 영어 웃긴 운세, 공유 카드 바이럴 훅
+
+**마케팅/분석**
+5. **[P2]** Meta Pixel 설치 (Instagram IAB 추적 보완)
+6. **[P2]** UTM 파라미터 bio 링크 적용
+7. **[P2]** Instagram Graph API 세팅
+
+**UX 개선**
+8. **[P3]** PersonPicker 저장 인물 1명일 때 auto-select
+9. **[P3]** STEP 2 OF 2 → STEP 2 OF 3 표기 수정
+10. **[P3]** Landing Hero 소셜 프루프 강화
+
+**✅ 세션74 완료 — 2026-05-06**
+- ✅ Cloud Run CORS에 프리뷰 URL 추가 (revision 00201-2j4)
+- ✅ test_10 생성 완료 (1990-05-15 ♀ Seoul, 09:30-11:30)
+- ✅ [KO] Personal Fortune — 크레딧 차감 정상, 로딩/프로필 한국어, 그러나 섹션 제목 2~7 영어("Career & Life Path" 등) P1 버그
+- ✅ [KO] Three Card Tarot — UI 전부 영어(카드 포지션/이름/버튼), GPT 리딩 전부 영어 P1 버그
+- ✅ [KO] Relationship Tarot — UI 전부 영어 P1 버그 (리딩 실행 생략)
+- ✅ [KO] Celtic Cross Tarot — UI 전부 영어 P1 버그 (리딩 실행 생략, 2크레딧)
+- ✅ [KO] Today's Fortune (무료) — 3탭 전부 영어 (Daily Tarot/Horoscope/Chinese Zodiac) P1 버그
+- ✅ [KO] 신년 운세 — 로딩/제목/버튼 한국어, 프로필 탭 한국어, 그러나 GPT 리딩 전부 영어 P1 버그 (크레딧 58→56)
+- ✅ [KO] 메뉴 — 전부 한국어, 언어 전환 버튼(EN/한국어/日本語) 정상 ✅
+- ✅ test_11 생성 완료 (1988-03-20 ♀ Tokyo, 13:30-15:30)
+- ✅ [JA] 메뉴 — 전부 일본어 ✅
+- ✅ [JA] 命式・運命鑑定 — GPT 리딩 일본어 출력 ✅, 섹션 제목 7개 모두 일본어 ✅
+- ✅ [JA] Three Card Tarot UI — 영어 ❌ (한국어와 동일)
+- ✅ [JA] Today's Fortune — 전부 영어 ❌ (한국어와 동일)
+- ✅ QA 리포트 저장: C:\Users\SNOOPY\Desktop\result_20260506_1.txt
+
+**KO vs JA 핵심 차이:**
+- KO GPT 리딩: 전부 영어 출력 [P1 버그]
+- JA GPT 리딩: 일본어 정상 출력 ✅ (단 "(Bold Wood)" 등 영어 기술 용어 혼재)
+- 두 언어 공통 미번역: 타로 UI 전체, Today's Fortune 전체, BaZi 차트 레이블
+
+**세션74 QA 종합 점수:**
+| 언어 | 메뉴 | Personal Fortune | 타로 | Today's Fortune | 종합 |
+|------|------|-----------------|------|-----------------|------|
+| 한국어 | 10/10 | 3/10 | 1.25/10 | 1.33/10 | 2.2/10 ❌ |
+| 일본어 | 10/10 | 7.8/10 | -/10 | 1.5/10 | 6.3/10 ⚠️ |
+
+**KO QA 핵심 버그 요약:**
+- [P1] 모든 GPT 리딩 결과가 영어로 출력됨 (한국어 locale에서도) — language 파라미터 미전달 의심
+- [P1] 타로 UI 레이블 전부 영어 (카드 포지션명, 버튼 텍스트 등) — i18n 번역 누락
+- [P1] Today's Fortune (무료) 3탭 전부 영어 — i18n 번역 누락
+- [P1] Personal Fortune 섹션 타이틀 2~7 영어 — i18n 번역 누락
+- [OK] 메뉴 페이지: 완전 한국어 ✅
+- [OK] 크레딧 표시/차감: 정상 ✅
+- [OK] 언어 전환 버튼: 정상 ✅
+
+**✅ 세션76 완료 — 2026-05-08**
+- ✅ main.py: build_compatibility_prompt() KO/JA 섹션 헤더 현지화 (두 사람은 누구인가 / 두 사람의 소통 방식 / 잘 맞는 부분 / 힘든 부분 / 함께 성장하는 방법 / 궁합 총평)
+- ✅ main.py: build_compatibility_prompt() COMPAT_SCORES 레이블 현지화 (연결감/케미/소통/갈등 해결/성장/지속성)
+- ✅ main.py: build_personal_fortune_prompt() KO/JA 섹션 헤더 현지화 (나는 누구인가 / 커리어 & 인생 경로 / 사랑 & 인간관계 / 재물 & 돈 / 건강 & 활력 / 인생 챕터 / 기억해야 할 한 가지)
+- ✅ main.py: build_personal_daily_prompt() KO/JA 섹션 헤더 현지화 (오늘의 나 / 커리어 & 집중 / 사랑 & 인간관계 / 재물 & 기회 / 건강 & 활력 / 오늘의 한 가지)
+- ✅ Cloud Run 배포: revision 00207-cwn
+
+**세션76 QA 결과:**
+| 서비스 | 언어 | 섹션 타이틀 | 본문 | 상태 |
+|--------|------|-----------|------|------|
+| 궁합 | KO | 전부 한국어 ✅ | 한국어 ✅ | 9/10 |
+| 레이더 차트 | KO | 연결감/케미/소통 등 ✅ | — | ✅ |
+| 평생 운명 | KO | 전부 한국어 ✅ | 한국어 ✅ | 9/10 |
+| 오늘의 나 | KO | 전부 한국어 ✅ | 한국어 ✅ | 9/10 |
+
+**미완료 항목 (다음 세션):**
+- [ ] KO 신년 운세 신규 리딩으로 섹션 타이틀 검증 (revision 00206-7kp에서 수정됨, 캐시로 미확인)
+- [ ] JA 궁합 / 평생 운명 / 오늘의 나 섹션 타이틀 검증
+- [ ] 레이더 차트 LOVE/CAREER/WEALTH 레이블 KO/JA 현지화 (personal fortune/daily)
+- [ ] BaZi 차트 YEAR/MONTH/DAY/HOUR 레이블 현지화
+- [ ] 관계 유형 드롭다운 KO/JA 번역
+- [ ] KO/JA 타로 22장 Firestore 사전 캐싱
+- [ ] EN 전체 서비스 테스트
+- [ ] 7일치 KO/JA 별자리/띠별 Firestore 데이터 재생성
+
+**✅ 세션75 완료 — 2026-05-07**
+- ✅ today/page.tsx: HOROSCOPE_NAMES/CHINESE_NAMES/MOON_PHASE_NAMES 3개 로케일 맵 추가
+- ✅ today/page.tsx: UI_TEXT에 moonPhaseLabel/illuminated/monthPlaceholder/dayPlaceholder/scoreLabels 추가
+- ✅ today/page.tsx: SCORE_ITEMS 하드코딩 label 제거, scoreLabels[s.key]로 동적 표시
+- ✅ today/page.tsx: 타로 Firestore EN 캐시 폴백 제거 (locale API 직접 호출)
+- ✅ main.py: generate_tarot_card_fortune() KO/JA 섹션 헤더 로케일화 (카드/오늘의 메시지/오늘 할 한 가지)
+- ✅ Cloud Run 배포: revision 00205-2zl
+- ✅ [locale]/menu/page.tsx: 헤더 크레딧 배지 /buy → locale-aware href
+- ✅ ReadingPageShell.tsx: /buy → locale-aware href (useLocale 추가)
+- ✅ middleware.ts: NEXT_LOCALE=en 쿠키 시 IP 감지 스킵 (KR IP 우회)
+- ✅ 커밋: fdd5ccd → bf1635f → 4465c0a (feature/i18n)
+
+**세션75 QA 결과 (수정 후 기준):**
+| 서비스 | 언어 | 점수 | 상태 |
+|--------|------|------|------|
+| 타로 | KO | 9/10 | ✅ 헤더+본문 한국어 |
+| 타로 | JA | 9/10 | ✅ 헤더+본문 일본어 |
+| 별자리 | KO | 9/10 | ✅ 수정 후 |
+| 별자리 | JA | 10/10 | ✅ 완전 일본어 |
+| 띠별 운세 | KO | 8/10 | ✅ |
+| 띠별 운세 | JA | 9/10 | ✅ 완전 일본어 |
+| 평생 운명 리딩 | KO | 8/10 | ✅ |
+
+**미완료 항목 (다음 세션):**
+- [ ] KO/JA 타로 22장 Firestore 사전 캐싱 (매일 API 직접 호출 → 응답 느림)
+- [ ] EN test11 전체 서비스 테스트 (Vercel 배포 후 쿠키로 EN 전환)
+- [ ] 7일치 KO/JA 별자리/띠별 Firestore 데이터 재생성
+
+**✅ 세션73 완료 — 2026-05-05**
+- ✅ ko.json: "명리학+점성술" → "사주+별자리운세" (personal_fortune/daily subtitle)
+- ✅ ko.json: 타로 타이틀 3종 → "과거/현재/미래 타로" / "나와 상대방의 관계 타로" / "심층 분석 타로"
+- ✅ ja.json: "四柱推命＋西洋占星術" → "四柱推命＋星座占い" (자연스러운 일반 용어)
+- ✅ ja.json: 타로 타이틀 3종 → "過去・現在・未来タロット" / "二人の関係タロット" / "深掘りタロット"
+- ✅ main.py: `get_day_master_label()` 로케일별 라벨 (ko: 굳센 나무/깊은 바다 등, ja: 大木/大海 등)
+- ✅ main.py: `_language_rule()` 일간×지배오행 이미지 지시어 추가 (전 언어)
+- ✅ main.py: 4개 call site에 `locale=req.language` 전달
+- ✅ Cloud Run 배포: revision 00200-slt
+- ✅ 커밋: 519cc45 (feature/i18n → push 완료)
+
+**✅ 세션72 완료**
+- ✅ GA4 전면 재설정 (route change page_view, 이벤트 전체 세분화, 누락 이벤트 추가)
+- ✅ AI 모델 비교 (Haiku 4.5 vs GPT-5.4-mini) → OpenAI 유지 결정
+- ✅ 포춘쿠키 신규 서비스 기획 완료
+
+**기타**
+11. **[비즈]** 크레딧 소모량 조정 검토 — Personal Fortune/Scenario/Compatibility 2크레딧, Yearly 3크레딧
+
+### 핵심 파일 경로
+| 파일 | 역할 |
+|------|------|
+| `E:\My Team\astropillar\src\components\ReadingResult.tsx` | Astrology Profile UI, extractWestern() |
+| `E:\My Team\astropillar\src\components\BirthForm.tsx` | TIME_RANGES, BirthData 인터페이스 |
+| `E:\My Team\astropillar\src\components\PersonPicker.tsx` | 인물 선택 UI, Add Person 폼 |
+| `E:\My Team\astropillar\src\lib\firestore.ts` | SavedPerson 인터페이스, savePerson() |
+| `E:\My Team\astropillar\src\app\library\page.tsx` | Library My Persons 탭 |
+| `D:\snap pillar\main.py` | FastAPI 백엔드 (Cloud Run) |
+
+### ⚠️ Cloud Run 배포 명령어 (반드시 --allow-unauthenticated 사용)
+```bash
+cd "D:\snap pillar" && gcloud run deploy snap-pillar-api --source . --project snap-pillar --region asia-northeast3 --allow-unauthenticated
+```
+> `--no-allow-unauthenticated` 사용 금지 — 배포 시마다 `allUsers invoker` IAM이 제거되어 크레딧 조회/결제 등 모든 GET API가 CORS 차단됨 (0 크레딧 표시 버그)
+
+---
+
+## 결과 화면 구성 (ReadingResult.tsx)
+
+결과 화면은 3개 탭으로 구성:
+1. **BaZi Chart** — 년/월/일/시 각 기둥의 천간·지지 이미지
+   - 천간: `gan_[한자].png`, 지지: `zhi_[한자].png` (GitHub 이미지 레포)
+2. **Elements** — Day Master 카드 + 오행 관계 차트(WuXingChart)
+   - Day Master 원소 설명 카드 (색상/한자/설명)
+   - WuXingChart: 오각형 + 상생(초록 실선) / 상극(빨강 점선) 화살표, ★ You 마커
+   - API `*_points` 필드로 노드 크기 비례 표시
+3. **Astrology Profile** — Big Three(Sun/Moon/Rising) + Inner Planets + Outer Planets 카드
+   - 별자리 SVG: `r_[sign].svg` (원본 색상, filter 없음)
+4. **Reading (GPT 해석문)** — 섹션별 아코디언
+
+---
+
+## 배포 절차 (GitHub + Vercel)
+
+### 1단계 — GitHub 레포 생성 & 푸시
+`gh` CLI가 없을 경우 GitHub에서 빈 레포 `hellojunpil/astropillar-nextjs` 수동 생성 후:
+```bash
+git -C "E:/My Team/astropillar" remote add origin https://github.com/hellojunpil/astropillar-nextjs.git
+git -C "E:/My Team/astropillar" push -u origin master
+```
+`gh` CLI 있을 경우:
+```bash
+gh repo create hellojunpil/astropillar-nextjs --public --source="E:/My Team/astropillar" --remote=origin --push
+```
+
+### 2단계 — Vercel 배포
+1. https://vercel.com → "Add New Project" → GitHub 레포 import
+2. Framework: **Next.js** (자동 감지)
+3. 환경변수 아래 목록 전부 입력 후 Deploy
+
+### 3단계 — Vercel 환경변수 목록
+```
+NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyAWFmD7UDYuO0EErZDF3kxlmTYxw1tz9KU
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=pillarfortune.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=pillarfortune
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=944836465041-ofkua0sdrnabng4nq6laaiu1sa1n7vbl.apps.googleusercontent.com
+NEXT_PUBLIC_API_BASE=https://snap-pillar-api-944836465041.asia-northeast3.run.app
+NEXT_PUBLIC_GUMROAD_URL_1=https://junpil.gumroad.com/l/gveeli
+NEXT_PUBLIC_GUMROAD_URL_5=https://junpil.gumroad.com/l/idksv
+GUMROAD_SELLER_ID=0DwFvQOjnySBKZVYvOzIJg==
+NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
+```
+
+### 4단계 — 도메인 연결
+- Vercel → Settings → Domains → `astropillar.com` 추가
+- DNS: Vercel이 안내하는 A레코드 또는 CNAME 설정
+
+---
+
+## 세션 히스토리 요약
+
+- **세션1~22**: Bubble + FastAPI 기반 전체 서비스 개발 완료
+- **세션47**: Vercel 분리 (astropillar.com → Vercel 랜딩, app.astropillar.com → Bubble)
+- **세션48**: GA4 내부 트래픽 필터, Playwright MCP 설치, V1 디자인 개선
+- **세션49**: Bubble 로그인 401 오류 미해결 → Bubble 포기, Next.js 전환 결정
+- **세션50~**: Next.js 전환 작업 시작
+
+---
+
+## 중요 원칙
+
+- **솔직한 진단 우선** — 듣기 좋은 말보다 도움 되는 말
+- **main.py 수정 전** 반드시 최신 파일 먼저 확인
+- **배포**: VSCode 터미널 기준으로 안내
+- **모델**: Claude Sonnet 4.6
+- **광고 타겟**: 미국/영국/캐나다/호주/필리핀/싱가포르/말레이시아

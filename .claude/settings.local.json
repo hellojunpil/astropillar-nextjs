@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cat)",
+      "Bash(node /tmp/ga4_open.js)",
+      "Bash(echo \"브라우저 실행됨 \\(PID: $!\\)\")",
+      "Bash(npm list *)",
+      "Bash(where playwright *)",
+      "Bash(npx playwright *)",
+      "Bash(python *)",
+      "Bash(start *)",
+      "Bash(tasklist)",
+      "Bash(taskkill /F /IM chrome.exe /T)",
+      "Bash(netstat -ano)",
+      "Bash(taskkill /F /IM msedge.exe /T)",
+      "Bash(gcloud --version)",
+      "Bash(gcloud auth application-default login *)",
+      "Bash(pip install *)",
+      "Bash(gcloud services enable *)",
+      "Bash(gcloud auth *)",
+      "Bash(gcloud firestore *)",
+      "Skill(update-config)",
+      "Bash(claude mcp *)"
+    ]
+  }
+}
