@@ -169,9 +169,7 @@ const ANNOTATIONS_BY_LOCALE: Record<string, Record<string, string>> = {
     '壬':'大海','癸':'雨露',
     '子':'鼠','丑':'牛','寅':'虎','卯':'兎','辰':'龍','巳':'蛇',
     '午':'馬','未':'羊','申':'猿','酉':'鶏','戌':'犬','亥':'猪',
-    '比肩':'比肩','劫財':'劫財','食神':'食神',
-    '傷官':'傷官','偏財':'偏財','正財':'正財',
-    '偏官':'偏官','正官':'正官','偏印':'偏印','正印':'正印',
+    // 십성은 JA에서 한자 그대로 = 주석 불필요, 툴팁으로 처리
     '年柱':'年柱','月柱':'月柱','日柱':'日柱','時柱':'時柱',
     '木':'木','火':'火','土':'土','金':'金','水':'水',
     '天干':'天干','地支':'地支','大運':'大運',
@@ -335,6 +333,75 @@ function normalizeTitle(t: string): string {
   return t.replace(EMOJI_RE,'').replace(/\s*—.*$/,'').trim()
 }
 
+// ── Ten Gods tooltip data ────────────────────────────────────────────
+const TEN_GODS_DATA: Record<string, Array<{ term: string; explanation: string }>> = {
+  en: [
+    { term: 'Friend Star',    explanation: 'Same element & polarity. Self-reliance, competition, and peer bonds.' },
+    { term: 'Rival Star',     explanation: 'Same element, opposite polarity. Bold action and ambition — watch over-spending.' },
+    { term: 'Creative Star',  explanation: 'Element you generate, same polarity. Talent, expression, and contentment.' },
+    { term: 'Expression Star',explanation: 'Element you generate, opposite polarity. Creativity and rebellion — rule-breaker energy.' },
+    { term: 'Indirect Wealth',explanation: 'Element you control, opposite polarity. Business, investment, and windfall luck.' },
+    { term: 'Direct Wealth',  explanation: 'Element you control, same polarity. Steady income and diligent effort.' },
+    { term: 'Power Star',     explanation: 'Element that controls you, opposite polarity. Ambition, pressure, and raw drive.' },
+    { term: 'Direct Officer', explanation: 'Element that controls you, same polarity. Reputation, rules, and social standing.' },
+    { term: 'Shadow Wisdom',  explanation: 'Element that feeds you, opposite polarity. Intuition and independence — can be erratic.' },
+    { term: 'Pure Wisdom',    explanation: 'Element that feeds you, same polarity. Learning, wisdom, and steady support.' },
+  ],
+  ko: [
+    { term: '비견', explanation: '나와 같은 오행·음양. 자존심·독립심·경쟁과 협력의 별.' },
+    { term: '겁재', explanation: '같은 오행, 반대 음양. 추진력·모험심·재물 소모에 주의.' },
+    { term: '식신', explanation: '내가 생하는 오행, 같은 음양. 재능·여유·행복을 부르는 별.' },
+    { term: '상관', explanation: '내가 생하는 오행, 반대 음양. 창의력·예술성·반골 기질.' },
+    { term: '편재', explanation: '내가 극하는 오행, 반대 음양. 사업·투자·우연한 횡재의 별.' },
+    { term: '정재', explanation: '내가 극하는 오행, 같은 음양. 안정적 재물·성실·근면의 별.' },
+    { term: '편관', explanation: '나를 극하는 오행, 반대 음양. 도전·압박·야망·칠살의 별.' },
+    { term: '정관', explanation: '나를 극하는 오행, 같은 음양. 명예·규범·사회적 지위의 별.' },
+    { term: '편인', explanation: '나를 생하는 오행, 반대 음양. 직관·독창성·불규칙한 흐름의 별.' },
+    { term: '정인', explanation: '나를 생하는 오행, 같은 음양. 학문·지혜·안정적 지원의 별.' },
+  ],
+  ja: [
+    { term: '比肩', explanation: '同じ五行・陰陽。自立心・競争と協力の星。' },
+    { term: '劫財', explanation: '同じ五行、逆の陰陽。行動力と冒険心。財の消耗に注意。' },
+    { term: '食神', explanation: '自分が生む五行、同じ陰陽。才能・表現・幸福の星。' },
+    { term: '傷官', explanation: '自分が生む五行、逆の陰陽。創造力・芸術性・反骨精神の星。' },
+    { term: '偏財', explanation: '自分が剋する五行、逆の陰陽。事業・投資・棚ぼた運の星。' },
+    { term: '正財', explanation: '自分が剋する五行、同じ陰陽。安定収入・勤勉・誠実の星。' },
+    { term: '偏官', explanation: '自分を剋する五行、逆の陰陽。挑戦・プレッシャー・野望の星。' },
+    { term: '正官', explanation: '自分を剋する五行、同じ陰陽。名誉・規律・社会的地位の星。' },
+    { term: '偏印', explanation: '自分を生む五行、逆の陰陽。直感・独創性・不規則な流れの星。' },
+    { term: '正印', explanation: '自分を生む五行、同じ陰陽。学問・知恵・安定したサポートの星。' },
+  ],
+}
+
+function TenGodTooltip({ term, explanation }: { term: string; explanation: string }) {
+  const [visible, setVisible] = useState(false)
+  return (
+    <span style={{ position: 'relative', display: 'inline' }}>
+      <span
+        style={{ color: 'var(--gold)', borderBottom: '1px dotted rgba(201,168,76,0.6)', cursor: 'help', fontWeight: 600 }}
+        onMouseEnter={() => setVisible(true)}
+        onMouseLeave={() => setVisible(false)}
+        onClick={() => setVisible(v => !v)}
+      >
+        {term}
+      </span>
+      {visible && (
+        <span style={{
+          position: 'absolute', bottom: 'calc(100% + 6px)', left: '50%', transform: 'translateX(-50%)',
+          background: '#1a1a2e', border: '1px solid rgba(201,168,76,0.4)', borderRadius: 8,
+          padding: '8px 12px', fontSize: 12, color: '#ddd', lineHeight: 1.6,
+          whiteSpace: 'normal', width: 220, zIndex: 100,
+          boxShadow: '0 4px 20px rgba(0,0,0,0.6)', pointerEvents: 'none',
+          display: 'block',
+        }}>
+          <strong style={{ color: 'var(--gold)', display: 'block', marginBottom: 4 }}>{term}</strong>
+          {explanation}
+        </span>
+      )}
+    </span>
+  )
+}
+
 // ── Day Master Labels for bold rendering ────────────────────────────
 const DAY_MASTER_LABELS_BY_LOCALE: Record<string, string[]> = {
   en: ['Bold Wood','Graceful Wood','Blazing Fire','Glowing Fire','Steady Earth','Grounded Earth','Forged Metal','Pure Metal','Vast Water','Still Water'],
@@ -345,16 +412,26 @@ const DAY_MASTER_LABELS_BY_LOCALE: Record<string, string[]> = {
 function RichText({ text }: { text: string }) {
   const locale = useLocale()
   const labels = DAY_MASTER_LABELS_BY_LOCALE[locale] ?? DAY_MASTER_LABELS_BY_LOCALE.en
-  const dmRe = new RegExp(`(${labels.join('|')})`, 'g')
+  const tenGodsItems = TEN_GODS_DATA[locale] ?? TEN_GODS_DATA.en
+  const tenGodsTerms = tenGodsItems.map(t => t.term)
+  const tenGodsMap = Object.fromEntries(tenGodsItems.map(t => [t.term, t.explanation]))
+
+  // longest-first to avoid partial match (e.g. "Direct Wealth" before "Wealth")
+  const allTerms = [...labels, ...tenGodsTerms].sort((a, b) => b.length - a.length)
+  const splitRe = new RegExp(`(${allTerms.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'gu')
+
   const annotated = annotateChineseChars(text, locale)
-  const parts = annotated.split(dmRe)
+  const parts = annotated.split(splitRe)
+
   return (
     <p style={{ color:'#ddd', fontSize:14, lineHeight:1.9, whiteSpace:'pre-wrap', margin:0 }}>
-      {parts.map((part, i) =>
-        labels.includes(part)
-          ? <strong key={i} style={{ color:'var(--gold)', fontWeight:700 }}>{part}</strong>
-          : part
-      )}
+      {parts.map((part, i) => {
+        if (labels.includes(part))
+          return <strong key={i} style={{ color:'var(--gold)', fontWeight:700 }}>{part}</strong>
+        if (tenGodsTerms.includes(part))
+          return <TenGodTooltip key={i} term={part} explanation={tenGodsMap[part]} />
+        return part
+      })}
     </p>
   )
 }
