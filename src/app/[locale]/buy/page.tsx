@@ -17,8 +17,8 @@ const PORTONE_KAKAOPAY_KEY = process.env.NEXT_PUBLIC_PORTONE_KAKAOPAY_CHANNEL_KE
 const PORTONE_TOSS_KEY = process.env.NEXT_PUBLIC_PORTONE_TOSS_CHANNEL_KEY || ''
 
 // 테스트 금액 (실서비스 전환 시 수정)
-const PRICES_KRW = { 1: 1900, 5: 8900 }
-const PRICES_JPY = { 1: 300, 5: 1200 }
+const PRICES_KRW = { 1: 990, 5: 3900 }
+const PRICES_JPY = { 1: 100, 5: 400 }
 
 export default function BuyPage() {
   const router = useRouter()
@@ -168,7 +168,7 @@ export default function BuyPage() {
                 </div>
               </div>
               <div style={{ fontSize: 22, fontWeight: 700, color: '#C9A84C' }}>
-                {locale === 'ko' ? '₩1,900' : locale === 'ja' ? '¥300' : t('pack1_price')}
+                {locale === 'ko' ? '₩990' : locale === 'ja' ? '¥100' : t('pack1_price')}
               </div>
             </div>
             {isPortOne ? (
@@ -202,7 +202,7 @@ export default function BuyPage() {
                 </div>
               </div>
               <div style={{ fontSize: 22, fontWeight: 700, color: '#C9A84C' }}>
-                {locale === 'ko' ? '₩8,900' : locale === 'ja' ? '¥1,200' : t('pack5_price')}
+                {locale === 'ko' ? '₩3,900' : locale === 'ja' ? '¥400' : t('pack5_price')}
               </div>
             </div>
             {isPortOne ? (
