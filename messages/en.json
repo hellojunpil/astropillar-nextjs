@@ -95,6 +95,11 @@
         "title": "Compatibility",
         "subtitle": "BaZi & Astrology Compatibility Reading",
         "desc": "How your energy aligns with someone special — deep compatibility analysis."
+      },
+      "scenario": {
+        "title": "Ask the Stars",
+        "subtitle": "Chart-based situation reading",
+        "desc": "Get chart-based insight on any situation you're facing."
       }
     },
     "tarot_section": "Tarot",
