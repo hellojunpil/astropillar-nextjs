@@ -10,7 +10,13 @@ const GA_ID = process.env.NEXT_PUBLIC_GA4_ID
 export const metadata: Metadata = {
   title: 'AstroPillar — Where the stars meet your fate',
   description: 'Discover your destiny through Eastern BaZi and Western Astrology. Free personalized readings.',
+  manifest: '/manifest.json',
   verification: { google: '91ba17f1e5a9c408' },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'AstroPillar',
+  },
   openGraph: {
     title: 'AstroPillar — Where the stars meet your fate',
     description: 'Your free BaZi + Astrology reading. Discover what your birth chart really says.',
