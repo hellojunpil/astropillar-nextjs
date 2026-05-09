@@ -9,6 +9,8 @@ import { gtagEvent } from '@/lib/gtag'
 import BottomNav from '@/components/BottomNav'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 import { getPaymentProviderByLocale } from '@/lib/paymentProvider'
+import { useEffect, useRef, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 
 const GUMROAD_1 = process.env.NEXT_PUBLIC_GUMROAD_URL_1 || ''
 const GUMROAD_5 = process.env.NEXT_PUBLIC_GUMROAD_URL_5 || ''
@@ -20,7 +22,7 @@ const PORTONE_TOSS_KEY = process.env.NEXT_PUBLIC_PORTONE_TOSS_CHANNEL_KEY || ''
 const PRICES_KRW = { 1: 990, 5: 3900 }
 const PRICES_JPY = { 1: 100, 5: 400 }
 
-export default function BuyPage() {
+function BuyContent() {
   const router = useRouter()
   const locale = useLocale()
   const t = useTranslations('buy')
@@ -28,8 +30,39 @@ export default function BuyPage() {
   const { user, credits, loading, refreshCredits } = useAuth()
   const pricing = usePricing()
   const provider = getPaymentProviderByLocale(locale)
+  const searchParams = useSearchParams()
+  const verifyCalledRef = useRef(false)
 
   const fontFamily = locale === 'ko' ? "'Noto Sans KR', sans-serif" : locale === 'ja' ? "'Noto Sans JP', sans-serif" : "'Noto Sans', sans-serif"
+
+  // 카카오페이 모바일 리다이렉트 복귀 처리
+  useEffect(() => {
+    const paymentId = searchParams.get('paymentId')
+    const creditsParam = searchParams.get('credits')
+    if (!paymentId || !creditsParam || !user?.email || verifyCalledRef.current) return
+    verifyCalledRef.current = true
+
+    const creditCount = Number(creditsParam)
+    fetch('/api/portone-verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ paymentId, credits: creditCount, email: user.email, locale }),
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.ok) {
+          refreshCredits(creditCount)
+          alert(locale === 'ko' ? `${creditCount} 크레딧이 충전되었습니다! 🎉` : locale === 'ja' ? `${creditCount}クレジットが追加されました！🎉` : `${creditCount} credits added! 🎉`)
+          // URL 파라미터 제거
+          window.history.replaceState({}, '', window.location.pathname)
+        } else {
+          alert(locale === 'ko' ? '결제 검증 실패. 고객센터로 문의해주세요.' : locale === 'ja' ? '決済の確認に失敗しました。' : 'Payment verification failed.')
+        }
+      })
+      .catch(() => {
+        alert(locale === 'ko' ? '결제 확인 중 오류가 발생했습니다.' : '結済確認エラーが発生しました。')
+      })
+  }, [searchParams, user, locale, refreshCredits])
 
   const SERVICE_NAMES: Record<string, string> = {
     personal_fortune: (tMenu.raw('services.personal_fortune') as { title: string }).title,
@@ -89,6 +122,8 @@ export default function BuyPage() {
         customer: {
           email: user.email,
         },
+        // 모바일 앱투앱 결제 후 복귀 URL (카카오페이 필수)
+        redirectUrl: `${window.location.origin}/${locale}/buy?paymentId=${paymentId}&credits=${creditCount}`,
       })
 
       if (!response || response.code) {
@@ -254,5 +289,13 @@ export default function BuyPage() {
       </div>
       <BottomNav />
     </main>
+  )
+}
+
+export default function BuyPage() {
+  return (
+    <Suspense>
+      <BuyContent />
+    </Suspense>
   )
 }
