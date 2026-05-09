@@ -395,7 +395,88 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 
 ## 다음 세션 시작 가이드
 
-> 마지막 작업: 2026-05-09 세션79 완료
+> 마지막 작업: 2026-05-09 세션81 완료
+
+### ✅ 세션81 완료 — 2026-05-09
+
+**JA 타로 GPT 언어 버그 완전 수정 + Cloud Run IAM 복구**
+
+**작업 목록:**
+1. ✅ **JA 타로 GPT 영어 출력 근본 원인 파악** — 타로 시스템 프롬프트에 "ALWAYS write entirely in English. No exceptions." 하드코딩 → append 방식으로는 override 불가
+2. ✅ **수정 (revision 00213-zjb)** — `_EN_TAROT_LANG_RULE` 상수 추가, KO/JA 시 `system_prompt.replace()` 로 영어 언어룰을 KO/JA 룰로 완전 교체 (4개 엔드포인트: three_card/relationship/celtic_cross/scenario)
+3. ✅ **JA Three Card 검증** — 恋愛運 질문, ペンタクルのペイジ/ナイト/皇帝 → GPT 해석 전부 일본어 출력 확인 ✅
+4. ✅ **크레딧 0 버그 수정** — Cloud Run `--no-allow-unauthenticated` 배포 시마다 `allUsers invoker` IAM 제거됨 → `get_pouch` GET API 403 → CORS 오류로 표시 → 165 크레딧 정상 복구
+5. ✅ **재발 방지** — CLAUDE.md 배포 명령어에 `--allow-unauthenticated` 명시, 메모리 저장
+
+**Cloud Run 배포 이력:**
+- revision `00212-h4g` — 타로 4종 language 파라미터 적용 (1차 수정 — 미완)
+- revision `00213-zjb` — **타로 EN 언어룰 replace 방식으로 완전 수정** ✅
+
+**올바른 배포 명령어 (필수):**
+```bash
+cd "D:\snap pillar" && gcloud run deploy snap-pillar-api --source . --project snap-pillar --region asia-northeast3 --allow-unauthenticated
+```
+
+6. ✅ **KO 타로 GPT 언어 확인** — revision 00213-zjb에서 KO도 동일 replace 로직 적용 → 정상 (JA 수정 시 함께 처리)
+7. ✅ **모바일 카카오페이 결제 버그 수정** — PC 카카오톡 간편결제 푸시 발송 버그
+   - 원인: `requestPayment`에 `redirectUrl` 없음 → KakaoPay가 모바일 앱 대신 PC 카카오톡으로 푸시
+   - 수정: `buy/page.tsx` — `redirectUrl` 추가 + `useEffect`로 URL 파라미터 감지 후 자동 검증
+   - `useSearchParams` 사용으로 `Suspense` 래퍼 필수 → `BuyPage` → `BuyContent` + `BuyPage(Suspense 래퍼)` 분리
+   - commit `47e7e5a`, master 푸시 완료 ✅, 테스트 결제 확인 ✅
+8. ✅ **포트원 실연동 신청 상태 확인** — admin.portone.io
+   - KG이니시스 해외결제: 입점 심사중
+   - KG이니시스 신용카드: 신청 접수 및 계약 진행 중
+   - 카카오페이: 진행중
+   - 실 채널키 발급까지 PG사 승인 대기 중 (hellojunpil@gmail.com 이메일로 계약서 수신 예정)
+   - JA 결제(JPY) 수단은 별도 신청 필요 (현재 신청 내역 없음)
+
+**포트원 라이브 전환 절차 (심사 완료 후):**
+1. admin.portone.io → 채널 관리 → 실연동 채널 추가 (실 채널키 자동 발급)
+2. Vercel 환경변수 교체: `NEXT_PUBLIC_PORTONE_CHANNEL_KEY`, `PORTONE_API_SECRET`
+3. Vercel 재배포
+
+**잔존 이슈:**
+- [P3] 타로 "What To Do" 섹션 헤더 영어 유지 (GPT 포맷 지시어 — 본문은 KO/JA 정상)
+- [P1] Celtic Cross 가격 배지 "3 Credits" (Firestore `service_config/pricing.tarot_celtic_cross` 값 확인 필요)
+- [P2] KO/JA 타로 22장 Firestore 사전 캐싱 미완료
+
+---
+
+### ✅ 세션80 완료 — 2026-05-09
+
+**전체 서비스 QA (EN/KO/JA 3개 언어 × 8종 서비스 = 24종)**
+
+**작업 목록:**
+1. ✅ **JA 궁합** — 크레딧 174→172, 전부 일본어(레이더 차트 일본어), 10/10
+2. ✅ **JA 시나리오** — 크레딧 172→171, 전부 일본어, 9.3/10 (SECTION 1 라벨 P2)
+3. ✅ **JA Three Card** — 크레딧 171→170, 포지션 라벨 일본어, GPT 본문 영어(P2 캐시)
+4. ✅ **JA Relationship** — 크레딧 170→169, 포지션 라벨 일본어, GPT 본문 영어(P2 캐시)
+5. ✅ **JA Celtic Cross** — 크레딧 캐시(미차감), 포지션 라벨 일본어, GPT 본문 영어(P2 캐시)
+6. ✅ **최종 QA 보고서** — `D:\snap_pillar bck\result\result_20260509_4.txt`
+
+**QA 종합 결과:**
+| 서비스 | EN | KO | JA | 평균 |
+|--------|----|----|----|----|
+| Personal Fortune | 9.3 | 9.5 | 10.0 | 9.6 ✅ |
+| Daily Fortune | 9.3 | 9.5 | 10.0 | 9.6 ✅ |
+| Yearly Fortune | 8.7 | 9.5 | 10.0 | 9.4 ✅ |
+| Compatibility | 9.3 | 9.5 | 10.0 | 9.6 ✅ |
+| Scenario Reading | 9.7 | 9.3 | 9.3 | 9.4 ✅ |
+| Three Card | 9.3 | 6.7 | 6.7 | 7.6 ⚠️ |
+| Relationship | 9.7 | 6.7 | 6.7 | 7.7 ⚠️ |
+| Celtic Cross | 9.7 | 6.7 | 6.7 | 7.7 ⚠️ |
+| **전체 평균** | **9.4** | **8.4** | **8.7** | **8.8/10** |
+
+**잔존 버그:**
+- [P1] Celtic Cross 가격 배지 "3 Credits" (Firestore 값 확인 필요)
+- [P2] KO/JA 타로 3종 GPT 본문 영어 (Firestore 캐시 영어 저장 → 언어별 분기 필요)
+- [P2] EN Yearly "SECTION 3" 라벨 (normalizeTitle 맵 미등록)
+- [P2] JA/KO 시나리오 "SECTION 1" 라벨 (첫 섹션 헤더 파싱 이슈)
+
+**다음 작업:**
+- [ ] 포트원(PortOne) KO/JA 결제 연동 (계정 정보 수령 후)
+- [ ] P1 Celtic Cross 가격 버그 수정
+- [ ] P2 KO/JA 타로 캐시 영어 이슈 수정
 
 ### ✅ 세션79 완료 — 2026-05-09
 
@@ -1084,6 +1165,12 @@ NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 | `E:\My Team\astropillar\src\lib\firestore.ts` | SavedPerson 인터페이스, savePerson() |
 | `E:\My Team\astropillar\src\app\library\page.tsx` | Library My Persons 탭 |
 | `D:\snap pillar\main.py` | FastAPI 백엔드 (Cloud Run) |
+
+### ⚠️ Cloud Run 배포 명령어 (반드시 --allow-unauthenticated 사용)
+```bash
+cd "D:\snap pillar" && gcloud run deploy snap-pillar-api --source . --project snap-pillar --region asia-northeast3 --allow-unauthenticated
+```
+> `--no-allow-unauthenticated` 사용 금지 — 배포 시마다 `allUsers invoker` IAM이 제거되어 크레딧 조회/결제 등 모든 GET API가 CORS 차단됨 (0 크레딧 표시 버그)
 
 ---
 
