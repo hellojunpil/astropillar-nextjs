@@ -56,5 +56,5 @@ android/.cxx/
 /gradlew.bat
 /gradle.properties
 
-# Capacitor iOS project
-/ios/
+# Capacitor iOS project - tracked for Codemagic builds
+# /ios/

@@ -1,0 +1,16 @@
+{
+	"appId": "com.pillab.astropillar",
+	"appName": "AstroPillar",
+	"webDir": "out",
+	"server": {
+		"url": "https://astropillar-web.vercel.app",
+		"cleartext": false
+	},
+	"android": {
+		"allowMixedContent": false
+	},
+	"ios": {
+		"contentInset": "always"
+	},
+	"packageClassList": []
+}

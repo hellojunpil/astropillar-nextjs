@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.pillab.astropillar",
+      "sha256_cert_fingerprints": [
+        "D6:5E:A4:F3:23:C1:C6:AD:D6:D5:6E:A5:56:AF:31:F7:53:9D:7A:50:E1:AF:90:D1:5B:83:B9:61:00:90:1A:EA"
+      ]
+    }
+  }
+]

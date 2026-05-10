@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>AstroPillar</title>
+  <script>
+    (function() {
+      function getCookie(name) {
+        var m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+        return m ? decodeURIComponent(m[1]) : null;
+      }
+      var locale = getCookie('NEXT_LOCALE') || 'en';
+      if (['en', 'ko', 'ja'].indexOf(locale) === -1) locale = 'en';
+      window.location.replace('./' + locale + '/');
+    })();
+  </script>
+</head>
+<body></body>
+</html>
