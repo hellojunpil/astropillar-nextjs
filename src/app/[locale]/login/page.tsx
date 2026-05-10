@@ -35,7 +35,8 @@ function LoginContent() {
   const fontFamily = locale === 'ko' ? "'Noto Sans KR', sans-serif" : locale === 'ja' ? "'Noto Sans JP', sans-serif" : "'Noto Sans', sans-serif"
 
   async function registerUser(userEmail: string) {
-    await apiPost('/register_user', { email: userEmail })
+    const platform = window.matchMedia('(display-mode: standalone)').matches ? 'mo' : 'on'
+    await apiPost('/register_user', { email: userEmail, platform })
   }
 
   async function handleEmailAuth(e: React.FormEvent) {

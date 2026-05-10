@@ -28,7 +28,8 @@ function LoginContent() {
   const [resetSent, setResetSent] = useState(false)
 
   async function registerUser(email: string) {
-    await apiPost('/register_user', { email })
+    const platform = window.matchMedia('(display-mode: standalone)').matches ? 'mo' : 'on'
+    await apiPost('/register_user', { email, platform })
   }
 
   async function handleEmailAuth(e: React.FormEvent) {
