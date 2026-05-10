@@ -1,7 +1,7 @@
 # AstroPillar — 프로젝트 레퍼런스
 
-> **마지막 작업: 2026-05-09 세션83**
-> **내일 첫 번째 할 일: TWA 유지 vs Capacitor 네이티브 앱 전환 결정**
+> **마지막 작업: 2026-05-10 세션84**
+> **다음 할 일: Info.plist에 ITSAppUsesNonExemptEncryption=false 추가 → TestFlight 내부 테스터 초대**
 
 ---
 
@@ -185,6 +185,36 @@ cd "D:\snap pillar" && gcloud run deploy snap-pillar-api --source . --project sn
 
 - **프론트엔드**: hellojunpil/astropillar-nextjs
 - **이미지**: hellojunpil/astropillar_images
+
+---
+
+## 세션84 완료 — 2026-05-10
+
+**이번 세션에서 한 것:**
+- ✅ iOS IPA 빌드 성공 (Build #9, commit d5307d8, 4.76 MB)
+- ✅ App Store Connect 업로드 성공
+- ✅ TestFlight Export Compliance 문제 해결
+  - 원인: "수출 규정 관련 문서 누락" — 암호화 질문 미답변
+  - 해결: "위에 언급된 알고리즘에 모두 해당하지 않음" 선택 → 저장
+  - 결과: 빌드 #1 상태 "제출 준비 완료 (90일 후 만료)"
+
+**다음 세션에서 할 것 (App Store 정식 제출 준비):**
+1. `ios/App/App/Info.plist`에 `ITSAppUsesNonExemptEncryption = false` 추가
+2. App Store Connect 배포 탭 메타데이터 채우기:
+   - 스크린샷 (iPhone 6.5인치 필수, 최대 10장)
+   - 앱 설명 / 프로모션 텍스트 / 키워드 (KO/EN/JA)
+   - 앱 아이콘 1024×1024
+   - 개인정보처리방침 URL
+   - 연령 등급 설문
+3. 심사 제출 (Submit for Review)
+4. TestFlight 내부 테스터 초대 (형님 Apple ID)
+
+**Codemagic 빌드 관련 발견사항:**
+- `ios_signing` 블록에 `certificate`/`provisioning_profile` 키 추가 불가 (스키마 오류)
+- Codemagic Team Settings → Code signing identities에 .p12 + .mobileprovision 업로드하면 자동 매칭
+- `npm ci` 대신 `npm install` 사용 (Lock 파일 버전 불일치 방지)
+- Node 22.14.0 필요 (@capacitor/cli@6 요구사항)
+- `git push web master:main` 병행 필수 (Codemagic은 web remote 감시)
 
 ---
 
