@@ -10,7 +10,7 @@ const config: CapacitorConfig = {
   // 스토어 제출 전 번들 방식으로 전환 예정
   ...(isLocal ? {} : {
     server: {
-      url: 'https://astropillar.com',
+      url: 'https://astropillar-web.vercel.app',
       cleartext: false,
     },
   }),
