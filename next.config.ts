@@ -1,7 +1,6 @@
 import type { NextConfig } from 'next'
 import createNextIntlPlugin from 'next-intl/plugin'
 import withPWAInit from '@ducanh2912/next-pwa'
-import path from 'path'
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts')
 const isCapacitor = process.env.BUILD_TARGET === 'capacitor'
@@ -18,9 +17,6 @@ const withPWA = withPWAInit({
 })
 
 const nextConfig: NextConfig = {
-  turbopack: {
-    root: path.resolve(__dirname),
-  },
   ...(isCapacitor ? {
     output: 'export',
     images: { unoptimized: true },

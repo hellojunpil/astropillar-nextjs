@@ -46,3 +46,15 @@ android/app/build/
 android/.cxx/
 *.keystore
 !debug.keystore
+
+# TWA root-level Android project (not for Vercel)
+/app/
+/build/
+/build.gradle
+/gradle/
+/gradlew
+/gradlew.bat
+/gradle.properties
+
+# Capacitor iOS project
+/ios/
