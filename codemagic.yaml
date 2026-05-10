@@ -11,8 +11,6 @@ workflows:
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.pillab.astropillar
-        certificate: AstroPillar_Distribution
-        provisioning_profile: AstroPillar_AppStore_Profile
       vars:
         BUNDLE_ID: com.pillab.astropillar
         XCODE_PROJECT: ios/App/App.xcodeproj
