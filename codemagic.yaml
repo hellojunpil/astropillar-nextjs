@@ -1,0 +1,46 @@
+workflows:
+  ios-release:
+    name: AstroPillar iOS Release
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.pillab.astropillar
+      vars:
+        BUNDLE_ID: com.pillab.astropillar
+        XCODE_PROJECT: ios/App/App.xcodeproj
+        XCODE_SCHEME: App
+      node: 20.18.0
+
+    scripts:
+      - name: Install dependencies
+        script: npm ci
+
+      - name: Capacitor sync
+        script: npx cap sync ios
+
+      - name: Build iOS IPA
+        script: |
+          xcode-project use-profiles
+          xcodebuild \
+            -project "$XCODE_PROJECT" \
+            -scheme "$XCODE_SCHEME" \
+            -configuration Release \
+            -archivePath build/AstroPillar.xcarchive \
+            archive
+          xcodebuild \
+            -exportArchive \
+            -archivePath build/AstroPillar.xcarchive \
+            -exportOptionsPlist /Users/builder/export_options.plist \
+            -exportPath build/
+
+    artifacts:
+      - build/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
