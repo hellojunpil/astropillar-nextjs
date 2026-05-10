@@ -136,7 +136,7 @@ export default function MenuPage() {
                 <div style={{ fontSize: 12, color: 'rgba(201,168,76,0.7)', marginBottom: 6 }}>
                   {svc.id === 'yearly' ? tData.subtitle.replace('{year}', String(getFortuneYear())) : tData.subtitle}
                 </div>
-                <div style={{ fontSize: 12, color: 'rgba(200,195,220,0.6)', lineHeight: 1.6 }}>{tData.desc}</div>
+                <div style={{ fontSize: 12, color: 'rgba(200,195,220,0.6)', lineHeight: 1.6 }}>{svc.id === 'yearly' ? tData.desc.replace('{year}', String(getFortuneYear())) : tData.desc}</div>
               </button>
             )
           })}
