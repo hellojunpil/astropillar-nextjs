@@ -206,7 +206,7 @@ function BuyContent() {
                 </div>
               </div>
               <div style={{ fontSize: 22, fontWeight: 700, color: '#C9A84C' }}>
-                {locale === 'ko' ? '₩990' : locale === 'ja' ? '$0.99' : t('pack1_price')}
+                {locale === 'ko' ? '₩990' : locale === 'ja' ? '¥100' : t('pack1_price')}
               </div>
             </div>
             {locale === 'ko' ? (
@@ -250,7 +250,7 @@ function BuyContent() {
                 </div>
               </div>
               <div style={{ fontSize: 22, fontWeight: 700, color: '#C9A84C' }}>
-                {locale === 'ko' ? '₩3,900' : locale === 'ja' ? '$3.99' : t('pack5_price')}
+                {locale === 'ko' ? '₩3,900' : locale === 'ja' ? '¥400' : t('pack5_price')}
               </div>
             </div>
             {locale === 'ko' ? (
