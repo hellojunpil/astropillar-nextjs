@@ -1,7 +1,7 @@
 # AstroPillar — 프로젝트 레퍼런스
 
-> **마지막 작업: 2026-05-10 세션84**
-> **다음 할 일: Info.plist에 ITSAppUsesNonExemptEncryption=false 추가 → TestFlight 내부 테스터 초대**
+> **마지막 작업: 2026-05-13 세션87**
+> **다음 할 일: RevenueCat 계정 생성 + App Store Connect IAP 상품 등록 → Codemagic 빌드 → App Store 재심사 / Google Play IAP 상품 등록 → Android AAB 재빌드**
 
 ---
 
@@ -40,6 +40,8 @@ GUMROAD_SELLER_ID=0DwFvQOjnySBKZVYvOzIJg==
 NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 NEXT_PUBLIC_PORTONE_CHANNEL_KEY= ← 실연동 후 교체
 PORTONE_API_SECRET= ← 실연동 후 교체
+NEXT_PUBLIC_REVENUECAT_APPLE_KEY= ← RevenueCat iOS API Key
+NEXT_PUBLIC_REVENUECAT_GOOGLE_KEY= ← RevenueCat Android API Key
 ```
 
 ---
@@ -188,33 +190,76 @@ cd "D:\snap pillar" && gcloud run deploy snap-pillar-api --source . --project sn
 
 ---
 
-## 세션84 완료 — 2026-05-10
+## 세션87 완료 — 2026-05-13
 
 **이번 세션에서 한 것:**
-- ✅ iOS IPA 빌드 성공 (Build #9, commit d5307d8, 4.76 MB)
-- ✅ App Store Connect 업로드 성공
-- ✅ TestFlight Export Compliance 문제 해결
-  - 원인: "수출 규정 관련 문서 누락" — 암호화 질문 미답변
-  - 해결: "위에 언급된 알고리즘에 모두 해당하지 않음" 선택 → 저장
-  - 결과: 빌드 #1 상태 "제출 준비 완료 (90일 후 만료)"
+- ✅ PWA 설치 배너 제거 (`beforeinstallprompt` 차단, layout.tsx)
+- ✅ iOS 앱 아이콘 교체 — Capacitor placeholder → 조디악 휠 1024px (AppIcon-512@2x.png)
+- ✅ Apple IAP + Google Play Billing 구현 완료
+  - `src/lib/iap.ts` — RevenueCat 초기화, 가격 조회, 구매 처리
+  - `src/app/api/iap-grant/route.ts` — 구매 후 크레딧 지급 API
+  - `src/app/[locale]/buy/page.tsx` — 네이티브 앱 감지 후 IAP 버튼 표시
+  - `package.json` — `@revenuecat/purchases-capacitor@^10.0.0` 추가
+- ✅ CLAUDE.md 환경변수에 RevenueCat 키 항목 추가
+- ✅ commit 56dbacf (아이콘+PWA배너), 이번 세션 별도 커밋 예정
 
-**다음 세션에서 할 것 (App Store 정식 제출 준비):**
-1. `ios/App/App/Info.plist`에 `ITSAppUsesNonExemptEncryption = false` 추가
-2. App Store Connect 배포 탭 메타데이터 채우기:
-   - 스크린샷 (iPhone 6.5인치 필수, 최대 10장)
-   - 앱 설명 / 프로모션 텍스트 / 키워드 (KO/EN/JA)
-   - 앱 아이콘 1024×1024
-   - 개인정보처리방침 URL
-   - 연령 등급 설문
-3. 심사 제출 (Submit for Review)
-4. TestFlight 내부 테스터 초대 (형님 Apple ID)
+**⚠️ IAP 완성을 위해 형님이 직접 해야 할 것 (코드 외):**
+1. **RevenueCat 계정 생성**: app.revenuecat.com → iOS 앱 + Android 앱 등록 → API Key 발급
+2. **App Store Connect**: `credits_1` / `credits_5` Consumable 상품 등록 (가격: $0.99 / $3.99)
+3. **Google Play Console**: 동일 ID로 인앱 상품 등록
+4. **RevenueCat Offerings 설정**: credits_1, credits_5를 "default" offering에 연결
+5. **환경변수 추가**: Vercel + .env.local에 `NEXT_PUBLIC_REVENUECAT_APPLE_KEY`, `NEXT_PUBLIC_REVENUECAT_GOOGLE_KEY` 입력
+6. **Codemagic 빌드 트리거** → TestFlight 업로드 → App Store 재심사 제출
+7. **Android AAB 재빌드** (Capacitor android/ 폴더 기준, RevenueCat Google Play Billing 포함)
 
-**Codemagic 빌드 관련 발견사항:**
-- `ios_signing` 블록에 `certificate`/`provisioning_profile` 키 추가 불가 (스키마 오류)
-- Codemagic Team Settings → Code signing identities에 .p12 + .mobileprovision 업로드하면 자동 매칭
-- `npm ci` 대신 `npm install` 사용 (Lock 파일 버전 불일치 방지)
-- Node 22.14.0 필요 (@capacitor/cli@6 요구사항)
-- `git push web master:main` 병행 필수 (Codemagic은 web remote 감시)
+**⚠️ 심사 재신청 필요:**
+- iOS: Codemagic 빌드 → App Store Connect에서 새 빌드 선택 → 재심사 제출
+- Android: RevenueCat + Google Play Billing 포함한 새 AAB 빌드 → Google Play Console 업로드 → 심사
+
+---
+
+## 세션86 완료 — 2026-05-11
+
+**이번 세션에서 한 것 (Google Play Console 세팅):**
+- ✅ 스토어 등록정보 연락처 세부정보: hellojunpil@gmail.com + https://astropillar.com 입력
+- ✅ 내부 테스트 테스터 목록 생성: "AstroPillar Testers" (hellojunpil@gmail.com) → 트랙 활성
+- ✅ 비공개 테스트(Alpha) 국가 176개 전체 선택
+- ✅ 비공개 테스트 테스터 연결 (AstroPillar Testers)
+- ✅ 비공개 테스트 버전 4 선택 + 전체 출시
+- ✅ 게시 개요에서 변경사항 13개 검토 전송 (→ Play 검토 중)
+
+**Play Store 현재 상태:**
+- 검토 중 (일반적으로 7일 이내) — 게시 개요에서 상태 확인 필요
+- **중요**: 프로덕션 출시 조건 — 비공개 테스트 12명+ opt-in, 14일+ 운영 필요
+
+**다음 단계:**
+1. Play Console에서 검토 상태 확인 (https://play.google.com/console → AstroPillar → 게시 개요)
+2. 비공개 테스트 테스터 11명+ 추가 모집 (현재 1명)
+3. 테스터 opt-in 후 14일 실행
+4. 프로덕션 신청 설문 답변
+
+---
+
+## 세션85 완료 — 2026-05-10
+
+**이번 세션에서 한 것:**
+- ✅ iOS App Store 심사 제출 완료 (상태: 심사 대기 중)
+  - 개인정보 수집 설문 4개 항목 완료 (EMAIL/USER_ID/PURCHASE/PRODUCT_INTERACTION)
+  - iPad 13" 스크린샷 6장 생성·업로드 (2048×2732)
+  - 개인정보처리방침 URL KO/EN/JA 3개 언어 입력
+  - 가격 $0.00 무료 설정, 콘텐츠 권한 설정
+- ✅ 앱 아이콘 조디악 이미지로 교체 (icon-192/512.png + 바탕화면 1024px)
+- ✅ `{year}` 미치환 버그 수정 (menu/page.tsx desc 필드)
+- ✅ twa-manifest.json localhost → astropillar.com 교체
+- ✅ AAB 빌드 완료 (버전 3)
+- ✅ 프로모션 텍스트 3개 언어 업데이트 (무료 앞, 가격 뒤)
+- ✅ App Store 심사 대기 중에도 프로모션 텍스트 수정 가능 확인
+
+**대기 중:**
+- ~~Google Play 개발자 인증~~ ✅
+- ~~AAB 업로드~~ ✅ (버전 4)
+- ~~Play Store 페이지 세팅~~ ✅ → 비공개 테스트 검토 대기
+- iOS 심사 결과 (hellojunpil@gmail.com)
 
 ---
 
@@ -265,7 +310,7 @@ cd "D:\snap pillar" && gcloud run deploy snap-pillar-api --source . --project sn
 |---------|------|------|
 | P1 | Celtic Cross 요금 배지 "3 Credits" | Firestore `service_config/pricing.tarot_celtic_cross` 값 2로 수정 |
 | P1 | 랜딩 "100% Private. Never stored." 문구 | 법적 리스크 — 광고 집행 중 필수 교체 |
-| P1 | manifest.json / icon-512.png 404 (astropillar.com) | next-pwa 빌드 간섭 의심, AAB 빌드 선행 조건 |
+| ~~P1~~ | ~~manifest.json / icon-512.png 404~~ | ✅ 해결됨 (2026-05-10) |
 | P2 | KO/JA 타로 GPT 본문 영어 (캐시) | 언어별 캐시 키 분기 필요 |
 | P2 | KO/JA 타로 22장 Firestore 사전 캐싱 미완료 | 매 API 호출 → 응답 느림 |
 | P2 | EN Yearly "SECTION 3" 라벨 | normalizeTitle 맵 미등록 |
@@ -278,15 +323,16 @@ cd "D:\snap pillar" && gcloud run deploy snap-pillar-api --source . --project sn
 ## 다음 작업 우선순위
 
 **앱 출시 관련 (Android)**
-1. manifest.json / icon-512.png 404 수정
-2. twa-manifest.json localhost URL → astropillar.com 교체
-3. bundleRelease (AAB) → Play Store 업로드 (Google Play 개발자 인증 완료 후)
+1. ~~manifest.json / icon-512.png 404 수정~~ ✅
+2. ~~twa-manifest.json localhost URL → astropillar.com 교체~~ ✅
+3. ~~AAB 빌드~~ ✅
+4. ~~Google Play 개발자 인증~~ ✅
+5. ~~AAB 업로드 + Play Store 페이지 세팅~~ ✅ → **비공개 테스트 검토 완료 대기**
+6. 비공개 테스트 테스터 12명+ 모집 (현재 1명)
+7. 14일 실행 후 프로덕션 신청
 
 **앱 출시 관련 (iOS)**
-4. Apple Developer Program 가입 ($99/년) → Capacitor + Codemagic 작업 시작
-   - Windows에서 Mac 없이 가능 (Codemagic 클라우드 빌드)
-   - AdMob iOS도 정상 지원 (`@capacitor-community/admob`)
-   - 국가별 가격 설정 가능
+8. ~~iOS App Store 심사 제출~~ ✅ → 심사 결과 대기 (hellojunpil@gmail.com)
 
 **결제**
 5. PortOne 실연동 완료 대기 (hellojunpil@gmail.com 이메일 수신)
@@ -301,16 +347,37 @@ cd "D:\snap pillar" && gcloud run deploy snap-pillar-api --source . --project sn
 
 ---
 
+## 스토어 메타데이터 (App Store / Play Store 공통)
+
+> 전체 메타데이터: `E:\My Team\astropillar\app_store_screenshots\metadata.md`
+
+### 프로모션 텍스트 (언어별)
+| 언어 | 문구 |
+|------|------|
+| 🌐 영어 | `Free daily tarot, horoscope & zodiac · AI fortune readings from $0.99` |
+| 🇰🇷 한국어 | `매일 무료 타로·별자리·띠 운세 · 사주+점성술 AI 운세는 990원부터` |
+| 🇯🇵 일본어 | `毎日無料タロット・星座・干支運勢 · 四柱推命AI占いは100円から` |
+
+### 앱 아이콘
+- 소스: 조디악 휠 이미지 (음양 + 運 + 12궁도)
+- 192px/512px: `E:\My Team\astropillar\public\` (PWA + Android)
+- 1024px: `C:\Users\SNOOPY\Desktop\AstroPillar-icon-1024.png` (iOS App Store용)
+
+---
+
 ## Android TWA 정보
 
 - **패키지**: com.pillab.astropillar
-- **버전**: 2
+- **버전**: 4 (versionCode: 4)
+- **AAB**: `E:\My Team\astropillar\app\build\outputs\bundle\release\app-release.aab` ✅
 - **APK**: `E:\My Team\astropillar\app\build\outputs\apk\release\app-release-signed.apk`
 - **키스토어**: `E:\My Team\astropillar\android.keystore`
   - alias: android / 비밀번호: AstroPillar2026!
   - SHA256: D6:5E:A4:F3:23:C1:C6:AD:D6:D5:6E:A5:56:AF:31:F7:53:9D:7A:50:E1:AF:90:D1:5B:83:B9:61:00:90:1A:EA
   - 백업: Google Drive / 바탕화면 / `E:\My Team\app\astropillar_keystore_backup.txt`
-- **Google Play**: PilLAB 계정 (hellojunpil@gmail.com), 개발자 인증 진행 중
+- **Google Play**: PilLAB 계정 (hellojunpil@gmail.com), **개발자 인증 완료** ✅
+- **AAB 빌드**: 완료 (2026-05-10), local.properties에 Android SDK 경로 설정됨
+- **빌드 명령어**: `JAVA_HOME="C:/Program Files/Android/Android Studio/jbr" ANDROID_HOME="C:/Users/SNOOPY/AppData/Local/Android/Sdk" PATH="$JAVA_HOME/bin:$PATH" ./gradlew bundleRelease "-Pandroid.injected.signing.store.file=E:/My Team/astropillar/android.keystore" "-Pandroid.injected.signing.store.password=AstroPillar2026!" "-Pandroid.injected.signing.key.alias=android" "-Pandroid.injected.signing.key.password=AstroPillar2026!"`
 
 ---
 

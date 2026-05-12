@@ -9,7 +9,8 @@ import { gtagEvent } from '@/lib/gtag'
 import BottomNav from '@/components/BottomNav'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 import { getPaymentProviderByLocale } from '@/lib/paymentProvider'
-import { useEffect, useRef, Suspense } from 'react'
+import { isNative, initRevenueCat, getIAPPrices, buyCreditsIAP } from '@/lib/iap'
+import { useEffect, useRef, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 
 const GUMROAD_1 = process.env.NEXT_PUBLIC_GUMROAD_URL_1 || ''
@@ -32,6 +33,9 @@ function BuyContent() {
   const provider = getPaymentProviderByLocale(locale)
   const searchParams = useSearchParams()
   const verifyCalledRef = useRef(false)
+  const [nativePrices, setNativePrices] = useState<{ credits1: string; credits5: string } | null>(null)
+  const [iapLoading, setIapLoading] = useState(false)
+  const nativeApp = isNative()
 
   const fontFamily = locale === 'ko' ? "'Noto Sans KR', sans-serif" : locale === 'ja' ? "'Noto Sans JP', sans-serif" : "'Noto Sans', sans-serif"
 
@@ -63,6 +67,36 @@ function BuyContent() {
         alert(locale === 'ko' ? '결제 확인 중 오류가 발생했습니다.' : '結済確認エラーが発生しました。')
       })
   }, [searchParams, user, locale, refreshCredits])
+
+  // 네이티브 앱일 때 RevenueCat 초기화 + 가격 로드
+  useEffect(() => {
+    if (!nativeApp || !user?.email) return
+    initRevenueCat(user.email)
+      .then(() => getIAPPrices())
+      .then(prices => setNativePrices(prices))
+      .catch(e => console.error('IAP init error:', e))
+  }, [nativeApp, user?.email])
+
+  async function handleIAPBuy(productId: 'credits_1' | 'credits_5') {
+    if (!user?.email) {
+      alert(locale === 'ko' ? '로그인이 필요합니다.' : locale === 'ja' ? 'ログインが必要です。' : 'Please log in.')
+      return
+    }
+    setIapLoading(true)
+    try {
+      const credits = await buyCreditsIAP(productId, user.email)
+      refreshCredits(credits)
+      alert(locale === 'ko' ? `${credits} 크레딧이 충전되었습니다! 🎉` : locale === 'ja' ? `${credits}クレジットが追加されました！🎉` : `${credits} credits added! 🎉`)
+      gtagEvent('credit_purchase_iap', { credits: String(credits), platform: productId })
+    } catch (e) {
+      const msg = (e as Error).message ?? ''
+      if (!msg.includes('cancel') && !msg.includes('Cancel')) {
+        alert(locale === 'ko' ? '결제 중 오류가 발생했습니다.' : locale === 'ja' ? '決済中にエラーが発生しました。' : 'Purchase failed. Please try again.')
+      }
+    } finally {
+      setIapLoading(false)
+    }
+  }
 
   const SERVICE_NAMES: Record<string, string> = {
     personal_fortune: (tMenu.raw('services.personal_fortune') as { title: string }).title,
@@ -209,7 +243,15 @@ function BuyContent() {
                 {locale === 'ko' ? '₩990' : locale === 'ja' ? '¥100' : t('pack1_price')}
               </div>
             </div>
-            {locale === 'ko' ? (
+            {nativeApp ? (
+              <button
+                onClick={() => handleIAPBuy('credits_1')}
+                disabled={iapLoading}
+                style={{ width: '100%', padding: '13px', background: '#C9A84C', color: '#16213E', fontFamily, fontSize: 14, fontWeight: 700, border: 'none', borderRadius: 50, cursor: iapLoading ? 'not-allowed' : 'pointer', opacity: iapLoading ? 0.7 : 1 }}
+              >
+                {iapLoading ? '...' : nativePrices?.credits1 ?? '$0.99'}
+              </button>
+            ) : locale === 'ko' ? (
               <>
                 <div style={{ width: '100%', padding: '13px', background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.25)', borderRadius: 50, textAlign: 'center', fontSize: 14, color: 'rgba(201,168,76,0.6)' }}>
                   🚧 아직 이용이 불가합니다
@@ -253,7 +295,15 @@ function BuyContent() {
                 {locale === 'ko' ? '₩3,900' : locale === 'ja' ? '¥400' : t('pack5_price')}
               </div>
             </div>
-            {locale === 'ko' ? (
+            {nativeApp ? (
+              <button
+                onClick={() => handleIAPBuy('credits_5')}
+                disabled={iapLoading}
+                style={{ width: '100%', padding: '13px', background: '#C9A84C', color: '#16213E', fontFamily, fontSize: 14, fontWeight: 700, border: 'none', borderRadius: 50, cursor: iapLoading ? 'not-allowed' : 'pointer', opacity: iapLoading ? 0.7 : 1 }}
+              >
+                {iapLoading ? '...' : nativePrices?.credits5 ?? '$3.99'}
+              </button>
+            ) : locale === 'ko' ? (
               <>
                 <div style={{ width: '100%', padding: '13px', background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.25)', borderRadius: 50, textAlign: 'center', fontSize: 14, color: 'rgba(201,168,76,0.6)' }}>
                   🚧 아직 이용이 불가합니다

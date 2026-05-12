@@ -14,6 +14,7 @@
     "@capacitor/cli": "^8.3.3",
     "@capacitor/core": "^8.3.3",
     "@capacitor/ios": "^8.3.3",
+    "@revenuecat/purchases-capacitor": "^10.0.0",
     "@ducanh2912/next-pwa": "^10.2.9",
     "@portone/browser-sdk": "^0.1.6",
     "firebase": "^12.12.0",
