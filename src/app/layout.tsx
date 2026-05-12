@@ -40,6 +40,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
       </head>
       <body>
+        <Script id="disable-pwa-install" strategy="afterInteractive">{`
+          window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault(); });
+        `}</Script>
         {GA_ID && (
           <>
             <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />
