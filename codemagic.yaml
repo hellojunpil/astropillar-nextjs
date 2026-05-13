@@ -24,6 +24,11 @@ workflows:
       - name: Capacitor sync
         script: npx cap sync ios
 
+      - name: Set build number
+        script: |
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" ios/App/App/Info.plist
+          echo "CFBundleVersion set to $BUILD_NUMBER"
+
       - name: Build iOS IPA
         script: |
           xcode-project use-profiles
@@ -32,7 +37,6 @@ workflows:
             -scheme "$XCODE_SCHEME" \
             -configuration Release \
             -archivePath build/AstroPillar.xcarchive \
-            CURRENT_PROJECT_VERSION=$BUILD_NUMBER \
             archive
           xcodebuild \
             -exportArchive \
