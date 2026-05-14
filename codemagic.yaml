@@ -26,9 +26,11 @@ workflows:
 
       - name: Set build number
         script: |
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" ios/App/App/Info.plist
-          /usr/libexec/PlistBuddy -c "Print :CFBundleVersion" ios/App/App/Info.plist
-          echo "CFBundleVersion set to $BUILD_NUMBER"
+          cd ios/App
+          xcrun agvtool new-version -all $BUILD_NUMBER
+          echo "=== agvtool result ==="
+          xcrun agvtool what-version
+          /usr/libexec/PlistBuddy -c "Print :CFBundleVersion" App/Info.plist
 
       - name: Build iOS IPA
         script: |
