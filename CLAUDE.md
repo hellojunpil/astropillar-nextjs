@@ -1,7 +1,97 @@
 # AstroPillar — 프로젝트 레퍼런스
 
-> **마지막 작업: 2026-05-13 세션87**
-> **다음 할 일: RevenueCat 계정 생성 + App Store Connect IAP 상품 등록 → Codemagic 빌드 → App Store 재심사 / Google Play IAP 상품 등록 → Android AAB 재빌드**
+> **마지막 작업: 2026-05-14 세션90**
+> **다음 할 일: Codemagic 빌드 #14 트리거 → 결과 확인 → 성공 시 App Store 재심사 제출**
+
+---
+
+## ⚡ 세션 재개 지점 (2026-05-14 세션90 종료 시점)
+
+### 현재 상태 요약
+- **수정 완료** (commit ce07e18): codemagic.yaml — agvtool을 `ios/App` 디렉토리에서 실행하도록 변경
+- 빌드 #11 실패 원인 파악: 루트 디렉토리에서 agvtool 실행 → 미적용
+- 근본 원인: `project.pbxproj`에 `CURRENT_PROJECT_VERSION = 1` 하드코딩 + Xcode archive 시 변수 치환
+
+### 세션90에서 수정한 것
+```yaml
+# 변경 전 (빌드 #13)
+/usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" ios/App/App/Info.plist
+
+# 변경 후 (빌드 #14)
+cd ios/App
+xcrun agvtool new-version -all $BUILD_NUMBER  ← pbxproj + Info.plist 동시 업데이트
+xcrun agvtool what-version                    ← 확인 로그
+/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" App/Info.plist
+```
+
+### 빌드 #14 트리거 방법
+1. Codemagic 대시보드 → AstroPillar → ios-release → "Start build"
+2. 빌드 로그에서 "=== agvtool result ===" 확인
+3. Publishing 단계에서 버전 충돌 에러 없으면 성공
+
+### 빌드 성공 시 해야 할 것 (순서대로)
+1. App Store Connect → AstroPillar → Distribution → iOS 1.0
+2. 새 빌드 선택
+3. iPhone 6.7" 스크린샷 6장 업로드: `E:\My Team\astropillar\app_store_screenshots\iphone\`
+4. "심사 업데이트" 클릭 → 재제출
+
+### iPhone 스크린샷 파일 목록 (1290×2796)
+- iphone_01_landing.png — 서비스 메뉴
+- iphone_02_today.png — 타로 카드 그리드
+- iphone_03_horoscope.png — 별자리 + 월의 위상
+- iphone_04_menu.png — 서비스 목록
+- iphone_05_tarot.png — 쓰리카드 입력
+- iphone_06_zodiac.png — 띠별 12동물
+
+### 빌드 이력
+| 빌드 | 방법 | 결과 |
+|------|------|------|
+| #10 | 기본 (버전 미설정) | 실패 — 버전=1 충돌 |
+| #11 | `agvtool new-version -all $BUILD_NUMBER` (루트에서) | 실패 — agvtool 미적용 |
+| #12 | xcodebuild에 `CURRENT_PROJECT_VERSION=$BUILD_NUMBER` | 실패 |
+| #13 | `PlistBuddy`로 cap sync 후 Info.plist 직접 수정 | 실패 |
+| #14 | `cd ios/App && xcrun agvtool new-version -all $BUILD_NUMBER` | **진행 예정** |
+
+---
+
+## ⚡ 세션 재개 지점 (2026-05-13 세션88 종료 시점)
+
+### 현재 상태 요약
+- RevenueCat IAP 코드 구현 **완료** (src/lib/iap.ts, api/iap-grant, buy/page.tsx)
+- RevenueCat Android 앱 + Offering + 상품 설정 **완료**
+- **Android API Key**: `goog_wtxdozluiAqxqYKIilVCyUSIkmB` (Vercel에 미등록)
+- **iOS API Key**: 미발급 (App Store Connect P8 키 필요)
+
+### 다음 세션 시작 시 바로 할 것 (순서대로)
+
+**STEP 1 — 형님이 직접 해야 하는 것 (브라우저에서 수동)**
+
+1. **App Store Connect P8 키 발급**
+   - https://appstoreconnect.apple.com 로그인 (hellojunpil@gmail.com)
+   - Users and Access → Integrations → In-App Purchase 탭 → "+" → 이름: "RevenueCat" → Generate
+   - `.p8 파일 다운로드` (단 한 번만 가능!) + `Key ID` + `Issuer ID` 메모
+
+2. **App Store Connect IAP 상품 등록**
+   - AstroPillar 앱 → Monetization → In-App Purchases → "+"
+   - credits_1: Consumable, Reference Name "1 Credit", $0.99
+   - credits_5: Consumable, Reference Name "5 Credits", $3.99
+
+3. **Google Play Console IAP 상품 등록**
+   - https://play.google.com/console → AstroPillar → Monetization → In-app products
+   - credits_1: Product ID `credits_1`, $0.99
+   - credits_5: Product ID `credits_5`, $3.99
+
+**STEP 2 — 형님이 잭에게 알려줘야 하는 것**
+- P8 파일 경로 (다운로드된 위치)
+- Key ID
+- Issuer ID
+
+→ 알려주면 잭이 나머지 자동으로 처리:
+- RevenueCat iOS 앱 완성
+- iOS 상품 연결
+- Vercel 환경변수 2개 등록
+- Codemagic iOS 빌드 트리거
+- App Store 재심사 제출
 
 ---
 
@@ -40,8 +130,8 @@ GUMROAD_SELLER_ID=0DwFvQOjnySBKZVYvOzIJg==
 NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
 NEXT_PUBLIC_PORTONE_CHANNEL_KEY= ← 실연동 후 교체
 PORTONE_API_SECRET= ← 실연동 후 교체
-NEXT_PUBLIC_REVENUECAT_APPLE_KEY= ← RevenueCat iOS API Key
-NEXT_PUBLIC_REVENUECAT_GOOGLE_KEY= ← RevenueCat Android API Key
+NEXT_PUBLIC_REVENUECAT_APPLE_KEY= ← RevenueCat iOS API Key (발급 대기 중 - P8 키 필요)
+NEXT_PUBLIC_REVENUECAT_GOOGLE_KEY=goog_wtxdozluiAqxqYKIilVCyUSIkmB
 ```
 
 ---
@@ -392,6 +482,77 @@ cd "D:\snap pillar" && gcloud run deploy snap-pillar-api --source . --project sn
 **일본 결제 PG 조사 결과:**
 - KOMOJU: 1순위 후보 (한국 개인사업자 가능, 점성술 금지 없음) — 이메일 미발송
 - Payverse, Payhip: 2~3순위 후보
+
+---
+
+## RevenueCat IAP 설정
+
+### 계정 정보
+- **URL**: https://app.revenuecat.com
+- **이메일**: hellojunpil@gmail.com
+- **비밀번호**: AstroPillar2026!
+- **Project ID**: 34058187
+
+### 앱 설정
+| 플랫폼 | App ID | API Key | 상태 |
+|--------|--------|---------|------|
+| Android (Play Store) | app5949d6b040 | `goog_wtxdozluiAqxqYKIilVCyUSIkmB` | ✅ 완료 |
+| iOS (App Store) | 미생성 | 발급 대기 중 | ⏳ P8 키 필요 |
+
+### Offering 설정
+- **Identifier**: `default` (SDK에서 `offerings.current`로 접근)
+- **Display Name**: AstroPillar Credits
+- **Packages**:
+  - `credits_1` → Android: "1 Credit" (credits_1)
+  - `credits_5` → Android: "5 Credits" (credits_5)
+
+### IAP 상품 ID (App Store Connect / Google Play Console에 동일하게 등록 필요)
+| ID | 이름 | 타입 | 가격 |
+|----|------|------|------|
+| `credits_1` | 1 Credit | Consumable | $0.99 |
+| `credits_5` | 5 Credits | Consumable | $3.99 |
+
+### iOS P8 키 발급 방법 (App Store Connect)
+1. https://appstoreconnect.apple.com 로그인
+2. Users and Access → Integrations → In-App Purchase 탭
+3. "+" 클릭 → 키 이름 "RevenueCat" → Generate
+4. .p8 파일 다운로드 (한 번만 가능!) + Key ID + Issuer ID 메모
+5. RevenueCat → Apps & providers → New App Store app에 업로드
+
+### App Store Connect에서 IAP 상품 등록 방법
+1. https://appstoreconnect.apple.com → AstroPillar 앱 선택
+2. Monetization → In-App Purchases → "+" 클릭
+3. credits_1: Consumable, $0.99, 이름 "1 Credit"
+4. credits_5: Consumable, $3.99, 이름 "5 Credits"
+
+### Google Play Console에서 IAP 상품 등록 방법
+1. https://play.google.com/console → AstroPillar 앱 선택
+2. Monetization → In-app products → "Create product"
+3. credits_1: Product ID credits_1, 가격 $0.99
+4. credits_5: Product ID credits_5, 가격 $3.99
+
+---
+
+## 세션88 완료 — 2026-05-13
+
+**이번 세션에서 한 것:**
+- ✅ RevenueCat 계정 생성 (hellojunpil@gmail.com / AstroPillar2026!)
+- ✅ RevenueCat Android 앱 추가 (com.pillab.astropillar, API Key: goog_wtxdozluiAqxqYKIilVCyUSIkmB)
+- ✅ RevenueCat default Offering 생성
+- ✅ credits_1, credits_5 상품 생성 (Android)
+- ✅ Offering에 credits_1, credits_5 패키지 연결
+- ✅ 코드 구현 완료 (src/lib/iap.ts, src/app/api/iap-grant/route.ts, buy/page.tsx IAP 분기)
+- ✅ @revenuecat/purchases-capacitor 패키지 추가
+
+**대기 중 (형님 액션 필요):**
+- ⏳ App Store Connect P8 키 발급 → RevenueCat iOS 앱 완성
+- ⏳ App Store Connect에 credits_1, credits_5 상품 등록
+- ⏳ Google Play Console에 credits_1, credits_5 상품 등록
+- ⏳ iOS API Key 발급 후 Vercel 환경변수 등록 (NEXT_PUBLIC_REVENUECAT_GOOGLE_KEY 이미 값 있음)
+
+**⚠️ 재심사 필요:**
+- iOS: 아이콘 교체 + IAP 코드 추가 → Codemagic 빌드 후 App Store 재제출
+- Android: IAP 코드 추가 → AAB 재빌드 후 Play Store 업로드
 
 ---
 
