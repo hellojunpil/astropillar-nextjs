@@ -27,6 +27,7 @@ workflows:
       - name: Set build number
         script: |
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" ios/App/App/Info.plist
+          /usr/libexec/PlistBuddy -c "Print :CFBundleVersion" ios/App/App/Info.plist
           echo "CFBundleVersion set to $BUILD_NUMBER"
 
       - name: Build iOS IPA
@@ -37,6 +38,8 @@ workflows:
             -scheme "$XCODE_SCHEME" \
             -configuration Release \
             -archivePath build/AstroPillar.xcarchive \
+            CURRENT_PROJECT_VERSION=$BUILD_NUMBER \
+            MARKETING_VERSION=1.0 \
             archive
           xcodebuild \
             -exportArchive \
