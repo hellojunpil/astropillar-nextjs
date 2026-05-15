@@ -25,7 +25,7 @@ export async function initRevenueCat(userId: string): Promise<void> {
 
 export async function getIAPPrices(): Promise<{ credits1: string; credits5: string }> {
   const { Purchases } = await import('@revenuecat/purchases-capacitor')
-  const { offerings } = await Purchases.getOfferings()
+  const offerings = await Purchases.getOfferings()
   const pkgs = offerings.current?.availablePackages ?? []
   const p1 = pkgs.find(p => p.product.identifier === IAP_PRODUCT_IDS.credits_1)
   const p5 = pkgs.find(p => p.product.identifier === IAP_PRODUCT_IDS.credits_5)
@@ -39,7 +39,7 @@ export async function buyCreditsIAP(productId: 'credits_1' | 'credits_5', email:
   const { Purchases } = await import('@revenuecat/purchases-capacitor')
   const credits = productId === 'credits_1' ? 1 : 5
 
-  const { offerings } = await Purchases.getOfferings()
+  const offerings = await Purchases.getOfferings()
   const pkg = offerings.current?.availablePackages.find(
     p => p.product.identifier === productId
   )
