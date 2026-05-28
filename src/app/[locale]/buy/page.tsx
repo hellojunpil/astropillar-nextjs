@@ -251,20 +251,18 @@ function BuyContent() {
               >
                 {iapLoading ? '...' : nativePrices?.credits1 ?? '$0.99'}
               </button>
-            ) : locale === 'ko' ? (
-              <>
-                <div style={{ width: '100%', padding: '13px', background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.25)', borderRadius: 50, textAlign: 'center', fontSize: 14, color: 'rgba(201,168,76,0.6)' }}>
-                  🚧 아직 이용이 불가합니다
-                </div>
-                <div style={{ textAlign: 'center', fontSize: 11, color: 'rgba(200,195,220,0.35)', marginTop: 6 }}>(VAT 별도)</div>
-              </>
             ) : isPortOne ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <button onClick={() => handlePortOneBuy(1, 'card')} style={{ width: '100%', padding: '12px', background: '#C9A84C', color: '#16213E', fontFamily, fontSize: 14, fontWeight: 700, border: 'none', borderRadius: 50, cursor: 'pointer' }}>
-                  {t('cta')}
+                  {locale === 'ko' ? '카드결제' : t('cta')}
                 </button>
+                {locale === 'ko' && (
+                  <button onClick={() => handlePortOneBuy(1, 'kakaopay')} style={{ width: '100%', padding: '12px', background: '#FAE100', color: '#3A1D1D', fontFamily, fontSize: 14, fontWeight: 700, border: 'none', borderRadius: 50, cursor: 'pointer' }}>
+                    카카오페이
+                  </button>
+                )}
                 <div style={{ textAlign: 'center', fontSize: 11, color: 'rgba(200,195,220,0.35)' }}>
-                  {locale === 'ja' ? '(税抜)' : '(excl. VAT)'}
+                  {locale === 'ko' ? '(VAT 별도)' : locale === 'ja' ? '(税抜)' : '(excl. VAT)'}
                 </div>
               </div>
             ) : (
@@ -303,20 +301,18 @@ function BuyContent() {
               >
                 {iapLoading ? '...' : nativePrices?.credits5 ?? '$3.99'}
               </button>
-            ) : locale === 'ko' ? (
-              <>
-                <div style={{ width: '100%', padding: '13px', background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.25)', borderRadius: 50, textAlign: 'center', fontSize: 14, color: 'rgba(201,168,76,0.6)' }}>
-                  🚧 아직 이용이 불가합니다
-                </div>
-                <div style={{ textAlign: 'center', fontSize: 11, color: 'rgba(200,195,220,0.35)', marginTop: 6 }}>(VAT 별도)</div>
-              </>
             ) : isPortOne ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <button onClick={() => handlePortOneBuy(5, 'card')} style={{ width: '100%', padding: '12px', background: '#C9A84C', color: '#16213E', fontFamily, fontSize: 14, fontWeight: 700, border: 'none', borderRadius: 50, cursor: 'pointer' }}>
-                  {t('cta')}
+                  {locale === 'ko' ? '카드결제' : t('cta')}
                 </button>
+                {locale === 'ko' && (
+                  <button onClick={() => handlePortOneBuy(5, 'kakaopay')} style={{ width: '100%', padding: '12px', background: '#FAE100', color: '#3A1D1D', fontFamily, fontSize: 14, fontWeight: 700, border: 'none', borderRadius: 50, cursor: 'pointer' }}>
+                    카카오페이
+                  </button>
+                )}
                 <div style={{ textAlign: 'center', fontSize: 11, color: 'rgba(200,195,220,0.35)' }}>
-                  {locale === 'ja' ? '(税抜)' : '(excl. VAT)'}
+                  {locale === 'ko' ? '(VAT 별도)' : locale === 'ja' ? '(税抜)' : '(excl. VAT)'}
                 </div>
               </div>
             ) : (
@@ -351,11 +347,6 @@ function BuyContent() {
           <span style={{ fontSize: 12, color: 'rgba(200,195,220,0.4)' }}>∞ {t('no_expiry')}</span>
         </div>
 
-        {locale === 'ko' && (
-          <div style={{ marginTop: 16, padding: '10px 14px', background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: 10, fontSize: 11, color: 'rgba(201,168,76,0.5)', textAlign: 'center' }}>
-            한국 결제 서비스 준비 중입니다. 빠른 시일 내에 이용 가능합니다.
-          </div>
-        )}
       </div>
       <BottomNav />
     </main>
