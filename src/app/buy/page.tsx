@@ -104,7 +104,7 @@ export default function BuyPage() {
           Get Credits
         </h1>
         <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 24 }}>
-          Credits unlock premium readings. They never expire.
+          Credits unlock premium readings. Valid for 1 year from purchase.
         </p>
 
         {/* Packages */}

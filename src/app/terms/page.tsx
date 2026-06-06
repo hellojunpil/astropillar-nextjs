@@ -25,7 +25,7 @@ const CONTENT = {
       },
       {
         h: '4. Credits',
-        p: 'Credits are the in-app currency used to unlock premium fortune readings.\n• Credits are non-transferable and cannot be exchanged for cash\n• Credits do not expire\n• Used credits are non-refundable\n• We are not responsible for credits lost due to account termination resulting from Terms violations',
+        p: 'Credits are the in-app currency used to unlock premium fortune readings.\n• Credits are non-transferable and cannot be exchanged for cash\n• Credits expire 1 year from the date of purchase\n• Used credits are non-refundable\n• We are not responsible for credits lost due to account termination resulting from Terms violations',
       },
       {
         h: '5. Acceptable Use',
@@ -75,7 +75,7 @@ const CONTENT = {
       },
       {
         h: '4. 크레딧',
-        p: '크레딧은 유료 운세 리딩을 이용하기 위한 앱 내 화폐입니다.\n• 크레딧은 양도 불가하며 현금으로 교환할 수 없습니다\n• 크레딧은 유효기간이 없습니다\n• 사용된 크레딧은 환불되지 않습니다\n• 약관 위반으로 인한 계정 정지·삭제 시 잔여 크레딧은 복구되지 않습니다',
+        p: '크레딧은 유료 운세 리딩을 이용하기 위한 앱 내 화폐입니다.\n• 크레딧은 양도 불가하며 현금으로 교환할 수 없습니다\n• 크레딧은 구매일로부터 1년간 유효합니다\n• 사용된 크레딧은 환불되지 않습니다\n• 약관 위반으로 인한 계정 정지·삭제 시 잔여 크레딧은 복구되지 않습니다',
       },
       {
         h: '5. 금지 행위',
@@ -125,7 +125,7 @@ const CONTENT = {
       },
       {
         h: '4. クレジット',
-        p: 'クレジットはプレミアム占い鑑定を利用するためのアプリ内通貨です。\n• クレジットは譲渡不可であり、現金に交換することはできません\n• クレジットに有効期限はありません\n• 使用済みクレジットは返金されません\n• 規約違反によるアカウント停止・削除の場合、残クレジットは復元されません',
+        p: 'クレジットはプレミアム占い鑑定を利用するためのアプリ内通貨です。\n• クレジットは譲渡不可であり、現金に交換することはできません\n• クレジットは購入日より1年間有効です\n• 使用済みクレジットは返金されません\n• 規約違反によるアカウント停止・削除の場合、残クレジットは復元されません',
       },
       {
         h: '5. 禁止行為',
