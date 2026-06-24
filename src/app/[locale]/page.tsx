@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from '@/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { onAuthStateChanged } from 'firebase/auth'
@@ -86,12 +86,7 @@ export default function LandingPage() {
   const [day, setDay] = useState('')
   const [gender, setGender] = useState<'M'|'F'|''>('')
   const [result, setResult] = useState<Result | null>(null)
-  const counterRef = useRef(10847)
-  const [counter, setCounter] = useState(10847)
-  const [rollingIdx, setRollingIdx] = useState(0)
-  const [showPopup, setShowPopup] = useState(false)
 
-  const ROLLING_TEXTS = [t('rolling.r1'), t('rolling.r2'), t('rolling.r3'), t('rolling.r4')]
   const TEASER_SETS = getTeaserSets(locale)
   const dmDescMap = { ...DM_DESC_EN, ...getDmDesc(locale) }
 
@@ -102,36 +97,10 @@ export default function LandingPage() {
       } else {
         setAuthChecked(true)
         ga('view_1_landing')
-        if (typeof window !== 'undefined' && !localStorage.getItem('ap_welcome_shown')) {
-          setTimeout(() => setShowPopup(true), 1500)
-        }
       }
     })
     return () => unsub()
   }, [router])
-
-  function closePopup() {
-    setShowPopup(false)
-    if (typeof window !== 'undefined') localStorage.setItem('ap_welcome_shown', '1')
-  }
-
-  useEffect(() => {
-    if (!authChecked) return
-    function tick() {
-      const add = Math.floor(Math.random() * 4) + 1
-      counterRef.current += add
-      setCounter(counterRef.current)
-      setTimeout(tick, 1200 + Math.random() * 800)
-    }
-    const timer = setTimeout(tick, 1500)
-    return () => clearTimeout(timer)
-  }, [authChecked])
-
-  useEffect(() => {
-    if (!authChecked) return
-    const timer = setInterval(() => setRollingIdx(i => (i + 1) % ROLLING_TEXTS.length), 3000)
-    return () => clearInterval(timer)
-  }, [authChecked, ROLLING_TEXTS.length])
 
   function goToView(v: View) {
     setView(v)
@@ -179,57 +148,10 @@ export default function LandingPage() {
 
   const signInLabel = locale === 'ko' ? '로그인' : locale === 'ja' ? 'ログイン' : 'Sign In'
 
-  const popupCopy = {
-    en: {
-      title: 'Welcome to AstroPillar ✨',
-      lines: ['🎁 Free credit on sign up', '🔁 Free credit for every 3 shares'],
-      btn: 'Got it',
-    },
-    ko: {
-      title: 'AstroPillar에 오신 걸 환영해요 ✨',
-      lines: ['🎁 회원가입 시 무료 크레딧 지급', '🔁 3회 공유 시 무료 크레딧 지급'],
-      btn: '확인',
-    },
-    ja: {
-      title: 'AstroPillarへようこそ ✨',
-      lines: ['🎁 新規登録で無料クレジット進呈', '🔁 3回シェアで無料クレジット進呈'],
-      btn: '了解',
-    },
-  }
-  const pc = popupCopy[locale as keyof typeof popupCopy] ?? popupCopy.en
-
   return (
     <main style={{ fontFamily, background:'#07071a', color:'#F6F6F8', minHeight:'100vh' }}>
 
-      {/* ══════════ 웰컴 팝업 ══════════ */}
-      {showPopup && (
-        <div
-          onClick={closePopup}
-          style={{ position:'fixed', inset:0, zIndex:9999, background:'rgba(7,7,26,0.75)', display:'flex', alignItems:'center', justifyContent:'center', padding:24, backdropFilter:'blur(4px)' }}
-        >
-          <div
-            onClick={e => e.stopPropagation()}
-            style={{ background:'#0d0d2b', border:'1px solid rgba(201,168,76,0.4)', borderRadius:20, padding:'32px 28px', maxWidth:360, width:'100%', boxShadow:'0 8px 40px rgba(0,0,0,0.6)' }}
-          >
-            <div style={{ fontSize:18, fontWeight:700, color:'#C9A84C', marginBottom:16, lineHeight:1.4 }}>{pc.title}</div>
-            <div style={{ display:'flex', flexDirection:'column', gap:10, marginBottom:20 }}>
-              {pc.lines.map((line, i) => (
-                <div key={i} style={{ fontSize:15, fontWeight:600, color:'#F6F6F8', lineHeight:1.5 }}>{line}</div>
-              ))}
-            </div>
-            <button
-              onClick={closePopup}
-              style={{ width:'100%', background:'#C9A84C', color:'#16213E', fontFamily, fontSize:14, fontWeight:700, border:'none', borderRadius:50, padding:'13px', cursor:'pointer' }}
-            >
-              {pc.btn}
-            </button>
-          </div>
-        </div>
-      )}
-
       <style>{`
-        @keyframes float1 { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
-        @keyframes float2 { 0%,100%{transform:translateX(0)} 50%{transform:translateX(-7px)} }
         .ap-select option { background:#16213E; color:#F6F6F8; }
         .ap-cta { width:100%; background:#C9A84C; color:#16213E; font-family:${fontFamily}; font-size:15px; font-weight:700; padding:13px; border-radius:50px; border:none; cursor:pointer; display:block; text-align:center; transition:transform .1s; }
         .ap-cta:active { transform:scale(0.98); }
@@ -263,30 +185,11 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* 플로팅 버블 */}
-          <div style={{ position:'absolute', top:'48%', left:'4%', zIndex:3, background:'rgba(0,0,0,.58)', border:'1px solid rgba(255,255,255,.22)', borderRadius:20, padding:'7px 14px', fontSize:13, color:'#fff', backdropFilter:'blur(10px)', WebkitBackdropFilter:'blur(10px)', whiteSpace:'nowrap', boxShadow:'0 2px 12px rgba(0,0,0,.3)', animation:'float1 3s ease-in-out infinite' }}>
-            {t('bubbles.b1')}
-          </div>
-          <div style={{ position:'absolute', top:'52%', right:'4%', zIndex:3, background:'rgba(0,0,0,.58)', border:'1px solid rgba(255,255,255,.22)', borderRadius:20, padding:'7px 14px', fontSize:13, color:'#fff', backdropFilter:'blur(10px)', WebkitBackdropFilter:'blur(10px)', whiteSpace:'nowrap', boxShadow:'0 2px 12px rgba(0,0,0,.3)', animation:'float2 4s ease-in-out infinite' }}>
-            {t('bubbles.b2')}
-          </div>
-          <div style={{ position:'absolute', top:'68%', left:'4%', zIndex:3, background:'rgba(0,0,0,.58)', border:'1px solid rgba(255,255,255,.22)', borderRadius:20, padding:'7px 14px', fontSize:13, color:'#fff', backdropFilter:'blur(10px)', WebkitBackdropFilter:'blur(10px)', whiteSpace:'nowrap', boxShadow:'0 2px 12px rgba(0,0,0,.3)', animation:'float1 3.5s ease-in-out infinite' }}>
-            {t('bubbles.b3')}
-          </div>
-
           {/* 하단 CTA */}
           <div style={{ position:'absolute', bottom:86, left:0, right:0, zIndex:10, padding:'0 20px 16px', display:'flex', flexDirection:'column', alignItems:'center', background:'linear-gradient(to top,rgba(7,7,26,1) 75%,transparent 100%)' }}>
-            <div style={{ height:20, overflow:'hidden', marginBottom:5, width:'100%', textAlign:'center' }}>
-              <div style={{ fontSize:11, color:'rgba(200,195,220,.75)', fontWeight:300, fontStyle:'italic', lineHeight:'20px', transition:'transform 0.35s ease', transform:`translateY(-${rollingIdx * 20}px)` }}>
-                {ROLLING_TEXTS.map((text, i) => <div key={i} style={{ lineHeight:'20px' }}>{text}</div>)}
-              </div>
-            </div>
             <button className="ap-cta" onClick={() => { goToView('v2'); ga('cta_click_v1') }}>
               ✦ &nbsp;{t('cta')}
             </button>
-            <div style={{ marginTop:6, textAlign:'center', fontSize:12, color:'rgba(200,195,220,.55)', fontWeight:300 }}>
-              <span style={{ color:'rgba(201,168,76,.85)', fontWeight:600 }}>{counter.toLocaleString()}</span> {t('counter_suffix')}
-            </div>
           </div>
         </div>
       )}
