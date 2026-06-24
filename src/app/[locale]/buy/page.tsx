@@ -253,14 +253,9 @@ function BuyContent() {
               </button>
             ) : isPortOne ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <button onClick={() => handlePortOneBuy(1, 'card')} style={{ width: '100%', padding: '12px', background: '#C9A84C', color: '#16213E', fontFamily, fontSize: 14, fontWeight: 700, border: 'none', borderRadius: 50, cursor: 'pointer' }}>
-                  {locale === 'ko' ? '카드결제' : t('cta')}
+                <button onClick={() => handlePortOneBuy(1, 'kakaopay')} style={{ width: '100%', padding: '12px', background: '#FAE100', color: '#3A1D1D', fontFamily, fontSize: 14, fontWeight: 700, border: 'none', borderRadius: 50, cursor: 'pointer' }}>
+                  카카오페이
                 </button>
-                {locale === 'ko' && (
-                  <button onClick={() => handlePortOneBuy(1, 'kakaopay')} style={{ width: '100%', padding: '12px', background: '#FAE100', color: '#3A1D1D', fontFamily, fontSize: 14, fontWeight: 700, border: 'none', borderRadius: 50, cursor: 'pointer' }}>
-                    카카오페이
-                  </button>
-                )}
                 <div style={{ textAlign: 'center', fontSize: 11, color: 'rgba(200,195,220,0.35)' }}>
                   {locale === 'ko' ? '(VAT 별도)' : locale === 'ja' ? '(税抜)' : '(excl. VAT)'}
                 </div>
@@ -303,14 +298,9 @@ function BuyContent() {
               </button>
             ) : isPortOne ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <button onClick={() => handlePortOneBuy(5, 'card')} style={{ width: '100%', padding: '12px', background: '#C9A84C', color: '#16213E', fontFamily, fontSize: 14, fontWeight: 700, border: 'none', borderRadius: 50, cursor: 'pointer' }}>
-                  {locale === 'ko' ? '카드결제' : t('cta')}
+                <button onClick={() => handlePortOneBuy(5, 'kakaopay')} style={{ width: '100%', padding: '12px', background: '#FAE100', color: '#3A1D1D', fontFamily, fontSize: 14, fontWeight: 700, border: 'none', borderRadius: 50, cursor: 'pointer' }}>
+                  카카오페이
                 </button>
-                {locale === 'ko' && (
-                  <button onClick={() => handlePortOneBuy(5, 'kakaopay')} style={{ width: '100%', padding: '12px', background: '#FAE100', color: '#3A1D1D', fontFamily, fontSize: 14, fontWeight: 700, border: 'none', borderRadius: 50, cursor: 'pointer' }}>
-                    카카오페이
-                  </button>
-                )}
                 <div style={{ textAlign: 'center', fontSize: 11, color: 'rgba(200,195,220,0.35)' }}>
                   {locale === 'ko' ? '(VAT 별도)' : locale === 'ja' ? '(税抜)' : '(excl. VAT)'}
                 </div>
