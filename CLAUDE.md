@@ -1,56 +1,56 @@
 # AstroPillar — 프로젝트 레퍼런스
 
-> **마지막 작업: 2026-05-14 세션90**
-> **다음 할 일: Codemagic 빌드 #14 트리거 → 결과 확인 → 성공 시 App Store 재심사 제출**
+> **마지막 작업: 2026-06-27 세션94 — 🎉 카카오페이 최종 승인 (CID CA19786125)**
+> **방향: 앱 출시(iOS/Android) 포기 → 웹 결제 집중. 한국=카카오페이 단일 / 일본·영어=Gumroad**
+> **다음 할 일 (STEP1부터):**
+> **  STEP1 — 포트원 콘솔 라이브 채널 생성 (CID 입력 → 채널키/StoreID/API Secret 복사)**
+> **  STEP2 — Vercel env 3개 라이브 키 교체 + Redeploy**
+> **  STEP3 — astropillar.com/ko/buy 카카오페이 ₩990 실결제 테스트**
 
 ---
 
-## ⚡ 세션 재개 지점 (2026-05-14 세션90 종료 시점)
+## ⚡ 세션93 완료 — 2026-05-28
 
-### 현재 상태 요약
-- **수정 완료** (commit ce07e18): codemagic.yaml — agvtool을 `ios/App` 디렉토리에서 실행하도록 변경
-- 빌드 #11 실패 원인 파악: 루트 디렉토리에서 agvtool 실행 → 미적용
-- 근본 원인: `project.pbxproj`에 `CURRENT_PROJECT_VERSION = 1` 하드코딩 + Xcode archive 시 변수 치환
+### 이번 세션에서 한 것
+- ✅ 카카오페이 심사 보완 이메일 수신 — "카드결제창(PG) 확인 필요"
+- ✅ 원인 파악: `src/app/[locale]/buy/page.tsx` 수정본이 미push 상태
+- ✅ Git 설치 (winget) → commit `2698548` push → Vercel 자동배포
+- ✅ 프로덕션(astropillar.com/ko/buy) 카드결제/카카오페이 버튼 정상 확인
+- ✅ 카카오페이 담당자(이재윤 noa.lee)에 회신
 
-### 세션90에서 수정한 것
-```yaml
-# 변경 전 (빌드 #13)
-/usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" ios/App/App/Info.plist
+### 남은 작업
+- PortOne 콘솔 → 결제 연동 → 라이브 채널 키 확인
+- Vercel 환경변수 라이브 키로 교체 (현재 테스트 키)
+- 카드결제창 실제 동작 확인
 
-# 변경 후 (빌드 #14)
-cd ios/App
-xcrun agvtool new-version -all $BUILD_NUMBER  ← pbxproj + Info.plist 동시 업데이트
-xcrun agvtool what-version                    ← 확인 로그
-/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" App/Info.plist
-```
+---
 
-### 빌드 #14 트리거 방법
-1. Codemagic 대시보드 → AstroPillar → ios-release → "Start build"
-2. 빌드 로그에서 "=== agvtool result ===" 확인
-3. Publishing 단계에서 버전 충돌 에러 없으면 성공
+## ⚡ 세션92 완료 — 2026-05-15
 
-### 빌드 성공 시 해야 할 것 (순서대로)
-1. App Store Connect → AstroPillar → Distribution → iOS 1.0
-2. 새 빌드 선택
-3. iPhone 6.7" 스크린샷 6장 업로드: `E:\My Team\astropillar\app_store_screenshots\iphone\`
-4. "심사 업데이트" 클릭 → 재제출
+### 이번 세션에서 한 것
+- ✅ Vercel 빌드 오류 수정 — RevenueCat `iap.ts` 타입 오류
+  - `const { offerings } = await Purchases.getOfferings()` → `const offerings = await Purchases.getOfferings()`
+  - commit `8479e8b` / 배포 완료 확인 (37초, Ready)
+- ✅ PortOne 콘솔 직접 확인 → KG이니시스 심사 현황 파악
+  - 신용카드 일반결제: **입점 심사중** ✅ (정상 진행)
+  - 취소 1건: 5월 6일 첫 신청 → 5월 11일 재신청으로 자동 대체 (이상 없음)
+  - 카카오페이: PGA사 접수 완료 (진행 중)
+- ✅ KG이니시스 공식 심사 기간 확인: 카드사 심사 7~10일, 전체 최대 1~3주 → **5월 21~22일 예상**
+- ✅ 바로오픈서비스: 심사 완료 전에도 실제 결제 수취 가능 (정산은 심사 후)
 
-### iPhone 스크린샷 파일 목록 (1290×2796)
-- iphone_01_landing.png — 서비스 메뉴
-- iphone_02_today.png — 타로 카드 그리드
-- iphone_03_horoscope.png — 별자리 + 월의 위상
-- iphone_04_menu.png — 서비스 목록
-- iphone_05_tarot.png — 쓰리카드 입력
-- iphone_06_zodiac.png — 띠별 12동물
+---
 
-### 빌드 이력
-| 빌드 | 방법 | 결과 |
-|------|------|------|
-| #10 | 기본 (버전 미설정) | 실패 — 버전=1 충돌 |
-| #11 | `agvtool new-version -all $BUILD_NUMBER` (루트에서) | 실패 — agvtool 미적용 |
-| #12 | xcodebuild에 `CURRENT_PROJECT_VERSION=$BUILD_NUMBER` | 실패 |
-| #13 | `PlistBuddy`로 cap sync 후 Info.plist 직접 수정 | 실패 |
-| #14 | `cd ios/App && xcrun agvtool new-version -all $BUILD_NUMBER` | **진행 예정** |
+## ⚡ 세션91 완료 — 2026-05-14
+
+### iOS App Store 재심사 제출 완료 ✅
+- **Build 15** (조디악 휠 아이콘, CFBundleVersion=15) 제출 성공
+- 이전 거부 사유: "2.1.0 Performance: App Completeness" (placeholder X 아이콘, build 1)
+- 해결 과정:
+  1. 기존 제출(build 1) 취소 → 빌드 섹션에서 build 1 삭제
+  2. build 15 (조디악 아이콘) 추가 → 저장
+  3. "심사에 추가" → "심사를 위해 제출" 클릭
+  4. "1개의 항목 제출됨" 확인
+- 심사 결과: hellojunpil@gmail.com으로 48시간 이내 이메일 수신 예정
 
 ---
 

@@ -58,3 +58,6 @@ android/.cxx/
 
 # Capacitor iOS project - tracked for Codemagic builds
 # /ios/
+.gstack/
+
+.vercel

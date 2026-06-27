@@ -13,18 +13,18 @@
   "backgroundColor": "#07071A",
   "enableNotifications": false,
   "startUrl": "/",
-  "iconUrl": "http://localhost:3000/icon-512.png",
-  "maskableIconUrl": "http://localhost:3000/icon-512.png",
-  "monochromeIconUrl": "http://localhost:3000/icon-512.png",
+  "iconUrl": "https://astropillar.com/icon-512.png",
+  "maskableIconUrl": "https://astropillar.com/icon-512.png",
+  "monochromeIconUrl": "https://astropillar.com/icon-512.png",
   "signingKey": {
     "path": "./android.keystore",
     "alias": "android"
   },
-  "appVersionName": "2",
-  "appVersionCode": 2,
+  "appVersionName": "3",
+  "appVersionCode": 3,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
-  "webManifestUrl": "http://localhost:3000/manifest.json",
+  "webManifestUrl": "https://astropillar.com/manifest.json",
   "fallbackType": "customtabs",
   "features": {},
   "alphaDependencies": {
@@ -40,5 +40,5 @@
   "additionalTrustedOrigins": [],
   "retainedBundles": [],
   "displayOverride": [],
-  "appVersion": "2"
+  "appVersion": "3"
 }
