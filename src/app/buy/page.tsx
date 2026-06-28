@@ -177,17 +177,6 @@ export default function BuyPage() {
           </div>
         </div>
 
-        {/* Free credit tip */}
-        <div style={{
-          background: 'rgba(46,204,113,0.07)', border: '1px solid rgba(46,204,113,0.3)',
-          borderRadius: 12, padding: '14px 18px', marginBottom: 24,
-        }}>
-          <p style={{ color: '#2ecc71', fontSize: 13, fontWeight: 600, marginBottom: 4 }}>💡 Earn free Credits</p>
-          <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>
-            Share AstroPillar 3 times to earn 1 free Credit — available in your reading results.
-          </p>
-        </div>
-
         {/* Back to menu */}
         <Link href="/menu" style={{ display: 'block', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13, textDecoration: 'none' }}>
           ← Back to Menu
