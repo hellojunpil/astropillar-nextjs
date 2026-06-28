@@ -1,5 +1,5 @@
 .gstack
 .git
 node_modules
-android
-app
+/android
+/app
