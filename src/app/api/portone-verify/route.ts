@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 
 const PORTONE_API_SECRET = process.env.PORTONE_API_SECRET || ''
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || ''
+const GUMROAD_SELLER_ID = process.env.GUMROAD_SELLER_ID || ''
+
+// permalink → 크레딧 매핑 (gumroad_webhook은 permalink로 상품 식별)
+const PERMALINK = { 1: 'gveeli', 5: 'idksv' } as const
 
 // 크레딧 패키지 — 테스트는 소액, 실서비스 전환 시 실제 가격으로 교체
 const CREDIT_PACKAGES: Record<string, { credits: number; amountKRW: number; amountJPY: number }> = {
@@ -53,22 +57,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Amount mismatch' }, { status: 400 })
     }
 
-    // FastAPI 백엔드로 크레딧 지급 (gumroad webhook과 동일한 엔드포인트 재활용)
+    // FastAPI 백엔드로 크레딧 지급 (gumroad_webhook 재활용)
+    // ⚠️ main.py는 form-encoded + seller_id 검증 + permalink로 상품 식별 (JSON/product_permalink 아님)
+    const form = new URLSearchParams({
+      seller_id: GUMROAD_SELLER_ID,
+      email,
+      sale_id: `portone_${paymentId}`,  // portone_ prefix로 중복 방지
+      permalink: PERMALINK[credits as 1 | 5] ?? PERMALINK[1],
+    })
+
     const webhookRes = await fetch(`${API_BASE}/gumroad_webhook`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email,
-        sale_id: `portone_${paymentId}`,  // portone_ prefix로 중복 방지
-        product_permalink: credits === 1 ? 'gveeli' : 'idksv',
-        amount: pkg.credits,
-      }),
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: form.toString(),
     })
 
     if (!webhookRes.ok) {
       const errText = await webhookRes.text()
       console.error('Credit grant failed:', errText)
-      return NextResponse.json({ error: 'Credit grant failed' }, { status: 500 })
+      return NextResponse.json({ error: 'Credit grant failed', detail: errText }, { status: 500 })
     }
 
     return NextResponse.json({ ok: true, credits: pkg.credits })
