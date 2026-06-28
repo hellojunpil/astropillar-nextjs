@@ -181,7 +181,6 @@ const UI_TEXT = {
     birthYear: 'Birth Year',
     selectYear: 'Select year',
     yearOf: (animal: string) => `✦ Year of the ${animal}`,
-    shareNote: 'Free Fortune shares do not count toward the 3-share Credit promotion.',
     scoreLabels: { score_love:'LOVE', score_work:'WORK', score_money:'MONEY', score_health:'HEALTH', score_social:'SOCIAL', score_creative:'CREATIVE' },
   },
   ko: {
@@ -221,7 +220,6 @@ const UI_TEXT = {
     birthYear: '출생연도',
     selectYear: '연도 선택',
     yearOf: (animal: string) => `✦ ${animal}띠`,
-    shareNote: '무료 운세 공유는 크레딧 적립(3회) 대상에 포함되지 않습니다.',
     scoreLabels: { score_love:'사랑', score_work:'일', score_money:'돈', score_health:'건강', score_social:'대인', score_creative:'창의' },
   },
   ja: {
@@ -261,7 +259,6 @@ const UI_TEXT = {
     birthYear: '生まれ年',
     selectYear: '年を選択',
     yearOf: (animal: string) => `✦ ${animal}年生まれ`,
-    shareNote: '無料の運勢シェアはクレジット積立（3回）の対象外です。',
     scoreLabels: { score_love:'恋愛', score_work:'仕事', score_money:'金運', score_health:'健康', score_social:'対人', score_creative:'創造' },
   },
 }
@@ -479,9 +476,6 @@ export default function TodayFortunePage() {
               style={{ width: '100%', background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.4)', color: 'var(--gold)', borderRadius: 50, padding: '11px', fontSize: 13, cursor: 'pointer' }}>
               {mode === 'horoscope' ? ui.shareHoro : ui.shareFortune}
             </button>
-            <p style={{ color: 'var(--text-muted)', fontSize: 10, textAlign: 'center' }}>
-              {ui.shareNote}
-            </p>
           </div>
         )}
         <button onClick={onBack} style={{ width: '100%', background: 'none', border: '1px solid var(--border)', color: 'var(--text-muted)', borderRadius: 50, padding: '11px', fontSize: 13, cursor: 'pointer', marginBottom: 14 }}>
@@ -681,9 +675,6 @@ export default function TodayFortunePage() {
                         style={{ width: '100%', background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.4)', color: 'var(--gold)', borderRadius: 50, padding: '11px', fontSize: 13, cursor: 'pointer', letterSpacing: 0.5 }}>
                         {ui.tarotShare}
                       </button>
-                      <p style={{ color: 'var(--text-muted)', fontSize: 10, textAlign: 'center', marginTop: -4 }}>
-                        {ui.shareNote}
-                      </p>
 
                       <button onClick={resetTarot} style={{
                         width: '100%', background: 'none', border: '1px solid rgba(255,255,255,0.12)',

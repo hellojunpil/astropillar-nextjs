@@ -1,23 +1,11 @@
 'use client'
 import { useState } from 'react'
-import { apiPost } from '@/lib/api'
 import { gtagEvent } from '@/lib/gtag'
 
 export default function TarotShareButton({ userEmail }: { userEmail: string }) {
   const [msg, setMsg] = useState('')
   const [loading, setLoading] = useState(false)
   const [showModal, setShowModal] = useState(false)
-
-  async function recordShare() {
-    try {
-      const res = await apiPost<{ share_count?: number; credit_earned?: boolean; credits_added?: number }>(
-        '/record_share', { email: userEmail }
-      )
-      const count = res.share_count ?? 0
-      if (res.credit_earned || res.credits_added) { setMsg('🎉 You earned 1 Credit!') }
-      else { const r = 3 - (count % 3); setMsg(`Shared! ${r} more share${r !== 1 ? 's' : ''} → 1 Credit`) }
-    } catch { /* silent */ }
-  }
 
   async function handleShare() {
     if (loading || !userEmail) return
@@ -29,7 +17,6 @@ export default function TarotShareButton({ userEmail }: { userEmail: string }) {
       if (navigator.share) {
         await navigator.share({ title: 'AstroPillar — Tarot Reading', text: shareText, url: shareUrl })
         gtagEvent('share_click', { type: 'tarot', method: 'native' })
-        await recordShare()
       } else {
         setShowModal(true)
       }
@@ -47,7 +34,6 @@ export default function TarotShareButton({ userEmail }: { userEmail: string }) {
     }
     gtagEvent('share_click', { type: 'tarot', method: 'copy' })
     setShowModal(false)
-    await recordShare()
   }
 
   function handleTwitter() {
@@ -56,7 +42,6 @@ export default function TarotShareButton({ userEmail }: { userEmail: string }) {
     window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank')
     gtagEvent('share_click', { type: 'tarot', method: 'twitter' })
     setShowModal(false)
-    recordShare()
   }
 
   function handleInstagram() {
@@ -66,7 +51,6 @@ export default function TarotShareButton({ userEmail }: { userEmail: string }) {
       .catch(() => setMsg('Copy the link and share on Instagram!'))
     gtagEvent('share_click', { type: 'tarot', method: 'instagram' })
     setShowModal(false)
-    recordShare()
   }
 
   if (!userEmail) return null
@@ -83,10 +67,9 @@ export default function TarotShareButton({ userEmail }: { userEmail: string }) {
             color: 'var(--gold)', borderRadius: 50, padding: 12, fontSize: 14,
             cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1,
           }}>
-          {loading ? '✦ Sharing...' : '↗ Share & Earn Credits'}
+          {loading ? '✦ Sharing...' : '↗ Share'}
         </button>
         {msg && <p style={{ color: '#aaa', fontSize: 12, textAlign: 'center' }}>{msg}</p>}
-        <p style={{ color: 'var(--text-muted)', fontSize: 11, textAlign: 'center' }}>Every 3 shares = 1 free Credit · Max 1 Credit per day</p>
       </div>
 
       {showModal && (
@@ -96,8 +79,8 @@ export default function TarotShareButton({ userEmail }: { userEmail: string }) {
           <div
             onClick={e => e.stopPropagation()}
             style={{ background: '#16213E', borderRadius: 20, padding: 24, width: '100%', maxWidth: 480, border: '1px solid var(--border)' }}>
-            <p style={{ color: 'var(--gold)', fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>Share & Earn Credits</p>
-            <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 20 }}>Every 3 shares = 1 free Credit (max 1/day)</p>
+            <p style={{ color: 'var(--gold)', fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>Share</p>
+            <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 20 }}>Share AstroPillar with friends ✨</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <button onClick={handleTwitter} style={{ width: '100%', background: '#1da1f2', border: 'none', borderRadius: 50, color: '#fff', padding: 12, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
                 Share on X (Twitter)

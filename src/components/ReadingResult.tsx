@@ -1062,7 +1062,7 @@ function ZodiacBadge({ sign }: { sign: string }) {
   )
 }
 
-function ShareButton({ userEmail, shareId }: { userEmail: string; shareId?: string }) {
+function ShareButton({ shareId }: { shareId?: string }) {
   const t = useTranslations('reading')
   const [msg, setMsg] = useState('')
   const [loading, setLoading] = useState(false)
@@ -1075,10 +1075,6 @@ function ShareButton({ userEmail, shareId }: { userEmail: string; shareId?: stri
     try {
       if (navigator.share) { await navigator.share(shareData) }
       else { await navigator.clipboard.writeText(`${shareData.text} ${shareUrl}`); setMsg('Link copied!') }
-      const res = await apiPost<{ share_count?: number; credit_earned?: boolean; credits_added?: number }>('/record_share', { email:userEmail })
-      const count = res.share_count ?? 0
-      if (res.credit_earned || res.credits_added) { setMsg('🎉 You earned 1 Credit!') }
-      else { const r = 3-(count%3); setMsg(`Shared! ${r} more share${r!==1?'s':''} → 1 Credit`) }
     } catch { setMsg('') }
     finally { setLoading(false) }
   }
@@ -1497,7 +1493,7 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
         )}
         {birthData && <NatalChartViewer birthData={birthData} />}
         {!isSharedView && birthData && <ScenarioButton birthData={birthData} />}
-        {!isSharedView && userEmail && <ShareButton userEmail={userEmail} shareId={shareId} />}
+        {!isSharedView && userEmail && <ShareButton shareId={shareId} />}
         <button onClick={onReset} style={{ background:'none', border:'1px solid var(--border)', color:'var(--text-muted)', borderRadius:50, padding:12, fontSize:14, cursor:'pointer' }}>
           {t('new_reading')}
         </button>
