@@ -364,13 +364,6 @@ export default function LandingPage() {
               <div style={{ textAlign:'center', marginTop:10, fontSize:11, color:'rgba(200,195,220,.35)', fontWeight:300 }}>New members get 1 FREE Credit &nbsp;·&nbsp; No credit card required</div>
             </div>
           </div>
-          {/* Share event */}
-          <div style={{ padding:'20px 20px 0' }}>
-            <div style={{ background:'rgba(100,149,237,.08)', border:'1px solid rgba(100,149,237,.25)', borderRadius:14, padding:'14px 16px', marginBottom:10 }}>
-              <div style={{ fontSize:13, fontWeight:700, color:'#89b4fa', marginBottom:4 }}>Share your result 3 times → 1 FREE Credit</div>
-              <div style={{ fontSize:12, lineHeight:1.65, color:'rgba(200,195,220,.65)', fontWeight:300 }}>Share 3 times and earn a free reading. Let the stars speak for you.</div>
-            </div>
-          </div>
           {/* Why section */}
           <div style={{ padding:20 }}>
             <div style={{ fontSize:10, letterSpacing:3, color:'rgba(201,168,76,.6)', textAlign:'center', marginBottom:18, fontWeight:400 }}>WHY ASTROPILLAR IS DIFFERENT</div>
