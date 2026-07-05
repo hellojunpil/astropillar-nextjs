@@ -9,6 +9,7 @@ import { gtagEvent } from '@/lib/gtag'
 import { saveReading } from '@/lib/firestore'
 import { FULL_DECK, TarotCard, cardImageUrl, shuffleDeck } from '@/lib/tarotDeck'
 import { parseResult } from '@/components/ReadingResult'
+import { localizeTarotTitle } from '@/lib/tarotTitles'
 import TarotShareButton from '@/components/TarotShareButton'
 import BottomNav from '@/components/BottomNav'
 
@@ -44,6 +45,7 @@ const UI_TEXT_MAP = {
     title: 'Relationship Spread',
     subtitle: 'You · Them · Connection · Advice — 4 cards',
     credits: 'Credits',
+    creditBadge: (n: number) => `${n} Credit${n !== 1 ? 's' : ''}`,
     notEnoughTitle: 'Not enough Credits',
     notEnoughBody: (cost: number, credits: number) => `This reading costs ${cost} Credit${cost !== 1 ? 's' : ''}. You have ${credits}.`,
     getCredits: 'Get Credits',
@@ -72,6 +74,7 @@ const UI_TEXT_MAP = {
     title: '나와 상대방의 관계 타로',
     subtitle: '나 · 상대방 · 연결 · 조언 — 4장',
     credits: '크레딧',
+    creditBadge: (n: number) => `${n} 크레딧`,
     notEnoughTitle: '크레딧이 부족해요',
     notEnoughBody: (cost: number, credits: number) => `이 리딩에는 ${cost} 크레딧이 필요해요. 현재 ${credits} 크레딧을 보유하고 있어요.`,
     getCredits: '크레딧 구매하기',
@@ -100,6 +103,7 @@ const UI_TEXT_MAP = {
     title: '二人の関係タロット',
     subtitle: '私 · 相手 · つながり · アドバイス — 4枚',
     credits: 'クレジット',
+    creditBadge: (n: number) => `${n}クレジット`,
     notEnoughTitle: 'クレジットが不足しています',
     notEnoughBody: (cost: number, credits: number) => `このリーディングには${cost}クレジットが必要です。現在${credits}クレジットをお持ちです。`,
     getCredits: 'クレジットを購入',
@@ -384,7 +388,7 @@ export default function RelationshipPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
             <h1 className="font-display" style={{ color: '#fff', fontSize: 22, fontWeight: 600 }}>{t.title}</h1>
             <span style={{ border: '1px solid var(--gold)', color: 'var(--gold)', borderRadius: 20, padding: '3px 10px', fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap' }}>
-              {cost} Credit{cost !== 1 ? 's' : ''}
+              {t.creditBadge(cost)}
             </span>
           </div>
           <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>{t.subtitle}</p>
@@ -511,7 +515,7 @@ export default function RelationshipPage() {
               <div className="card" style={{ padding: 20, marginBottom: 16 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                   <p style={{ color: 'var(--gold)', fontSize: 12, letterSpacing: 1, textTransform: 'uppercase', margin: 0 }}>{t.goDeeper}</p>
-                  <span style={{ border: '1px solid var(--gold)', color: 'var(--gold)', borderRadius: 20, padding: '2px 8px', fontSize: 10, fontWeight: 700 }}>{scenarioCost} Credit{scenarioCost !== 1 ? 's' : ''}</span>
+                  <span style={{ border: '1px solid var(--gold)', color: 'var(--gold)', borderRadius: 20, padding: '2px 8px', fontSize: 10, fontWeight: 700 }}>{t.creditBadge(scenarioCost)}</span>
                 </div>
                 <p style={{ color: '#fff', fontWeight: 600, fontSize: 15, marginBottom: 6 }}>{t.scenarioTitle}</p>
                 <textarea value={scenarioQ} onChange={e => setScenarioQ(e.target.value)}

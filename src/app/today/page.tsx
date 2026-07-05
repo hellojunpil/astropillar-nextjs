@@ -122,7 +122,16 @@ function parseTarotResult(text: string): Array<{ header: string; content: string
   return sections.length > 0 ? sections : [{ header: '', content: text.trim() }]
 }
 
-const todayStr = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+const TODAY_LOCALE_MAP: Record<string, string> = { ko: 'ko-KR', ja: 'ja-JP', en: 'en-US' }
+function formatTodayStr(locale: string): string {
+  return new Date().toLocaleDateString(TODAY_LOCALE_MAP[locale] ?? 'en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+}
+
+const MONTH_NAMES_MAP: Record<string, string[]> = {
+  en: MONTHS,
+  ko: ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],
+  ja: ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'],
+}
 
 // ── UI Text (locale-aware) ──────────────────────────────────────
 const HOROSCOPE_NAMES: Record<string, Record<string, string>> = {
@@ -521,7 +530,7 @@ export default function TodayFortunePage() {
 
         {/* Page title */}
         <div style={{ textAlign: 'center', padding: '14px 20px 0' }}>
-          <p style={{ color: 'var(--text-muted)', fontSize: 12 }}>{todayStr}</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: 12 }}>{formatTodayStr(locale)}</p>
           <span style={{ display: 'inline-block', marginTop: 4, border: '1px solid #2ecc71', color: '#2ecc71', borderRadius: 20, padding: '2px 10px', fontSize: 10, fontWeight: 700 }}>
             {ui.freeBadge}
           </span>
@@ -725,7 +734,7 @@ export default function TodayFortunePage() {
                     <div style={{ display: 'flex', gap: 8 }}>
                       <select value={horoMonth} onChange={e => { setHoroMonth(e.target.value); const m=parseInt(e.target.value),d=parseInt(horoDay); if(m&&d) setHoroAuto(getHoroscope(m,d)); else setHoroAuto(null) }} style={selectStyle}>
                         <option value="">{ui.monthPlaceholder}</option>
-                        {MONTHS.map((m,i) => <option key={m} value={String(i+1)}>{m}</option>)}
+                        {(MONTH_NAMES_MAP[locale] ?? MONTHS).map((m,i) => <option key={m} value={String(i+1)}>{m}</option>)}
                       </select>
                       <select value={horoDay} onChange={e => { setHoroDay(e.target.value); const m=parseInt(horoMonth),d=parseInt(e.target.value); if(m&&d) setHoroAuto(getHoroscope(m,d)); else setHoroAuto(null) }} style={{...selectStyle, maxWidth: 90}}>
                         <option value="">{ui.dayPlaceholder}</option>

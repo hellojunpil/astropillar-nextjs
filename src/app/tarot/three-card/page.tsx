@@ -9,6 +9,7 @@ import { gtagEvent } from '@/lib/gtag'
 import { saveReading } from '@/lib/firestore'
 import { FULL_DECK, TarotCard, cardImageUrl, shuffleDeck } from '@/lib/tarotDeck'
 import { parseResult } from '@/components/ReadingResult'
+import { localizeTarotTitle } from '@/lib/tarotTitles'
 import TarotShareButton from '@/components/TarotShareButton'
 import BottomNav from '@/components/BottomNav'
 
@@ -35,6 +36,7 @@ const UI_TEXT_MAP = {
     title: 'Three Card Spread',
     subtitle: 'Past · Present · Future — 3 cards',
     credits: 'Credits',
+    creditBadge: (n: number) => `${n} Credit${n !== 1 ? 's' : ''}`,
     notEnoughTitle: 'Not enough Credits',
     notEnoughBody: (cost: number, credits: number) => `This reading costs ${cost} Credit${cost !== 1 ? 's' : ''}. You have ${credits}.`,
     getCredits: 'Get Credits',
@@ -63,6 +65,7 @@ const UI_TEXT_MAP = {
     title: '과거·현재·미래 타로',
     subtitle: '과거 · 현재 · 미래 — 3장',
     credits: '크레딧',
+    creditBadge: (n: number) => `${n} 크레딧`,
     notEnoughTitle: '크레딧이 부족해요',
     notEnoughBody: (cost: number, credits: number) => `이 리딩에는 ${cost} 크레딧이 필요해요. 현재 ${credits} 크레딧을 보유하고 있어요.`,
     getCredits: '크레딧 구매하기',
@@ -91,6 +94,7 @@ const UI_TEXT_MAP = {
     title: '過去・現在・未来タロット',
     subtitle: '過去 · 現在 · 未来 — 3枚',
     credits: 'クレジット',
+    creditBadge: (n: number) => `${n}クレジット`,
     notEnoughTitle: 'クレジットが不足しています',
     notEnoughBody: (cost: number, credits: number) => `このリーディングには${cost}クレジットが必要です。現在${credits}クレジットをお持ちです。`,
     getCredits: 'クレジットを購入',
@@ -373,7 +377,7 @@ export default function ThreeCardPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
             <h1 className="font-display" style={{ color: '#fff', fontSize: 22, fontWeight: 600 }}>{t.title}</h1>
             <span style={{ border: '1px solid var(--gold)', color: 'var(--gold)', borderRadius: 20, padding: '3px 10px', fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap' }}>
-              {cost} Credit{cost !== 1 ? 's' : ''}
+              {t.creditBadge(cost)}
             </span>
           </div>
           <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>{t.subtitle}</p>
@@ -492,7 +496,7 @@ export default function ThreeCardPage() {
                   if (i < 3 && card) {
                     return <CardSection key={i} card={card} positionLabel={pos[i].label} positionDesc={pos[i].desc} content={sec.content} defaultOpen={i === 0} />
                   }
-                  return <Section key={i} title={sec.title ?? `Section ${i + 1}`} content={sec.content} defaultOpen={i === 3} />
+                  return <Section key={i} title={localizeTarotTitle(sec.title ?? `Section ${i + 1}`, locale)} content={sec.content} defaultOpen={i === 3} />
                 })}
             </div>
 
@@ -501,7 +505,7 @@ export default function ThreeCardPage() {
               <div className="card" style={{ padding: 20, marginBottom: 16 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                   <p style={{ color: 'var(--gold)', fontSize: 12, letterSpacing: 1, textTransform: 'uppercase', margin: 0 }}>{t.goDeeper}</p>
-                  <span style={{ border: '1px solid var(--gold)', color: 'var(--gold)', borderRadius: 20, padding: '2px 8px', fontSize: 10, fontWeight: 700 }}>{scenarioCost} Credit{scenarioCost !== 1 ? 's' : ''}</span>
+                  <span style={{ border: '1px solid var(--gold)', color: 'var(--gold)', borderRadius: 20, padding: '2px 8px', fontSize: 10, fontWeight: 700 }}>{t.creditBadge(scenarioCost)}</span>
                 </div>
                 <p style={{ color: '#fff', fontWeight: 600, fontSize: 15, marginBottom: 6 }}>{t.scenarioTitle}</p>
                 <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 14 }}>{t.scenarioDesc}</p>
@@ -521,7 +525,7 @@ export default function ThreeCardPage() {
               <div className="card" style={{ padding: '0 20px', marginBottom: 16 }}>
                 <p style={{ color: 'var(--gold)', fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', padding: '16px 0 8px' }}>{t.scenarioLabel}</p>
                 {parseResult(scenarioText).map((sec, i) => (
-                  <Section key={i} title={sec.title ?? `Section ${i + 1}`} content={sec.content} defaultOpen={i === 0} />
+                  <Section key={i} title={localizeTarotTitle(sec.title ?? `Section ${i + 1}`, locale)} content={sec.content} defaultOpen={i === 0} />
                 ))}
               </div>
             )}
