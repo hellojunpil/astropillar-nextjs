@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter } from '@/navigation'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
@@ -9,8 +9,11 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   sendPasswordResetEmail,
   getAdditionalUserInfo,
+  type UserCredential,
 } from 'firebase/auth'
 import { auth, googleProvider } from '@/lib/firebase'
 import { apiPost } from '@/lib/api'
@@ -34,9 +37,21 @@ function LoginContent() {
 
   const fontFamily = locale === 'ko' ? "'Noto Sans KR', sans-serif" : locale === 'ja' ? "'Noto Sans JP', sans-serif" : "'Noto Sans', sans-serif"
 
+  // 가입 크레딧 지급 — 일시 오류로 계정만 생기고 크레딧 0이 되지 않도록 3회 재시도
   async function registerUser(userEmail: string) {
     const platform = window.matchMedia('(display-mode: standalone)').matches ? 'mo' : 'on'
-    await apiPost('/register_user', { email: userEmail, platform })
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        await apiPost('/register_user', { email: userEmail, platform })
+        return
+      } catch {
+        if (attempt === 3) {
+          gtagEvent('register_user_failed', { platform })
+          return
+        }
+        await new Promise(r => setTimeout(r, 800 * attempt))
+      }
+    }
   }
 
   async function handleEmailAuth(e: React.FormEvent) {
@@ -78,25 +93,77 @@ function LoginContent() {
     }
   }
 
-  async function handleGoogle() {
+  // 인스타그램/페이스북/카카오톡 등 인앱 브라우저는 구글이 팝업 OAuth를 차단(disallowed_useragent)
+  function isInAppBrowser() {
+    return /instagram|threads|fban|fbav|fb_iab|kakaotalk|line\/|naver|daumapps/i.test(navigator.userAgent)
+  }
+
+  async function completeSocialSignIn(result: UserCredential, method: string) {
+    if (!result.user.email) {
+      setError(locale === 'ko' ? '이메일 제공에 동의해야 이용할 수 있어요.' : locale === 'ja' ? 'メールアドレスの提供に同意してください。' : 'Email permission is required to sign in.')
+      return
+    }
+    const info = getAdditionalUserInfo(result)
+    if (info?.isNewUser) {
+      await registerUser(result.user.email)
+      gtagEvent('sign_up', { method })
+    } else {
+      gtagEvent('login', { method })
+    }
+    router.push('/menu')
+  }
+
+  async function handleSocial(provider: typeof googleProvider, method: string) {
     setError('')
     setLoading(true)
-    try {
-      const result = await signInWithPopup(auth, googleProvider)
-      const info = getAdditionalUserInfo(result)
-      if (info?.isNewUser) {
-        await registerUser(result.user.email!)
-        gtagEvent('sign_up', { method: 'google' })
-      } else {
-        gtagEvent('login', { method: 'google' })
+    const failMsg = locale === 'ko' ? '구글 로그인에 실패했어요.' : locale === 'ja' ? 'Googleログインに失敗しました。' : 'Google sign-in failed.'
+    if (isInAppBrowser()) {
+      try {
+        sessionStorage.setItem('social_method', method)
+        await signInWithRedirect(auth, provider)
+      } catch {
+        setError(failMsg)
+        setLoading(false)
       }
-      router.push('/menu')
-    } catch {
-      setError(locale === 'ko' ? '구글 로그인에 실패했어요.' : locale === 'ja' ? 'Googleログインに失敗しました。' : 'Google sign-in failed.')
+      return
+    }
+    try {
+      const result = await signInWithPopup(auth, provider)
+      await completeSocialSignIn(result, method)
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : ''
+      if (/popup-closed-by-user|cancelled-popup-request/.test(msg)) {
+        setLoading(false)
+        return
+      }
+      if (/popup-blocked|operation-not-supported|web-storage-unsupported/.test(msg)) {
+        try {
+          sessionStorage.setItem('social_method', method)
+          await signInWithRedirect(auth, provider)
+          return
+        } catch { /* fall through */ }
+      }
+      setError(failMsg)
     } finally {
       setLoading(false)
     }
   }
+
+  // 인앱 브라우저에서 redirect 방식으로 돌아온 경우 처리
+  useEffect(() => {
+    getRedirectResult(auth)
+      .then(result => {
+        if (result) {
+          const method = sessionStorage.getItem('social_method') || 'google'
+          sessionStorage.removeItem('social_method')
+          return completeSocialSignIn(result, method)
+        }
+      })
+      .catch(() => {
+        setError(locale === 'ko' ? '로그인에 실패했어요. 다시 시도해주세요.' : locale === 'ja' ? 'ログインに失敗しました。もう一度お試しください。' : 'Sign-in failed. Please try again.')
+      })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   async function handleForgot(e: React.FormEvent) {
     e.preventDefault()
@@ -146,6 +213,20 @@ function LoginContent() {
           </div>
         )}
 
+        {mode !== 'forgot' && (
+          <>
+            <button onClick={() => handleSocial(googleProvider, 'google')} disabled={loading} style={{ width: '100%', padding: '14px', background: 'rgba(255,255,255,0.07)', border: '1.5px solid rgba(201,168,76,0.3)', borderRadius: 50, color: '#F6F6F8', fontFamily, fontSize: 14, fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, opacity: loading ? 0.7 : 1 }}>
+              <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"/></svg>
+              {t('google')}
+            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0' }}>
+              <div style={{ flex: 1, height: 1, background: 'rgba(201,168,76,0.2)' }} />
+              <span style={{ fontSize: 11, color: 'rgba(200,195,220,0.4)' }}>{locale === 'ko' ? '또는 이메일로' : locale === 'ja' ? 'またはメールで' : 'or continue with email'}</span>
+              <div style={{ flex: 1, height: 1, background: 'rgba(201,168,76,0.2)' }} />
+            </div>
+          </>
+        )}
+
         {resetSent ? (
           <div style={{ textAlign: 'center', color: '#C9A84C', padding: 20 }}>{t('reset_sent')}</div>
         ) : (
@@ -180,18 +261,10 @@ function LoginContent() {
           </button>
         )}
 
-        {mode !== 'forgot' && (
-          <>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0' }}>
-              <div style={{ flex: 1, height: 1, background: 'rgba(201,168,76,0.2)' }} />
-              <span style={{ fontSize: 11, color: 'rgba(200,195,220,0.4)' }}>{locale === 'ko' ? '또는' : locale === 'ja' ? 'または' : 'or'}</span>
-              <div style={{ flex: 1, height: 1, background: 'rgba(201,168,76,0.2)' }} />
-            </div>
-            <button onClick={handleGoogle} disabled={loading} style={{ width: '100%', padding: '14px', background: 'rgba(255,255,255,0.07)', border: '1.5px solid rgba(201,168,76,0.3)', borderRadius: 50, color: '#F6F6F8', fontFamily, fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-              <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"/></svg>
-              {t('google')}
-            </button>
-          </>
+        {mode === 'signup' && (
+          <div style={{ textAlign: 'center', marginTop: 16, fontSize: 12, color: 'rgba(201,168,76,0.8)' }}>
+            {locale === 'ko' ? '🎁 가입하면 무료 크레딧 1개를 드려요' : locale === 'ja' ? '🎁 登録で無料クレジット1個プレゼント' : '🎁 Get 1 free Credit on sign-up'}
+          </div>
         )}
 
         <div style={{ textAlign: 'center', marginTop: 24, fontSize: 12, color: 'rgba(200,195,220,0.4)' }}>

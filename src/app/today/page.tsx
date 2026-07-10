@@ -155,9 +155,9 @@ const MOON_PHASE_NAMES: Record<string, Record<string, string>> = {
 const UI_TEXT = {
   en: {
     tabs: [
-      { id: 'tarot' as ActiveTab,     label: '🃏 Daily Tarot' },
-      { id: 'horoscope' as ActiveTab, label: '🌙 Horoscope' },
-      { id: 'chinese' as ActiveTab,   label: '☯ Chinese Zodiac' },
+      { id: 'tarot' as ActiveTab,     icon: '🃏', label: 'Tarot' },
+      { id: 'horoscope' as ActiveTab, icon: '🌙', label: 'Horoscope' },
+      { id: 'chinese' as ActiveTab,   icon: '☯', label: 'Zodiac' },
     ],
     freeBadge: 'FREE — No login required',
     signIn: 'Sign in →',
@@ -194,9 +194,9 @@ const UI_TEXT = {
   },
   ko: {
     tabs: [
-      { id: 'tarot' as ActiveTab,     label: '🃏 오늘의 타로' },
-      { id: 'horoscope' as ActiveTab, label: '🌙 오늘의 별자리' },
-      { id: 'chinese' as ActiveTab,   label: '☯ 오늘의 띠별 운세' },
+      { id: 'tarot' as ActiveTab,     icon: '🃏', label: '타로' },
+      { id: 'horoscope' as ActiveTab, icon: '🌙', label: '별자리' },
+      { id: 'chinese' as ActiveTab,   icon: '☯', label: '띠별 운세' },
     ],
     freeBadge: '무료 — 로그인 불필요',
     signIn: '로그인 →',
@@ -233,9 +233,9 @@ const UI_TEXT = {
   },
   ja: {
     tabs: [
-      { id: 'tarot' as ActiveTab,     label: '🃏 今日のタロット' },
-      { id: 'horoscope' as ActiveTab, label: '🌙 今日の星座占い' },
-      { id: 'chinese' as ActiveTab,   label: '☯ 今日の干支占い' },
+      { id: 'tarot' as ActiveTab,     icon: '🃏', label: 'タロット' },
+      { id: 'horoscope' as ActiveTab, icon: '🌙', label: '星座' },
+      { id: 'chinese' as ActiveTab,   icon: '☯', label: '干支' },
     ],
     freeBadge: '無料 — ログイン不要',
     signIn: 'ログイン →',
@@ -538,28 +538,32 @@ export default function TodayFortunePage() {
 
         {/* ── Tab bar ──────────────────────────────────────────── */}
         <div style={{
-          display: 'flex',
-          borderBottom: '2px solid var(--border)',
-          margin: '14px 0 0',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: 10,
+          padding: '14px 20px 0',
         }}>
           {ui.tabs.map(tab => {
             const active = activeTab === tab.id
             return (
               <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
-                flex: 1,
-                padding: '12px 4px',
-                background: active ? 'rgba(201,168,76,0.06)' : 'transparent',
-                border: 'none',
-                borderBottom: active ? '2px solid var(--gold)' : '2px solid transparent',
-                marginBottom: -2,
-                color: active ? '#fff' : 'var(--text-muted)',
-                fontSize: 11,
-                fontWeight: active ? 700 : 400,
+                padding: '14px 4px 12px',
+                background: active ? 'rgba(201,168,76,0.14)' : 'rgba(255,255,255,0.04)',
+                border: active ? '2px solid var(--gold)' : '2px solid rgba(255,255,255,0.08)',
+                borderRadius: 14,
+                color: active ? 'var(--gold)' : 'var(--text-muted)',
+                fontSize: 13,
+                fontWeight: 700,
                 cursor: 'pointer',
                 transition: 'all 0.18s',
-                letterSpacing: 0.2,
                 whiteSpace: 'nowrap',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 6,
+                boxShadow: active ? '0 0 14px rgba(201,168,76,0.25)' : 'none',
               }}>
+                <span style={{ fontSize: 24, lineHeight: 1 }}>{tab.icon}</span>
                 {tab.label}
               </button>
             )
