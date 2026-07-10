@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { apiPost } from '@/lib/api'
+import { createShare, birthDateStr } from '@/lib/firestore'
 import { BirthData } from './BirthForm'
 import { usePricing } from '@/hooks/usePricing'
 
@@ -1062,10 +1063,29 @@ function ZodiacBadge({ sign }: { sign: string }) {
   )
 }
 
-function ShareButton({ shareId }: { shareId?: string }) {
+function ShareButton({ shareId: shareIdProp, raw, birthData }: { shareId?: string; raw?: unknown; birthData?: BirthData }) {
   const t = useTranslations('reading')
   const [msg, setMsg] = useState('')
   const [loading, setLoading] = useState(false)
+  const [shareId, setShareId] = useState<string | null>(shareIdProp ?? null)
+
+  // 공유 레코드를 미리 생성 — 클릭 시점에 await하면 iOS Safari가 navigator.share의
+  // 사용자 제스처 컨텍스트를 잃어 공유가 거부될 수 있음
+  useEffect(() => {
+    if (shareIdProp || !raw) return
+    let cancelled = false
+    createShare({
+      reading_type: 'reading',
+      name: birthData?.name ?? '',
+      birth_date: birthData ? birthDateStr(birthData.year, birthData.month, birthData.day) : '',
+      birth_city: birthData?.city ?? '',
+      result: raw,
+      birth_data: birthData ?? null,
+    }).then(id => { if (!cancelled && id) setShareId(id) })
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   async function handleShare() {
     if (loading) return
     setLoading(true)
@@ -1494,7 +1514,7 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
         )}
         {birthData && <NatalChartViewer birthData={birthData} />}
         {!isSharedView && birthData && <ScenarioButton birthData={birthData} />}
-        {!isSharedView && userEmail && <ShareButton shareId={shareId} />}
+        {!isSharedView && userEmail && <ShareButton shareId={shareId} raw={raw} birthData={birthData} />}
         <button onClick={onReset} style={{ background:'none', border:'1px solid var(--border)', color:'var(--text-muted)', borderRadius:50, padding:12, fontSize:14, cursor:'pointer' }}>
           {t('new_reading')}
         </button>
