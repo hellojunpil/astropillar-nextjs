@@ -1,11 +1,11 @@
 # AstroPillar — 프로젝트 레퍼런스
 
-> **마지막 작업: 2026-06-27 세션94 — 🎉 카카오페이 최종 승인 (CID CA19786125)**
+> ⚠️ **정식 레퍼런스는 `E:\My Team\.claude\CLAUDE.md`. 이 파일 아래 세션 로그(세션83~94)는 히스토리 보존용.**
+>
+> **마지막 작업: 2026-06-28 — 결제 라이브 전환 상태 점검 + 문서 일치화**
 > **방향: 앱 출시(iOS/Android) 포기 → 웹 결제 집중. 한국=카카오페이 단일 / 일본·영어=Gumroad**
-> **다음 할 일 (STEP1부터):**
-> **  STEP1 — 포트원 콘솔 라이브 채널 생성 (CID 입력 → 채널키/StoreID/API Secret 복사)**
-> **  STEP2 — Vercel env 3개 라이브 키 교체 + Redeploy**
-> **  STEP3 — astropillar.com/ko/buy 카카오페이 ₩990 실결제 테스트**
+> **🎉 카카오페이 최종 승인 (CID CA19786125)**
+> **결제 라이브 전환: ✅ STEP1(라이브 채널) ✅ STEP2(Vercel env 교체) — ⏭️ STEP3(실결제 테스트)만 남음**
 
 ---
 
@@ -110,8 +110,8 @@ astropillar.com   → Next.js 앱 (Vercel) ← 이 프로젝트
 FastAPI 백엔드    → Google Cloud Run (D:\snap pillar\main.py)
 Firebase Auth     → 로그인 (이메일 + Google OAuth)
 Firestore         → 유저 데이터 (pouch_count 등)
-Gumroad           → 결제 (크레딧 구매, EN/JA)
-PortOne           → 결제 (KO, 심사 중)
+Gumroad           → 결제 (크레딧 구매, EN/JA) — 운영 중
+PortOne           → 결제 (KO, 카카오페이 단일) — 라이브 키 적용 완료, STEP3 실결제 테스트만 남음
 ```
 
 ---
@@ -128,9 +128,12 @@ NEXT_PUBLIC_GUMROAD_URL_1=https://junpil.gumroad.com/l/gveeli
 NEXT_PUBLIC_GUMROAD_URL_5=https://junpil.gumroad.com/l/idksv
 GUMROAD_SELLER_ID=0DwFvQOjnySBKZVYvOzIJg==
 NEXT_PUBLIC_GA4_ID=G-NSTDRL3GJN
-NEXT_PUBLIC_PORTONE_CHANNEL_KEY= ← 실연동 후 교체
-PORTONE_API_SECRET= ← 실연동 후 교체
-NEXT_PUBLIC_REVENUECAT_APPLE_KEY= ← RevenueCat iOS API Key (발급 대기 중 - P8 키 필요)
+# PortOne (카카오페이) — 라이브 키 적용 완료 (2026-06-27, CID CA19786125)
+NEXT_PUBLIC_PORTONE_STORE_ID=store-19d1b24b-edfc-474c-8e3f-d123c2913e12
+NEXT_PUBLIC_PORTONE_KAKAOPAY_CHANNEL_KEY=channel-key-d6d5b330-50e4-45fd-b4be-29e9d0bbb547
+NEXT_PUBLIC_PORTONE_TOSS_CHANNEL_KEY=channel-key-bca8a34f-939e-4261-a487-0ec11b6951e4  # env 준비됨, buy UI는 카카오페이만 노출
+PORTONE_API_SECRET=<V2 라이브 시크릿 — .env.local / Vercel에 적용됨>
+# RevenueCat (앱 IAP — 앱 출시 포기로 보류, 참고용)
 NEXT_PUBLIC_REVENUECAT_GOOGLE_KEY=goog_wtxdozluiAqxqYKIilVCyUSIkmB
 ```
 
@@ -412,6 +415,8 @@ cd "D:\snap pillar" && gcloud run deploy snap-pillar-api --source . --project sn
 
 ## 다음 작업 우선순위
 
+> ⚠️ 아래는 옛 방향(앱 출시) 기준 히스토리. **현재 우선순위는 `E:\My Team\.claude\CLAUDE.md`의 "다음 작업 우선순위" 참조 — 결제 STEP3(카카오페이 실결제 테스트)가 최우선.**
+
 **앱 출시 관련 (Android)**
 1. ~~manifest.json / icon-512.png 404 수정~~ ✅
 2. ~~twa-manifest.json localhost URL → astropillar.com 교체~~ ✅
@@ -471,17 +476,17 @@ cd "D:\snap pillar" && gcloud run deploy snap-pillar-api --source . --project sn
 
 ---
 
-## 결제 현황 (2026-05-09)
+## 결제 현황 (2026-06-28)
 
 | 지역 | 방식 | 상태 |
 |------|------|------|
-| KO | PortOne (KG이니시스 + KakaoPay) | 심사 중 |
-| JA | Gumroad ($0.99/$4.95) | 운영 중 |
+| KO | PortOne (카카오페이 단일) | 🎉 승인 완료 (CID CA19786125) + STEP1·2 완료 — ⏭️ STEP3 실결제 테스트만 남음 |
+| JA | Gumroad (¥100/¥400) | 운영 중 |
 | EN | Gumroad ($0.99/$4.95) | 운영 중 |
 
-**일본 결제 PG 조사 결과:**
-- KOMOJU: 1순위 후보 (한국 개인사업자 가능, 점성술 금지 없음) — 이메일 미발송
-- Payverse, Payhip: 2~3순위 후보
+> 정식 결제 절차/키는 `E:\My Team\.claude\CLAUDE.md` 결제 현황 참조.
+> 카카오페이 CID CA19786125 / 사업자 4967400629 / 상호 필랩 / 월 정산한도 50만원.
+> 아래 KG이니시스·KOMOJU·RevenueCat 관련 기록은 옛 방향(앱 출시) 히스토리.
 
 ---
 
