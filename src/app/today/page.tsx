@@ -370,12 +370,31 @@ export default function TodayFortunePage() {
   }
 
   async function shareReading(label: string, type: 'tarot' | 'horoscope' | 'chinese', imgFile: string) {
-    const shareUrl = `https://astropillar.com/today/share?type=${encodeURIComponent(type)}&id=${encodeURIComponent(imgFile)}&label=${encodeURIComponent(label)}`
-    const text = type === 'tarot'
-      ? `✦ I drew "${label}" from the Major Arcana today — what does your card say?`
-      : type === 'horoscope'
-      ? `✦ My ${label} horoscope for today has been revealed ✦`
-      : `✦ Year of the ${label} — today's fortune revealed ✦`
+    // 별자리/띠는 EN 키로 넘어오므로 뷰어 언어로 표시명 변환
+    const displayLabel = type === 'horoscope'
+      ? HOROSCOPE_NAMES[locale as keyof typeof HOROSCOPE_NAMES]?.[label] ?? label
+      : type === 'chinese'
+      ? CHINESE_NAMES[locale as keyof typeof CHINESE_NAMES]?.[label] ?? label
+      : label
+    const localePrefix = locale === 'en' ? '' : `/${locale}`
+    const shareUrl = `https://astropillar.com${localePrefix}/today/share?type=${encodeURIComponent(type)}&id=${encodeURIComponent(imgFile)}&label=${encodeURIComponent(displayLabel)}`
+    const text = locale === 'ko'
+      ? (type === 'tarot'
+        ? `✦ 오늘 메이저 아르카나에서 "${displayLabel}" 카드를 뽑았어요 — 당신의 카드는?`
+        : type === 'horoscope'
+        ? `✦ 오늘의 ${displayLabel} 운세가 공개됐어요 ✦`
+        : `✦ ${displayLabel}띠 — 오늘의 운세 공개 ✦`)
+      : locale === 'ja'
+      ? (type === 'tarot'
+        ? `✦ 今日メジャーアルカナから「${displayLabel}」を引きました — あなたのカードは？`
+        : type === 'horoscope'
+        ? `✦ 今日の${displayLabel}の運勢が公開されました ✦`
+        : `✦ ${displayLabel}年生まれ — 今日の運勢公開 ✦`)
+      : (type === 'tarot'
+        ? `✦ I drew "${displayLabel}" from the Major Arcana today — what does your card say?`
+        : type === 'horoscope'
+        ? `✦ My ${displayLabel} horoscope for today has been revealed ✦`
+        : `✦ Year of the ${displayLabel} — today's fortune revealed ✦`)
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const nav = navigator as any
