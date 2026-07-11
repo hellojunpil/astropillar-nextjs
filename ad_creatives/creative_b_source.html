@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1350px; overflow: hidden; }
+  body {
+    background: #0a0a0f;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-family: Georgia, "Times New Roman", serif;
+  }
+  /* sparse star field — barely there */
+  .star { position: absolute; border-radius: 50%; background: #C9A84C; }
+
+  .main {
+    width: 860px;
+    text-align: center;
+    position: relative;
+    z-index: 2;
+  }
+  .headline {
+    color: #f5f0e6;
+    font-size: 86px;
+    line-height: 1.22;
+    font-weight: 400;
+    letter-spacing: -0.5px;
+  }
+  .headline em {
+    font-style: italic;
+    color: #C9A84C;
+  }
+  .divider {
+    width: 70px; height: 2px; background: #C9A84C; opacity: .6;
+    margin: 70px auto 64px;
+  }
+  .answer {
+    color: #8f8f9a;
+    font-size: 37px;
+    line-height: 1.5;
+    font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    font-weight: 400;
+  }
+  .answer b {
+    color: #C9A84C;
+    font-weight: 600;
+  }
+  .foot {
+    position: absolute;
+    bottom: 64px;
+    left: 0; right: 0;
+    text-align: center;
+    color: #5a5a66;
+    font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    font-size: 24px;
+    letter-spacing: 5px;
+  }
+  .foot span { color: #C9A84C; }
+</style>
+</head>
+<body>
+  <div class="star" style="top:8%;  left:12%; width:3px; height:3px; opacity:.5"></div>
+  <div class="star" style="top:14%; left:78%; width:2px; height:2px; opacity:.4"></div>
+  <div class="star" style="top:22%; left:31%; width:2px; height:2px; opacity:.3"></div>
+  <div class="star" style="top:6%;  left:55%; width:2px; height:2px; opacity:.35"></div>
+  <div class="star" style="top:83%; left:18%; width:3px; height:3px; opacity:.4"></div>
+  <div class="star" style="top:76%; left:86%; width:2px; height:2px; opacity:.5"></div>
+  <div class="star" style="top:90%; left:64%; width:2px; height:2px; opacity:.3"></div>
+  <div class="star" style="top:38%; left:6%;  width:2px; height:2px; opacity:.3"></div>
+  <div class="star" style="top:52%; left:93%; width:3px; height:3px; opacity:.35"></div>
+
+  <div class="main">
+    <div class="headline">Mercury retrograde<br>is not why<br>he didn&rsquo;t text back.</div>
+    <div class="divider"></div>
+    <div class="answer">Want the real answer? Ask your full chart —<br>Western astrology <b>+</b> Eastern Four Pillars.<br><br><b>99&cent;.</b> No subscription.</div>
+  </div>
+
+  <div class="foot">ASTROPILLAR<span>.</span>COM</div>
+</body>
+</html>
