@@ -9,6 +9,7 @@ import { apiPost } from '@/lib/api'
 import { gtagEvent } from '@/lib/gtag'
 import { saveReading, createShare, getCachedReading, getPeople, savePerson, birthDateStr, SavedPerson } from '@/lib/firestore'
 import ReadingLoader from '@/components/ReadingLoader'
+import { monthOptionLabel, timeRangeLabel } from '@/lib/birthLabels'
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 const TIME_RANGES: { label: string; hour: number | null; minute: number }[] = [
@@ -302,7 +303,7 @@ export default function CompatibilityPage() {
                 <label style={labelStyle}>{t('birth_date_label')}</label>
                 <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 3fr', gap: 8 }}>
                   <select style={inputStyle} value={pMonth} onChange={e => setPMonth(e.target.value)}>
-                    {MONTHS.map((m, i) => <option key={i} value={i+1}>{m}</option>)}
+                    {MONTHS.map((_, i) => <option key={i} value={i+1}>{monthOptionLabel(i, locale)}</option>)}
                   </select>
                   <input style={inputStyle} placeholder={t('day_placeholder')} type="number" min={1} max={31} value={pDay} onChange={e => setPDay(e.target.value)} required />
                   <input style={inputStyle} placeholder={t('year_placeholder')} type="number" min={1900} max={2025} value={pYear} onChange={e => setPYear(e.target.value)} required />
@@ -311,7 +312,7 @@ export default function CompatibilityPage() {
               <div>
                 <label style={labelStyle}>{t('birth_time_label')} <span style={{ color: 'var(--text-muted)', textTransform: 'none', letterSpacing: 0 }}>({t('optional')})</span></label>
                 <select style={inputStyle} value={pHourIndex} onChange={e => setPHourIndex(parseInt(e.target.value))}>
-                  {TIME_RANGES.map((tr, i) => <option key={i} value={i}>{tr.label}</option>)}
+                  {TIME_RANGES.map((tr, i) => <option key={i} value={i}>{timeRangeLabel(tr.label, locale)}</option>)}
                 </select>
               </div>
               <div>

@@ -507,7 +507,7 @@ export default function RelationshipPage() {
                 if (i < 4 && card) {
                   return <CardSection key={i} card={card} positionLabel={pos[i].label} positionDesc={pos[i].desc} content={sec.content} defaultOpen={i === 0} />
                 }
-                return <Section key={i} title={sec.title ?? `Section ${i + 1}`} content={sec.content} defaultOpen={i === 4} />
+                return <Section key={i} title={localizeTarotTitle(sec.title ?? `Section ${i + 1}`, locale)} content={sec.content} defaultOpen={i === 4} />
               })}
             </div>
 
@@ -532,7 +532,7 @@ export default function RelationshipPage() {
               <div className="card" style={{ padding: '0 20px', marginBottom: 16 }}>
                 <p style={{ color: 'var(--gold)', fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', padding: '16px 0 8px' }}>{t.scenarioLabel}</p>
                 {parseResult(scenarioText).map((sec, i) => (
-                  <Section key={i} title={sec.title ?? `Section ${i + 1}`} content={sec.content} defaultOpen={i === 0} />
+                  <Section key={i} title={localizeTarotTitle(sec.title ?? `Section ${i + 1}`, locale)} content={sec.content} defaultOpen={i === 0} />
                 ))}
               </div>
             )}

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { apiPost } from '@/lib/api'
 import { createShare, birthDateStr } from '@/lib/firestore'
+import { zodiacSignName } from '@/lib/birthLabels'
 import { BirthData } from './BirthForm'
 import { usePricing } from '@/hooks/usePricing'
 
@@ -1282,7 +1283,7 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
   const activeYourSignLabel = isCompatibility
     ? ((data[`${activePfx}_day_master_label`] as string) ?? '')
     : yourSignLabel
-  const activeYourSignName = activeYourSignSun ? activeYourSignSun.charAt(0).toUpperCase() + activeYourSignSun.slice(1) : ''
+  const activeYourSignName = activeYourSignSun ? zodiacSignName(activeYourSignSun.charAt(0).toUpperCase() + activeYourSignSun.slice(1), locale) : ''
 
   // COMPAT_SCORES
   const compatScores = data.compatibility_scores as Record<string, {label:string; score:number} | number> | undefined

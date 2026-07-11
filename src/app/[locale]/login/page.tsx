@@ -27,6 +27,18 @@ function LoginContent() {
   const t = useTranslations('login')
   const searchParams = useSearchParams()
   const initialMode: Mode = searchParams.get('tab') === 'signup' ? 'signup' : 'login'
+  // returnUrl: 같은 사이트 경로만 허용 (open redirect 방지). 로케일 접두어가 이미 포함된
+  // 전체 경로이므로 next-intl 라우터 대신 location으로 이동한다.
+  const rawReturnUrl = searchParams.get('returnUrl')
+  const returnUrl = rawReturnUrl && rawReturnUrl.startsWith('/') && !rawReturnUrl.startsWith('//') ? rawReturnUrl : null
+
+  function goAfterAuth() {
+    if (returnUrl) {
+      window.location.assign(returnUrl)
+    } else {
+      router.push('/menu')
+    }
+  }
   const [mode, setMode] = useState<Mode>(initialMode)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -72,12 +84,12 @@ function LoginContent() {
       if (mode === 'login') {
         await signInWithEmailAndPassword(auth, email, password)
         gtagEvent('login', { method: 'email' })
-        router.push('/menu')
+        goAfterAuth()
       } else {
         const cred = await createUserWithEmailAndPassword(auth, email, password)
         await registerUser(cred.user.email!)
         gtagEvent('sign_up', { method: 'email' })
-        router.push('/menu')
+        goAfterAuth()
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : ''
@@ -110,7 +122,7 @@ function LoginContent() {
     } else {
       gtagEvent('login', { method })
     }
-    router.push('/menu')
+    goAfterAuth()
   }
 
   async function handleSocial(provider: typeof googleProvider, method: string) {

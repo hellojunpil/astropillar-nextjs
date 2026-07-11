@@ -13,6 +13,9 @@ import ReadingResult, { parseResult } from '@/components/ReadingResult'
 import { cardImageUrl } from '@/lib/tarotDeck'
 import { gtagEvent } from '@/lib/gtag'
 import BottomNav from '@/components/BottomNav'
+import { useLocale } from 'next-intl'
+import { localizeTarotTitle } from '@/lib/tarotTitles'
+import { monthOptionLabel, timeRangeLabel } from '@/lib/birthLabels'
 
 const TAROT_POSITIONS: Record<string, { label: string; desc: string }[]> = {
   tarot_three_card: [
@@ -38,6 +41,64 @@ const TAROT_POSITIONS: Record<string, { label: string; desc: string }[]> = {
     { label: 'Hopes & Fears', desc: 'What you want & dread' },
     { label: 'Where This Is Heading', desc: 'The outcome of this path' },
   ],
+}
+
+// 타로 페이지들의 POSITIONS_MAP과 동일한 라벨 (라이브러리 상세 현지화용)
+const TAROT_POSITIONS_KO: Record<string, { label: string; desc: string }[]> = {
+  tarot_three_card: [
+    { label: '과거', desc: '지금을 만든 것' },
+    { label: '현재', desc: '지금 있는 곳' },
+    { label: '미래', desc: '이 흐름의 끝' },
+  ],
+  tarot_relationship: [
+    { label: '나', desc: '나의 에너지' },
+    { label: '상대방', desc: '상대방의 에너지' },
+    { label: '연결', desc: '우리의 관계' },
+    { label: '조언', desc: '무엇을 해야 하는가' },
+  ],
+  tarot_celtic_cross: [
+    { label: '현재 상황', desc: '상황의 핵심' },
+    { label: '십자 (장애물)', desc: '숨겨진 역학' },
+    { label: '뿌리 (기초)', desc: '어떻게 시작됐는가' },
+    { label: '최근 과거', desc: '방금 지나간 것' },
+    { label: '목표', desc: '의식적 목표' },
+    { label: '내면', desc: '무의식의 동력' },
+    { label: '나의 시각', desc: '자기 인식' },
+    { label: '외부 영향', desc: '외부의 영향들' },
+    { label: '희망과 두려움', desc: '원하는 것과 두려운 것' },
+    { label: '결과', desc: '이 길의 결말' },
+  ],
+}
+const TAROT_POSITIONS_JA: Record<string, { label: string; desc: string }[]> = {
+  tarot_three_card: [
+    { label: '過去', desc: '今を作ったもの' },
+    { label: '現在', desc: '今のあなた' },
+    { label: '未来', desc: 'この流れの先' },
+  ],
+  tarot_relationship: [
+    { label: '私', desc: 'あなたのエネルギー' },
+    { label: '相手', desc: '相手のエネルギー' },
+    { label: 'つながり', desc: '二人の関係' },
+    { label: 'アドバイス', desc: 'すべきこと' },
+  ],
+  tarot_celtic_cross: [
+    { label: '現在の状況', desc: '状況の核心' },
+    { label: '十字（障害）', desc: '隠れた力学' },
+    { label: '根（基盤）', desc: 'どのように始まったか' },
+    { label: '直近の過去', desc: '通り過ぎたもの' },
+    { label: '目標', desc: '意識的な目標' },
+    { label: '内面', desc: '無意識の動力' },
+    { label: '自己認識', desc: '自分の見方' },
+    { label: '外部の影響', desc: '外部の影響' },
+    { label: '希望と恐れ', desc: '望むことと恐れること' },
+    { label: '結果', desc: 'この道の結末' },
+  ],
+}
+
+function tarotPositions(readingType: string, locale: string): { label: string; desc: string }[] {
+  if (locale === 'ko') return TAROT_POSITIONS_KO[readingType] ?? TAROT_POSITIONS[readingType] ?? []
+  if (locale === 'ja') return TAROT_POSITIONS_JA[readingType] ?? TAROT_POSITIONS[readingType] ?? []
+  return TAROT_POSITIONS[readingType] ?? []
 }
 
 function TarotCardAccordion({ cardName, cardFile, posLabel, posDesc, content, defaultOpen }: {
@@ -94,7 +155,8 @@ function TarotResultView({ readingType, tarotResult }: {
   readingType: string
   tarotResult: { content_text?: string; cards?: { name?: string; position?: string; file?: string }[]; question?: string; scenario_question?: string; spread_type?: string }
 }) {
-  const positions = TAROT_POSITIONS[readingType] ?? []
+  const locale = useLocale()
+  const positions = tarotPositions(readingType, locale)
   const cards = tarotResult.cards ?? []
   const sections = tarotResult.content_text ? parseResult(tarotResult.content_text) : []
   const cardCount = positions.length
@@ -156,7 +218,7 @@ function TarotResultView({ readingType, tarotResult }: {
             return (
               <TarotSectionAccordion
                 key={i}
-                title={sec.title ?? `Section ${i + 1}`}
+                title={localizeTarotTitle(sec.title ?? `Section ${i + 1}`, locale)}
                 content={sec.content}
                 defaultOpen={i === cardCount}
               />
@@ -219,6 +281,7 @@ const TIME_RANGES: { label: string; hour: number | null; minute: number }[] = [
 
 function LibraryPageInner() {
   const router = useRouter()
+  const locale = useLocale()
   const searchParams = useSearchParams()
   const { user, loading } = useAuth()
   const [tab, setTab] = useState<'history' | 'persons'>(() =>
@@ -285,7 +348,8 @@ function LibraryPageInner() {
     if (!r.created_at) return ''
     const d = (r.created_at as { toDate?: () => Date }).toDate?.()
     if (!d) return ''
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    const dateLocale = locale === 'ko' ? 'ko-KR' : locale === 'ja' ? 'ja-JP' : 'en-US'
+    return d.toLocaleDateString(dateLocale, { month: 'short', day: 'numeric', year: 'numeric' })
   }
 
   if (loading) return (
@@ -425,7 +489,7 @@ function LibraryPageInner() {
                           {p.birth_date} · {p.sex === 'F' ? '♀' : '♂'} · {p.birth_city}
                         </p>
                         <p style={{ color: 'var(--text-muted)', fontSize: 11, marginTop: 2 }}>
-                          {p.birth_time_label ?? (p.hour !== null && p.hour !== undefined ? `${String(p.hour).padStart(2,'0')}:${String(p.minute ?? 0).padStart(2,'0')}` : 'Birth time unknown')}
+                          {p.birth_time_label ? timeRangeLabel(p.birth_time_label, locale) : (p.hour !== null && p.hour !== undefined ? `${String(p.hour).padStart(2,'0')}:${String(p.minute ?? 0).padStart(2,'0')}` : locale === 'ko' ? '태어난 시간 모름' : locale === 'ja' ? '出生時間不明' : 'Birth time unknown')}
                         </p>
                       </div>
                       <button onClick={() => p.id && handleDeletePerson(p.id)} style={{
@@ -462,7 +526,7 @@ function LibraryPageInner() {
                       <label style={labelStyle}>Birth Date</label>
                       <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 3fr', gap: 8 }}>
                         <select style={inputStyle} value={pMonth} onChange={e => setPMonth(e.target.value)}>
-                          {MONTHS.map((m, i) => <option key={i} value={i+1}>{m}</option>)}
+                          {MONTHS.map((_, i) => <option key={i} value={i+1}>{monthOptionLabel(i, locale)}</option>)}
                         </select>
                         <input style={inputStyle} placeholder="Day" type="number" min={1} max={31} value={pDay} onChange={e => setPDay(e.target.value)} required />
                         <input style={inputStyle} placeholder="Year" type="number" min={1900} max={2025} value={pYear} onChange={e => setPYear(e.target.value)} required />
@@ -471,7 +535,7 @@ function LibraryPageInner() {
                     <div>
                       <label style={labelStyle}>Birth Time <span style={{ color: 'var(--text-muted)', textTransform: 'none', letterSpacing: 0 }}>(optional)</span></label>
                       <select style={inputStyle} value={pHourIndex} onChange={e => setPHourIndex(parseInt(e.target.value))}>
-                        {TIME_RANGES.map((t, i) => <option key={i} value={i}>{t.label}</option>)}
+                        {TIME_RANGES.map((t, i) => <option key={i} value={i}>{timeRangeLabel(t.label, locale)}</option>)}
                       </select>
                     </div>
                     <div>

@@ -1,7 +1,8 @@
 'use client'
 import { useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { SavedPerson } from '@/lib/firestore'
+import { monthOptionLabel, timeRangeLabel } from '@/lib/birthLabels'
 
 export interface BirthData {
   name: string
@@ -64,6 +65,7 @@ const labelStyle: React.CSSProperties = {
 
 export default function BirthForm({ onSubmit, loading, submitLabel, costBadge, savedPersons, onSavePerson }: Props) {
   const t = useTranslations('reading')
+  const locale = useLocale()
   const [name, setName] = useState('')
   const [year, setYear] = useState('')
   const [month, setMonth] = useState('1')
@@ -178,7 +180,7 @@ export default function BirthForm({ onSubmit, loading, submitLabel, costBadge, s
         <label style={labelStyle}>{t('birth_date_label')}</label>
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 3fr', gap: 8 }}>
           <select style={inputStyle} value={month} onChange={e => setMonth(e.target.value)}>
-            {MONTHS.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
+            {MONTHS.map((_, i) => <option key={i} value={i + 1}>{monthOptionLabel(i, locale)}</option>)}
           </select>
           <input style={inputStyle} placeholder={t('day_placeholder')} type="number" min={1} max={31} value={day} onChange={e => setDay(e.target.value)} />
           <input style={inputStyle} placeholder={t('year_placeholder')} type="number" min={1900} max={2025} value={year} onChange={e => setYear(e.target.value)} />
@@ -189,7 +191,7 @@ export default function BirthForm({ onSubmit, loading, submitLabel, costBadge, s
         <label style={labelStyle}>{t('birth_time_label')} <span style={{ color: 'var(--text-muted)', textTransform: 'none', letterSpacing: 0 }}>({t('birth_time_optional')})</span></label>
         <select style={inputStyle} value={hourIndex} onChange={e => setHourIndex(parseInt(e.target.value))}>
           {TIME_RANGES.map((tr, i) => (
-            <option key={i} value={i}>{tr.label}</option>
+            <option key={i} value={i}>{timeRangeLabel(tr.label, locale)}</option>
           ))}
         </select>
       </div>

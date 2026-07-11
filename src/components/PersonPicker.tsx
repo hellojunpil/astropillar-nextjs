@@ -1,7 +1,8 @@
 'use client'
 import { useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { SavedPerson, savePerson, birthDateStr } from '@/lib/firestore'
+import { monthOptionLabel, timeRangeLabel } from '@/lib/birthLabels'
 import BirthForm, { BirthData } from './BirthForm'
 
 export function personToBirthData(p: SavedPerson): BirthData {
@@ -9,9 +10,11 @@ export function personToBirthData(p: SavedPerson): BirthData {
   return { name: p.name, year, month, day, hour: p.hour ?? null, minute: p.minute ?? null, sex: p.sex, city: p.birth_city }
 }
 
-function birthTimeLabel(p: SavedPerson) {
-  if (p.birth_time_label) return p.birth_time_label
-  if (p.hour === null || p.hour === undefined) return 'Birth time unknown'
+function birthTimeLabel(p: SavedPerson, locale: string) {
+  if (p.birth_time_label) return timeRangeLabel(p.birth_time_label, locale)
+  if (p.hour === null || p.hour === undefined) {
+    return locale === 'ko' ? '태어난 시간 모름' : locale === 'ja' ? '出生時間不明' : 'Birth time unknown'
+  }
   return `${String(p.hour).padStart(2,'0')}:${String(p.minute ?? 0).padStart(2,'0')}`
 }
 
@@ -59,6 +62,7 @@ export default function PersonPicker({
   costBadge, headerSlot, userEmail, onPeopleChange,
 }: Props) {
   const t = useTranslations('reading')
+  const locale = useLocale()
   const [mode, setMode] = useState<'select' | 'manual'>('select')
   const [selectedId, setSelectedId] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
@@ -125,7 +129,7 @@ export default function PersonPicker({
         <label style={labelStyle}>{t('birth_date_label')}</label>
         <div style={{ display:'grid', gridTemplateColumns:'2fr 2fr 3fr', gap:8 }}>
           <select style={inputStyle} value={pMonth} onChange={e => setPMonth(e.target.value)}>
-            {MONTHS.map((m, i) => <option key={i} value={i+1}>{m}</option>)}
+            {MONTHS.map((_, i) => <option key={i} value={i+1}>{monthOptionLabel(i, locale)}</option>)}
           </select>
           <input style={inputStyle} placeholder={t('day_placeholder')} type="number" min={1} max={31} value={pDay} onChange={e => setPDay(e.target.value)} required />
           <input style={inputStyle} placeholder={t('year_placeholder')} type="number" min={1900} max={2025} value={pYear} onChange={e => setPYear(e.target.value)} required />
@@ -134,7 +138,7 @@ export default function PersonPicker({
       <div>
         <label style={labelStyle}>{t('birth_time_label')} <span style={{ color:'var(--text-muted)', textTransform:'none', letterSpacing:0 }}>({t('optional')})</span></label>
         <select style={inputStyle} value={pHourIndex} onChange={e => setPHourIndex(parseInt(e.target.value))}>
-          {TIME_RANGES.map((tr, i) => <option key={i} value={i}>{tr.label}</option>)}
+          {TIME_RANGES.map((tr, i) => <option key={i} value={i}>{timeRangeLabel(tr.label, locale)}</option>)}
         </select>
       </div>
       <div>
@@ -216,7 +220,7 @@ export default function PersonPicker({
                   <p style={{ color:'var(--text-muted)', fontSize:12, marginTop:4 }}>
                     {p.birth_date} · {p.sex === 'F' ? '♀' : '♂'} · {p.birth_city}
                   </p>
-                  <p style={{ color:'var(--text-muted)', fontSize:11, marginTop:2 }}>{birthTimeLabel(p)}</p>
+                  <p style={{ color:'var(--text-muted)', fontSize:11, marginTop:2 }}>{birthTimeLabel(p, locale)}</p>
                 </button>
               )
             })}
