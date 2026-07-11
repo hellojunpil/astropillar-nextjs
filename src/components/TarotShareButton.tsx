@@ -1,7 +1,14 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useLocale } from 'next-intl'
 import { gtagEvent } from '@/lib/gtag'
+import { createShare } from '@/lib/firestore'
+
+export interface TarotShareData {
+  reading_type: string
+  name: string
+  result: unknown
+}
 
 const SHARE_TEXT_MAP = {
   en: {
@@ -51,18 +58,38 @@ const SHARE_TEXT_MAP = {
   },
 }
 
-export default function TarotShareButton({ userEmail }: { userEmail: string }) {
+export default function TarotShareButton({ userEmail, share }: { userEmail: string; share?: TarotShareData | null }) {
   const [msg, setMsg] = useState('')
   const [loading, setLoading] = useState(false)
   const [showModal, setShowModal] = useState(false)
+  const [shareId, setShareId] = useState<string | null>(null)
+  const createdRef = useRef(false)
   const locale = useLocale()
   const t = SHARE_TEXT_MAP[locale as keyof typeof SHARE_TEXT_MAP] ?? SHARE_TEXT_MAP.en
+
+  // 공유 레코드를 미리 생성 — 클릭 시점에 await하면 iOS Safari가 공유 제스처를 거부할 수 있음
+  useEffect(() => {
+    if (!share || createdRef.current) return
+    createdRef.current = true
+    createShare({
+      reading_type: share.reading_type,
+      name: share.name,
+      birth_date: '',
+      birth_city: '',
+      result: share.result,
+    }).then(id => { if (id) setShareId(id) })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [share])
+
+  function shareLink() {
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://astropillar.com'
+    return shareId ? `${origin}/share/${shareId}` : origin
+  }
 
   async function handleShare() {
     if (loading || !userEmail) return
     setLoading(true)
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://astropillar.com'
-    const shareUrl = origin
+    const shareUrl = shareLink()
     try {
       if (navigator.share) {
         await navigator.share({ title: t.shareTitle, text: t.shareMsg, url: shareUrl })
@@ -75,9 +102,8 @@ export default function TarotShareButton({ userEmail }: { userEmail: string }) {
   }
 
   async function handleCopyLink() {
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://astropillar.com'
     try {
-      await navigator.clipboard.writeText(`${t.shareMsg} ${origin}`)
+      await navigator.clipboard.writeText(`${t.shareMsg} ${shareLink()}`)
       setMsg(t.copied)
     } catch {
       setMsg(t.copied)
@@ -87,16 +113,14 @@ export default function TarotShareButton({ userEmail }: { userEmail: string }) {
   }
 
   function handleTwitter() {
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://astropillar.com'
-    const text = encodeURIComponent(`${t.shareMsg} ${origin}`)
+    const text = encodeURIComponent(`${t.shareMsg} ${shareLink()}`)
     window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank')
     gtagEvent('share_click', { type: 'tarot', method: 'twitter' })
     setShowModal(false)
   }
 
   function handleInstagram() {
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://astropillar.com'
-    navigator.clipboard.writeText(`${t.shareMsg} ${origin}`)
+    navigator.clipboard.writeText(`${t.shareMsg} ${shareLink()}`)
       .then(() => setMsg(t.copiedInsta))
       .catch(() => setMsg(t.copyFail))
     gtagEvent('share_click', { type: 'tarot', method: 'instagram' })

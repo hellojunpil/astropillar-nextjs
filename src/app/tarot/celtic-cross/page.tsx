@@ -592,7 +592,15 @@ export default function CelticCrossPage() {
               </div>
             )}
 
-            <TarotShareButton userEmail={user?.email ?? ''} />
+            <TarotShareButton userEmail={user?.email ?? ''} share={gptText ? {
+              reading_type: 'tarot_celtic_cross',
+              name: question.trim() || 'Celtic Cross Reading',
+              result: {
+                content_text: gptText,
+                cards: slots.map((c, i) => ({ name: c?.name, position: pos[i].label, file: c?.file })),
+                question: question.trim(),
+              },
+            } : null} />
 
             <button onClick={() => {
               setPhase('question'); setQuestion(''); setDeck(shuffleDeck(FULL_DECK))
