@@ -56,6 +56,12 @@ function BuyContent() {
       .then(data => {
         if (data.ok) {
           refreshCredits(creditCount)
+          gtagEvent('purchase', {
+            transaction_id: paymentId,
+            value: locale === 'ja' ? PRICES_JPY[creditCount as 1 | 5] : PRICES_KRW[creditCount as 1 | 5],
+            currency: locale === 'ja' ? 'JPY' : 'KRW',
+            items: [{ item_id: `credits_${creditCount}`, item_name: `${creditCount} Credits`, quantity: 1 }],
+          })
           alert(locale === 'ko' ? `${creditCount} 크레딧이 충전되었습니다! 🎉` : locale === 'ja' ? `${creditCount}クレジットが追加されました！🎉` : `${creditCount} credits added! 🎉`)
           // URL 파라미터 제거
           window.history.replaceState({}, '', window.location.pathname)
@@ -190,6 +196,13 @@ function BuyContent() {
 
       // 크레딧 UI 갱신
       refreshCredits(creditCount)
+
+      gtagEvent('purchase', {
+        transaction_id: response.paymentId,
+        value: amount,
+        currency,
+        items: [{ item_id: `credits_${creditCount}`, item_name: `${creditCount} Credits`, quantity: 1 }],
+      })
 
       alert(locale === 'ko' ? `${creditCount} 크레딧이 충전되었습니다! 🎉` : locale === 'ja' ? `${creditCount}クレジットが追加されました！🎉` : `${creditCount} credits added! 🎉`)
     } catch (e) {
