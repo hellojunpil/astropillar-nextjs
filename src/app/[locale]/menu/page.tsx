@@ -6,7 +6,7 @@ import { useTranslations, useLocale } from 'next-intl'
 import Link from 'next/link'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
-import { apiGet } from '@/lib/api'
+import { apiGet, getPouchWithRetry } from '@/lib/api'
 import { gtagEvent } from '@/lib/gtag'
 import { usePricing } from '@/hooks/usePricing'
 import BottomNav from '@/components/BottomNav'
@@ -49,8 +49,10 @@ export default function MenuPage() {
         setIsLoggedIn(true)
         setEmail(user.email || '')
         try {
-          const data = await apiGet<{ pouch_count: number }>('/get_pouch', { email: user.email || '' })
+          const data = await apiGet<{ ok: boolean; pouch_count: number }>('/get_pouch', { email: user.email || '' })
           setCredits(data.pouch_count)
+          // 가입 직후 register_user보다 먼저 도착하면 user_not_found(0) — 백그라운드 재시도
+          if (!data.ok) void getPouchWithRetry(user.email || '').then(setCredits)
         } catch {
           setCredits(0)
         }
