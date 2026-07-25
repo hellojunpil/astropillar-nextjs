@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { apiPost } from '@/lib/api'
+
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || ''
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,34 +14,46 @@ export async function POST(req: NextRequest) {
     }
 
     const email = body.get('email')?.toString() || ''
-    const productId = body.get('product_permalink')?.toString() || ''
     const saleId = body.get('sale_id')?.toString() || ''
+    // Gumroad은 permalink(슬러그) 또는 product_permalink(전체 URL)로 옴 — 슬러그로 정규화
+    const rawPermalink = body.get('permalink')?.toString()
+      || body.get('product_permalink')?.toString() || ''
+    const slug = rawPermalink.split('/').pop()?.toLowerCase() || ''
 
     if (!email || !saleId) {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
     }
 
-    // Determine credit amount by product
     const gumroad1 = process.env.NEXT_PUBLIC_GUMROAD_URL_1 || ''
     const gumroad5 = process.env.NEXT_PUBLIC_GUMROAD_URL_5 || ''
-    const permalink1 = gumroad1.split('/').pop() || ''
-    const permalink5 = gumroad5.split('/').pop() || ''
+    const permalink1 = gumroad1.split('/').pop() || 'gveeli'
+    const permalink5 = gumroad5.split('/').pop() || 'idksv'
 
-    let amount = 0
-    if (productId === permalink1 || productId === 'gveeli') amount = 1
-    else if (productId === permalink5 || productId === 'idksv') amount = 5
+    let permalink = ''
+    if (slug === permalink1 || slug === 'gveeli') permalink = permalink1
+    else if (slug === permalink5 || slug === 'idksv') permalink = permalink5
 
-    if (amount === 0) {
+    if (!permalink) {
       return NextResponse.json({ error: 'Unknown product' }, { status: 400 })
     }
 
-    // Forward to FastAPI
-    await apiPost('/gumroad_webhook', {
+    // FastAPI /gumroad_webhook 계약: form-encoded + seller_id + permalink (JSON 아님)
+    const form = new URLSearchParams({
+      seller_id: sellerIdEnv,
       email,
       sale_id: saleId,
-      product_permalink: productId,
-      amount,
+      permalink,
     })
+    const res = await fetch(`${API_BASE}/gumroad_webhook`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: form.toString(),
+    })
+    if (!res.ok) {
+      const errText = await res.text()
+      console.error('Gumroad webhook forward failed:', errText)
+      return NextResponse.json({ error: 'Grant failed', detail: errText }, { status: 500 })
+    }
 
     return NextResponse.json({ success: true })
   } catch (e: unknown) {

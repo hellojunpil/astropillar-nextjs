@@ -33,9 +33,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       setUser(u)
       if (u.email) {
+        const email = u.email
         try {
-          const data = await apiGet<{ pouch_count: number }>('/get_pouch', { email: u.email })
+          const data = await apiGet<{ ok: boolean; pouch_count: number }>('/get_pouch', { email })
           setCredits(data.pouch_count)
+          if (!data.ok) {
+            // 가입 직후에는 register_user(웰컴 크레딧 지급)가 아직 유저 문서를
+            // 만들기 전이라 user_not_found(0)가 올 수 있음 — 백그라운드 재시도
+            void (async () => {
+              for (let i = 0; i < 4; i++) {
+                await new Promise(r => setTimeout(r, 1500))
+                try {
+                  const retry = await apiGet<{ ok: boolean; pouch_count: number }>('/get_pouch', { email })
+                  if (retry.ok) {
+                    setCredits(retry.pouch_count)
+                    return
+                  }
+                } catch { /* 다음 시도 */ }
+              }
+            })()
+          }
         } catch {
           setCredits(0)
         }
