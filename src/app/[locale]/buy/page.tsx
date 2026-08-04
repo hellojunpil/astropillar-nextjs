@@ -140,6 +140,11 @@ function BuyContent() {
       : (locale === 'ko' ? '5 크레딧 패키지' : locale === 'ja' ? '5クレジットパック' : '5 Credits Pack')
 
     gtagEvent('credit_purchase_click', { credits: String(creditCount), price: `${amount}${currency}`, method })
+    gtagEvent('begin_checkout', {
+      value: amount,
+      currency,
+      items: [{ item_id: `credits_${creditCount}`, item_name: `${creditCount} Credits`, quantity: 1 }],
+    })
 
     try {
       // PortOne browser SDK 동적 import
@@ -214,6 +219,11 @@ function BuyContent() {
   function handleGumroadBuy(creditCount: number, gumroadUrl: string) {
     const price = creditCount === 1 ? t('pack1_price') : t('pack5_price')
     gtagEvent('credit_purchase_click', { credits: String(creditCount), price })
+    gtagEvent('begin_checkout', {
+      value: locale === 'ja' ? PRICES_JPY[creditCount as 1 | 5] : parseFloat(price.replace(/[^0-9.]/g, '')) || 0,
+      currency: locale === 'ja' ? 'JPY' : 'USD',
+      items: [{ item_id: `credits_${creditCount}`, item_name: `${creditCount} Credits`, quantity: 1 }],
+    })
     window.open(gumroadUrl, '_blank')
   }
 

@@ -116,7 +116,14 @@ export default function BuyPage() {
               target="_blank"
               rel="noopener noreferrer"
               style={{ textDecoration: 'none' }}
-              onClick={() => gtagEvent('credit_purchase_click', { credits: pkg.credits, price: pkg.price })}
+              onClick={() => {
+                gtagEvent('credit_purchase_click', { credits: pkg.credits, price: pkg.price })
+                gtagEvent('begin_checkout', {
+                  value: parseFloat(pkg.price.replace(/[^0-9.]/g, '')) || 0,
+                  currency: 'USD',
+                  items: [{ item_id: `credits_${pkg.credits}`, item_name: `${pkg.credits} Credits`, quantity: 1 }],
+                })
+              }}
             >
               <div style={{
                 background: pkg.popular ? 'linear-gradient(135deg, #16213E 0%, #1a1a3e 100%)' : 'var(--card)',

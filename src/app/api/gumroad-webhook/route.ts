@@ -55,6 +55,39 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Grant failed', detail: errText }, { status: 500 })
     }
 
+    // Gumroad 결제는 외부 체크아웃이라 클라이언트 gtag가 못 잡음 → 서버에서 GA4 Measurement Protocol로 purchase 전송
+    // GA4_API_SECRET: GA4 관리 → 데이터 스트림 → Measurement Protocol API 비밀번호에서 발급 후 Vercel env에 등록
+    const ga4Id = process.env.NEXT_PUBLIC_GA4_ID || ''
+    const ga4Secret = process.env.GA4_API_SECRET || ''
+    if (ga4Id && ga4Secret) {
+      const cents = Number(body.get('price')?.toString() || '')
+      const currency = (body.get('currency')?.toString() || 'usd').toUpperCase()
+      const credits = permalink === permalink5 ? 5 : 1
+      try {
+        await fetch(`https://www.google-analytics.com/mp/collect?measurement_id=${ga4Id}&api_secret=${ga4Secret}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            client_id: `gumroad.${saleId}`,
+            events: [{
+              name: 'purchase',
+              params: {
+                transaction_id: saleId,
+                // Gumroad price는 센트 단위 (JPY 등 무소수점 통화는 그대로)
+                ...(Number.isFinite(cents) && cents > 0
+                  ? { value: currency === 'JPY' ? cents : cents / 100 }
+                  : {}),
+                currency,
+                items: [{ item_id: `credits_${credits}`, item_name: `${credits} Credits`, quantity: 1 }],
+              },
+            }],
+          }),
+        })
+      } catch (mpError) {
+        console.error('GA4 MP purchase failed:', mpError)
+      }
+    }
+
     return NextResponse.json({ success: true })
   } catch (e: unknown) {
     console.error('Gumroad webhook error:', e)
