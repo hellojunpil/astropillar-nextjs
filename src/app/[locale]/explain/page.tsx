@@ -73,28 +73,28 @@ function InnerItem({ id, symEl, title, sub, kws, desc, isYours, isPlanet }: {
   const [open, setOpen] = useState(isYours)
   const goldColor = isPlanet ? '#FF6B9D' : 'var(--gold)'
   return (
-    <div style={{ border:`1px solid ${isYours ? goldColor : 'rgba(201,168,76,0.2)'}`, borderRadius:10, marginBottom:6, overflow:'hidden' }}>
-      <div onClick={() => setOpen(o=>!o)} style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 14px', cursor:'pointer', background:'#1a2744', userSelect:'none' }}>
+    <div className="ex-item" style={{ border:`1px solid ${isYours ? goldColor : 'var(--line)'}`, borderRadius:14, overflow:'hidden', background:'rgba(17,22,40,0.6)', alignSelf:'start' }}>
+      <button type="button" aria-expanded={open} onClick={() => setOpen(o=>!o)} style={{ width:'100%', display:'flex', alignItems:'center', gap:12, padding:'14px 16px', cursor:'pointer', background:'transparent', border:0, color:'inherit', font:'inherit', textAlign:'left', minHeight:60 }}>
         {symEl}
         <div style={{ flex:1, minWidth:0 }}>
-          <p style={{ color:'#E8E4DC', fontSize:11, fontWeight:600 }}>{title}</p>
-          <p style={{ color:'rgba(232,228,220,0.55)', fontSize:10, fontStyle:'italic', marginTop:1 }}>{sub}</p>
+          <p style={{ color:'var(--ink)', fontSize:15, fontWeight:600 }}>{title}</p>
+          <p style={{ color:'var(--ink-2)', fontSize:13, marginTop:2 }}>{sub}</p>
         </div>
         {isYours && (
-          <span style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:7, letterSpacing:1.5, color:goldColor, border:`1px solid ${goldColor}40`, padding:'2px 6px', borderRadius:4, flexShrink:0 }}>
+          <span style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:11, fontWeight:700, letterSpacing:1.5, color:goldColor, border:`1px solid ${goldColor}60`, padding:'2px 8px', borderRadius:999, flexShrink:0 }}>
             YOURS
           </span>
         )}
-        <span style={{ fontSize:9, color:'rgba(232,228,220,0.55)', transform:open?'rotate(180deg)':'none', transition:'transform 0.22s', flexShrink:0 }}>▼</span>
-      </div>
+        <span className="material-icons" aria-hidden="true" style={{ fontSize:20, color:'var(--ink-3)', transform:open?'rotate(180deg)':'none', transition:'transform 0.22s', flexShrink:0 }}>expand_more</span>
+      </button>
       {open && (
-        <div style={{ padding:'0 14px 14px', background:'#1a2744', borderTop:'1px solid rgba(201,168,76,0.15)' }}>
+        <div style={{ padding:'0 16px 16px', borderTop:'1px solid var(--line)' }}>
           <div style={{ display:'flex', flexWrap:'wrap', gap:5, paddingTop:12, marginBottom:10 }}>
             {kws.map(k => (
-              <span key={k} style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:8, letterSpacing:1, color:goldColor, border:`1px solid ${goldColor}30`, borderRadius:20, padding:'2px 9px' }}>{k}</span>
+              <span key={k} style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:13, fontWeight:600, letterSpacing:0.5, color:goldColor, border:`1px solid ${goldColor}40`, borderRadius:20, padding:'2px 10px' }}>{k}</span>
             ))}
           </div>
-          <p style={{ fontSize:13, lineHeight:1.85, color:'rgba(232,228,220,0.55)', fontStyle:'italic' }}>{desc}</p>
+          <p style={{ fontSize:14.5, lineHeight:1.85, color:'var(--ink-2)' }}>{desc}</p>
         </div>
       )}
     </div>
@@ -106,17 +106,17 @@ function MainSection({ id, title, children, defaultOpen }: {
 }) {
   const [open, setOpen] = useState(defaultOpen ?? false)
   return (
-    <div style={{ border:'1px solid rgba(201,168,76,0.2)', borderRadius:14, marginBottom:10, overflow:'hidden' }}>
-      <div onClick={() => setOpen(o=>!o)} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'16px 18px', cursor:'pointer', background:'#16213E', userSelect:'none' }}>
-        <span style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:12, fontWeight:600, letterSpacing:1.5, color:'var(--gold)', textTransform:'uppercase' }}>{title}</span>
-        <span style={{ fontSize:11, color:'var(--gold)', transform:open?'rotate(180deg)':'none', transition:'transform 0.25s', flexShrink:0, marginLeft:10 }}>▼</span>
-      </div>
+    <section id={id} className="ap-glass" style={{ marginBottom:14, overflow:'hidden', borderRadius:20 }}>
+      <button type="button" aria-expanded={open} onClick={() => setOpen(o=>!o)} style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'space-between', padding:'20px 22px', cursor:'pointer', background:'transparent', border:0, color:'inherit', textAlign:'left', minHeight:64 }}>
+        <span style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:22, fontWeight:600, letterSpacing:0.5, color:'var(--gold-light)' }}>{title}</span>
+        <span className="material-icons" aria-hidden="true" style={{ fontSize:24, color:'var(--gold)', transform:open?'rotate(180deg)':'none', transition:'transform 0.25s', flexShrink:0, marginLeft:10 }}>expand_more</span>
+      </button>
       {open && (
-        <div style={{ background:'#16213E', borderTop:'1px solid rgba(201,168,76,0.15)' }}>
+        <div style={{ borderTop:'1px solid var(--line)', paddingBottom:4 }}>
           {children}
         </div>
       )}
-    </div>
+    </section>
   )
 }
 
@@ -161,7 +161,7 @@ function WuxingCanvas({ userElement }: { userElement: string }) {
       const grd = ctx.createRadialGradient(p.x,p.y,nr*0.3,p.x,p.y,nr*1.6)
       grd.addColorStop(0,el.color+'35'); grd.addColorStop(1,'transparent')
       ctx.beginPath(); ctx.arc(p.x,p.y,nr*1.6,0,Math.PI*2); ctx.fillStyle=grd; ctx.fill()
-      ctx.beginPath(); ctx.arc(p.x,p.y,nr,0,Math.PI*2); ctx.fillStyle='#16213E'; ctx.fill()
+      ctx.beginPath(); ctx.arc(p.x,p.y,nr,0,Math.PI*2); ctx.fillStyle='#111628'; ctx.fill()
       ctx.strokeStyle=el.color; ctx.lineWidth=isYours?3:1.5; ctx.stroke()
       ctx.fillStyle=el.color; ctx.font='bold 18px serif'; ctx.textAlign='center'; ctx.textBaseline='middle'
       ctx.fillText(el.hanja,p.x,p.y-3)
@@ -184,31 +184,29 @@ function ExplainPageInner() {
   if (userSun) parts.push(userSun.charAt(0).toUpperCase()+userSun.slice(1))
 
   return (
-    <main style={{ background:'#0D1B2A', minHeight:'100vh', paddingBottom:60, color:'#E8E4DC', fontFamily:"'Noto Sans', sans-serif" }}>
+    <main className="ap-page ex">
       {/* Header */}
-      <div style={{ padding:'28px 20px 20px', borderBottom:'1px solid rgba(201,168,76,0.2)', background:'linear-gradient(180deg,rgba(201,168,76,0.05) 0%,transparent 100%)' }}>
-        <div style={{ maxWidth:480, margin:'0 auto' }}>
-          <Link href="/menu" style={{ color:'rgba(201,168,76,0.7)', fontSize:13, textDecoration:'none', display:'block', marginBottom:12 }}>← Back</Link>
-          <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:22, fontWeight:600, color:'var(--gold)', letterSpacing:2, marginBottom:4 }}>What It All Means</p>
-          {parts.length > 0 && (
-            <p style={{ fontSize:13, color:'rgba(232,228,220,0.55)', fontStyle:'italic' }}>{parts.join(' · ')}</p>
-          )}
-        </div>
+      <div className="ap-container ex-head">
+        <Link href="/menu" className="ap-btn-ghost ap-btn-sm" style={{ marginBottom:18 }}>← Back</Link>
+        <h1 className="ap-h1 ap-gold-text">What It All Means</h1>
+        {parts.length > 0 && (
+          <p className="ap-lead" style={{ marginTop:8 }}>{parts.join(' · ')}</p>
+        )}
       </div>
 
-      <div style={{ maxWidth:480, margin:'0 auto', padding:'16px 20px' }}>
+      <div className="ap-container" style={{ paddingTop:24 }}>
 
         {/* SECTION 1: East Meets West */}
         <MainSection id="about" title="East (BaZi) Meets West (Astrology)">
-          <div style={{ padding:16, display:'flex', flexDirection:'column', gap:10 }}>
+          <div className="ex-trio" style={{ padding:16 }}>
             {[
               { t:'BaZi — The Eastern Blueprint', d:'BaZi reads the exact moment you were born — the year, month, day, and hour — and translates it into a map of your core personality, your natural strengths, and the energy patterns that shape your life. It has been used for over a thousand years to understand who a person truly is at their core.' },
               { t:'Western Astrology — The Celestial Map', d:'Western astrology looks at where the planets were in the sky the moment you were born. Each planet governs a different part of your life — your emotions, your relationships, your ambitions, your fears. Together they paint a picture of how you experience the world around you.' },
               { t:'What Happens When You Combine Them', d:'BaZi tells you who you are. Western astrology tells you how you experience life. Used together, they cover each other\'s blind spots and give you a reading that is both deeper and more accurate than either system alone. That is exactly what AstroPillar does.', highlight: true },
             ].map((b,i) => (
-              <div key={i} style={{ background: b.highlight ? 'linear-gradient(135deg,#1a2744 0%,rgba(201,168,76,0.06) 100%)' : '#1a2744', border:`1px solid ${b.highlight?'var(--gold)':'rgba(201,168,76,0.2)'}`, borderRadius:12, padding:'18px 16px' }}>
-                <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:11, letterSpacing:1.5, color:'var(--gold)', marginBottom:10 }}>{b.t}</p>
-                <p style={{ fontSize:13, lineHeight:1.85, color:'rgba(232,228,220,0.55)', fontStyle:'italic' }}>{b.d}</p>
+              <div key={i} style={{ background: b.highlight ? 'linear-gradient(135deg,rgba(17,22,40,0.7) 0%,rgba(201,168,76,0.1) 100%)' : 'rgba(17,22,40,0.6)', border:`1px solid ${b.highlight?'var(--gold-line)':'var(--line)'}`, borderRadius:14, padding:'20px 18px' }}>
+                <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:19, fontWeight:600, color:'var(--gold-light)', marginBottom:10 }}>{b.t}</p>
+                <p style={{ fontSize:14.5, lineHeight:1.85, color:'var(--ink-2)' }}>{b.d}</p>
               </div>
             ))}
           </div>
@@ -216,10 +214,10 @@ function ExplainPageInner() {
 
         {/* SECTION 2: Day Stem */}
         <MainSection id="stem" title="Day Stem" defaultOpen={!!userStem}>
-          <div style={{ margin:'16px 16px 12px', background:'rgba(201,168,76,0.07)', border:'1px solid rgba(201,168,76,0.2)', borderRadius:10, padding:'14px 16px', fontSize:13, lineHeight:1.85, color:'rgba(232,228,220,0.55)', fontStyle:'italic' }}>
+          <div style={{ margin:'16px 16px 14px', background:'rgba(201,168,76,0.07)', border:'1px solid var(--gold-line)', borderRadius:14, padding:'16px 18px', fontSize:14.5, lineHeight:1.85, color:'var(--ink-2)', maxWidth:'72ch' }}>
             Your Day Stem is determined by the exact day you were born. In BaZi, it represents your core identity — the person you are at your most fundamental level. It is the single most important element in your entire birth chart.
           </div>
-          <div style={{ padding:'0 12px 16px' }}>
+          <div className="ex-grid">
             {STEMS.map(s => (
               <InnerItem
                 key={s.key} id={`stem-${s.key}`}
@@ -233,13 +231,13 @@ function ExplainPageInner() {
 
         {/* SECTION 3: Elements */}
         <MainSection id="element" title="Elements" defaultOpen={!!userElement}>
-          <div style={{ margin:'16px 16px 12px', background:'rgba(201,168,76,0.07)', border:'1px solid rgba(201,168,76,0.2)', borderRadius:10, padding:'14px 16px', fontSize:13, lineHeight:1.85, color:'rgba(232,228,220,0.55)', fontStyle:'italic' }}>
-            <strong style={{ color:'var(--gold)', fontStyle:'normal', fontFamily:"'Cormorant Garamond',serif", fontSize:9, letterSpacing:1, display:'block', marginBottom:8 }}>Why your Day Stem and dominant element might be different</strong>
+          <div style={{ margin:'16px 16px 14px', background:'rgba(201,168,76,0.07)', border:'1px solid var(--gold-line)', borderRadius:14, padding:'16px 18px', fontSize:14.5, lineHeight:1.85, color:'var(--ink-2)', maxWidth:'72ch' }}>
+            <strong style={{ color:'var(--gold)', fontStyle:'normal', fontFamily:"'Cormorant Garamond',serif", fontSize:18, fontWeight:600, display:'block', marginBottom:8 }}>Why your Day Stem and dominant element might be different</strong>
             Your Day Stem is determined by the day you were born. It shows your core personality.<br/><br/>
             Your dominant element is calculated from your entire birth chart — year, month, day, and hour combined. It shows the overall energy that shapes how your life unfolds.<br/><br/>
             They are measuring two different things.
           </div>
-          <div style={{ padding:'0 12px' }}>
+          <div className="ex-grid" style={{ paddingBottom:0 }}>
             {ELEMENTS.map(e => (
               <InnerItem
                 key={e.key} id={`el-${e.key}`}
@@ -249,30 +247,30 @@ function ExplainPageInner() {
               />
             ))}
           </div>
-          <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:8, letterSpacing:2.5, color:'rgba(232,228,220,0.55)', textTransform:'uppercase', margin:'20px 12px 12px', display:'flex', alignItems:'center', gap:10 }}>
+          <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:18, fontWeight:600, color:'var(--ink)', margin:'24px 16px 12px', display:'flex', alignItems:'center', gap:12 }}>
             How the Five Elements Relate
             <span style={{ flex:1, height:1, background:'rgba(201,168,76,0.2)', display:'inline-block' }} />
           </p>
           <WuxingCanvas userElement={userElement} />
           <div style={{ display:'flex', gap:14, justifyContent:'center', marginBottom:16 }}>
             {[{color:'#4CAF50',label:'Nourishes'},{color:'#F44336',label:'Restrains'}].map(l=>(
-              <div key={l.label} style={{ display:'flex', alignItems:'center', gap:5, fontFamily:"'Cormorant Garamond',serif", fontSize:8, letterSpacing:1, color:'rgba(232,228,220,0.55)' }}>
+              <div key={l.label} style={{ display:'flex', alignItems:'center', gap:5, fontSize:13, color:'var(--ink-2)' }}>
                 <div style={{ width:18, height:2, borderRadius:2, background:l.color }} />{l.label}
               </div>
             ))}
           </div>
-          <div style={{ padding:'0 12px 16px', display:'flex', flexDirection:'column', gap:8 }}>
+          <div className="ex-cycles">
             {[
               { t:'Nourishing Cycle — each element feeds the next', color:'#4CAF50', items:['Wood feeds Fire — like fuel to a flame','Fire creates Earth — ash becomes rich soil','Earth produces Metal — ore forms deep in the ground','Metal collects Water — cold metal draws moisture','Water nourishes Wood — roots drink deep'] },
               { t:'Restraining Cycle — each element keeps another in check', color:'#F44336', items:['Wood breaks Earth — roots split through soil','Earth absorbs Water — ground soaks up the flood','Water extinguishes Fire — flood kills the flame','Fire melts Metal — heat destroys the blade','Metal cuts Wood — an axe fells the tree'] },
             ].map(c=>(
-              <div key={c.t} style={{ background:'#1a2744', border:'1px solid rgba(201,168,76,0.2)', borderRadius:10, padding:'14px 16px' }}>
-                <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:9, letterSpacing:1.5, color:c.color, marginBottom:10 }}>{c.t}</p>
+              <div key={c.t} style={{ background:'rgba(17,22,40,0.6)', border:'1px solid var(--line)', borderRadius:14, padding:'16px 18px' }}>
+                <p style={{ fontSize:15, fontWeight:700, color:c.color, marginBottom:10 }}>{c.t}</p>
                 {c.items.map((it,i) => {
                   const [bold, ...rest] = it.split(' — ')
                   return (
-                    <p key={i} style={{ fontSize:13, color:'rgba(232,228,220,0.55)', lineHeight:1.7, padding:'4px 0', borderBottom:i<c.items.length-1?'1px solid rgba(255,255,255,0.04)':'none', fontStyle:'italic' }}>
-                      <span style={{ color:'#E8E4DC', fontStyle:'normal', fontWeight:500 }}>{bold}</span>{rest.length?' — '+rest.join(' — '):''}
+                    <p key={i} style={{ fontSize:14, color:'var(--ink-2)', lineHeight:1.7, padding:'5px 0' }}>
+                      <span style={{ color:'var(--ink)', fontWeight:600 }}>{bold}</span>{rest.length?' — '+rest.join(' — '):''}
                     </p>
                   )
                 })}
@@ -283,7 +281,7 @@ function ExplainPageInner() {
 
         {/* SECTION 4: Planets */}
         <MainSection id="planet" title="Planets" defaultOpen={!!userSun}>
-          <div style={{ padding:'0 12px 16px' }}>
+          <div className="ex-grid" style={{ paddingTop:16 }}>
             {PLANETS.map(p => (
               <InnerItem
                 key={p.key} id={`pl-${p.key}`}
@@ -296,6 +294,21 @@ function ExplainPageInner() {
         </MainSection>
 
       </div>
+      <style>{`
+        .ex-head { padding-top: 24px; }
+        .ex-trio { display:grid; grid-template-columns: 1fr; gap: 12px; }
+        .ex-grid { display:grid; grid-template-columns: 1fr; gap: 8px; padding: 0 16px 16px; }
+        .ex-cycles { display:grid; grid-template-columns: 1fr; gap: 10px; padding: 0 16px 16px; }
+        @media (min-width: 768px) {
+          .ex-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+          .ex-cycles { grid-template-columns: 1fr 1fr; }
+        }
+        @media (min-width: 1024px) {
+          .ex-head { padding-top: 48px; }
+          .ex-trio { grid-template-columns: repeat(3, 1fr); }
+          .ex-grid { grid-template-columns: repeat(3, 1fr); padding: 0 22px 22px; }
+        }
+      `}</style>
     </main>
   )
 }
@@ -303,7 +316,7 @@ function ExplainPageInner() {
 export default function ExplainPage() {
   return (
     <Suspense fallback={
-      <main style={{ background:'#0D1B2A', minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center' }}>
+      <main className="ap-page" style={{ display:'flex', alignItems:'center', justifyContent:'center' }}>
         <p style={{ color:'var(--gold)', fontFamily:"'Cormorant Garamond',serif", fontSize:18 }}>Loading...</p>
       </main>
     }>

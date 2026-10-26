@@ -1,1 +1,1 @@
-export { default } from '@/app/library/page'
+export { default } from '@/app/_pages/library/page'

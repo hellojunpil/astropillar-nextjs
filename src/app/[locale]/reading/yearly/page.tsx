@@ -1,1 +1,1 @@
-export { default } from '@/app/reading/yearly/page'
+export { default } from '@/app/_pages/reading/yearly/page'

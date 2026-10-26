@@ -1,1 +1,1 @@
-export { default } from '@/app/reading/scenario/page'
+export { default } from '@/app/_pages/reading/scenario/page'

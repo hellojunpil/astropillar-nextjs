@@ -25,30 +25,38 @@ export default function LegalFooter({ style }: { style?: React.CSSProperties }) 
   }
   const l = labels[locale as keyof typeof labels] ?? labels.en
 
-  const linkSt: React.CSSProperties = {
-    color: 'rgba(200,195,220,.45)',
-    fontSize: 11,
-    textDecoration: 'none',
-    whiteSpace: 'nowrap',
-  }
-  const dotSt: React.CSSProperties = { color: 'rgba(200,195,220,.2)', fontSize: 11 }
-
   return (
-    <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
-      padding: '20px 20px 10px',
-      borderTop: '1px solid rgba(201,168,76,0.08)',
-      ...style,
-    }}>
-      <div style={{ fontSize: 11, color: 'rgba(200,195,220,.35)', textAlign: 'center', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{l.biz}</div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
-        <Link href={`${prefix}/privacy`} style={linkSt}>{l.privacy}</Link>
-        <span style={dotSt}>·</span>
-        <Link href={`${prefix}/terms`} style={linkSt}>{l.terms}</Link>
-        <span style={dotSt}>·</span>
-        <Link href={`${prefix}/refund`} style={linkSt}>{l.refund}</Link>
+    <footer className="ap-footer" style={style}>
+      <div className="ap-footer-inner">
+        <div className="ap-footer-brand">
+          <span className="ap-footer-logo">ASTROPILLAR</span>
+          <nav className="ap-footer-links" aria-label="Legal">
+            <Link href={`${prefix}/privacy`}>{l.privacy}</Link>
+            <Link href={`${prefix}/terms`}>{l.terms}</Link>
+            <Link href={`${prefix}/refund`}>{l.refund}</Link>
+          </nav>
+        </div>
+        <p className="ap-footer-biz">{l.biz}</p>
+        <p className="ap-footer-copy">{l.copy}</p>
       </div>
-      <div style={{ fontSize: 10, color: 'rgba(200,195,220,.25)', textAlign: 'center' }}>{l.copy}</div>
-    </div>
+      <style>{`
+        .ap-footer { position: relative; z-index: 1; margin-top: 48px; padding: 28px 20px 16px; border-top: 1px solid var(--line); }
+        .ap-footer::before { content:""; position:absolute; top:-1px; left:20%; right:20%; height:1px;
+          background: linear-gradient(90deg, transparent, var(--gold-line), transparent); }
+        .ap-footer-inner { max-width: 1200px; margin: 0 auto; display:flex; flex-direction:column; align-items:center; gap: 12px; text-align:center; }
+        .ap-footer-brand { display:flex; flex-direction:column; align-items:center; gap: 10px; }
+        .ap-footer-logo { font-family:'Cormorant Garamond',serif; font-weight:700; font-size:14px; letter-spacing:.24em; color: rgba(201,168,76,.7); }
+        .ap-footer-links { display:flex; flex-wrap:wrap; justify-content:center; gap: 4px 18px; }
+        .ap-footer-links a { font-size: 12.5px; color: var(--ink-2); text-decoration:none; white-space:nowrap; min-height: 28px; display:inline-flex; align-items:center; }
+        .ap-footer-links a:hover { color: var(--gold-light); }
+        .ap-footer-biz { font-size: 11.5px; line-height: 1.75; color: var(--ink-3); white-space: pre-wrap; max-width: 760px; }
+        .ap-footer-copy { font-size: 11px; color: rgba(138,143,163,.7); }
+        @media (min-width: 1024px) {
+          .ap-footer { padding: 36px 40px 24px; }
+          .ap-footer-inner { align-items: stretch; text-align:left; }
+          .ap-footer-brand { flex-direction: row; justify-content: space-between; }
+        }
+      `}</style>
+    </footer>
   )
 }

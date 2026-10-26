@@ -1,1 +1,1 @@
-export { default } from '@/app/tarot/three-card/page'
+export { default } from '@/app/_pages/tarot/three-card/page'

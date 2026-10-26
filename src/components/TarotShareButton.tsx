@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { useLocale } from 'next-intl'
 import { gtagEvent } from '@/lib/gtag'
 import { createShare } from '@/lib/firestore'
@@ -83,7 +84,9 @@ export default function TarotShareButton({ userEmail, share }: { userEmail: stri
 
   function shareLink() {
     const origin = typeof window !== 'undefined' ? window.location.origin : 'https://astropillar.com'
-    return shareId ? `${origin}/share/${shareId}` : origin
+    // 공유한 사람의 언어를 유지 (en은 접두어 없음)
+    const prefix = locale === 'en' ? '' : `/${locale}`
+    return shareId ? `${origin}${prefix}/share/${shareId}` : `${origin}${prefix}/today`
   }
 
   async function handleShare() {
@@ -146,13 +149,14 @@ export default function TarotShareButton({ userEmail, share }: { userEmail: stri
         {msg && <p style={{ color: '#aaa', fontSize: 12, textAlign: 'center' }}>{msg}</p>}
       </div>
 
-      {showModal && (
+      {showModal && typeof document !== 'undefined' && createPortal(
         <div
+          role="dialog" aria-modal="true"
           onClick={() => setShowModal(false)}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 9999, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: 16 }}>
           <div
             onClick={e => e.stopPropagation()}
-            style={{ background: '#16213E', borderRadius: 20, padding: 24, width: '100%', maxWidth: 480, border: '1px solid var(--border)' }}>
+            style={{ background: 'var(--surface-solid)', borderRadius: 20, padding: 24, width: '100%', maxWidth: 480, border: '1px solid var(--gold-line)' }}>
             <p style={{ color: 'var(--gold)', fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>{t.modalLabel}</p>
             <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 20 }}>{t.modalDesc}</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -170,7 +174,8 @@ export default function TarotShareButton({ userEmail, share }: { userEmail: stri
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   )

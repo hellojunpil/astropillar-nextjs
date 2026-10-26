@@ -4,76 +4,74 @@ import { Link } from '@/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { useTranslations } from 'next-intl'
 
-const GOLD = '#C9A84C'
-const INACTIVE = 'rgba(246,246,248,0.75)'
-const GLOW = 'drop-shadow(0 0 6px rgba(201,168,76,0.6))'
+/** 로케일 prefix 제거 */
+export function cleanPathname(pathname: string) {
+  return pathname.replace(/^\/(ko|ja|en)(?=\/|$)/, '') || '/'
+}
 
+/** 탭 활성 판정: 리딩·타로 하위 경로는 '운세' 탭으로 묶음 */
+export function isNavActive(href: string, cleanPath: string) {
+  if (href === '/') return cleanPath === '/'
+  if (href === '/menu') return cleanPath === '/menu' || cleanPath.startsWith('/reading') || cleanPath.startsWith('/tarot')
+  return cleanPath === href || cleanPath.startsWith(href + '/')
+}
+
+/**
+ * 모바일 하단 탭 바 (PC에서는 숨김 — 상단 SiteNav가 대신함)
+ */
 export default function BottomNav() {
   const pathname = usePathname()
   const { credits } = useAuth(false)
   const t = useTranslations('nav')
+  const cleanPath = cleanPathname(pathname)
 
   const NAV_ITEMS = [
-    { href: '/' as const,        icon: 'home',          label: t('home') },
-    { href: '/menu' as const,    icon: 'auto_awesome',  label: t('destiny') },
-    { href: '/today' as const,   icon: 'calendar_today',label: t('free') },
-    { href: '/library' as const, icon: 'local_library', label: t('library') },
+    { href: '/' as const,        icon: 'home',            label: t('home') },
+    { href: '/today' as const,   icon: 'nights_stay',     label: t('free') },
+    { href: '/menu' as const,    icon: 'auto_awesome',    label: t('destiny') },
+    { href: '/library' as const, icon: 'local_library',   label: t('library') },
   ]
-
-  // 로케일 prefix 제거 후 경로 비교
-  const cleanPath = pathname.replace(/^\/(ko|ja)/, '') || '/'
-
-  function isActive(href: string) {
-    if (href === '/') return cleanPath === '/'
-    return cleanPath === href || cleanPath.startsWith(href + '/')
-  }
-
   const creditActive = cleanPath === '/buy'
 
   return (
-    <nav style={{
-      position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
-      background: '#16213E',
-      borderTop: '1px solid rgba(201,168,76,0.35)',
-    }}>
-      <div style={{
-        maxWidth: 480, margin: '0 auto',
-        display: 'flex', justifyContent: 'space-around',
-        padding: '8px 0 env(safe-area-inset-bottom, 12px)',
-      }}>
+    <nav className="ap-tabbar ap-mobile-only" aria-label="Main">
+      <div className="ap-tabbar-inner">
         {NAV_ITEMS.map(item => {
-          const active = isActive(item.href)
+          const active = isNavActive(item.href, cleanPath)
           return (
-            <Link key={item.href} href={item.href} style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, minWidth: 52 }}>
-              <span className="material-icons" style={{
-                fontSize: 22,
-                color: active ? GOLD : INACTIVE,
-                filter: active ? GLOW : 'none',
-              }}>
-                {item.icon}
-              </span>
-              <span style={{ fontSize: 10, color: active ? GOLD : INACTIVE, filter: active ? GLOW : 'none' }}>
-                {item.label}
-              </span>
+            <Link key={item.href} href={item.href} className={`ap-tab${active ? ' is-active' : ''}`} aria-current={active ? 'page' : undefined}>
+              <span className="material-icons ap-tab-icon">{item.icon}</span>
+              <span className="ap-tab-label">{item.label}</span>
             </Link>
           )
         })}
-
-        {/* 크레딧 탭 */}
-        <Link href="/buy" style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, minWidth: 52 }}>
-          <span style={{
-            fontSize: 16, fontWeight: 700, lineHeight: '22px', height: 22,
-            display: 'flex', alignItems: 'center',
-            color: creditActive ? GOLD : INACTIVE,
-            filter: creditActive ? GLOW : 'none',
-          }}>
-            {credits ?? '—'}
-          </span>
-          <span style={{ fontSize: 10, color: creditActive ? GOLD : INACTIVE, filter: creditActive ? GLOW : 'none' }}>
-            {t('credits')}
-          </span>
+        <Link href="/buy" className={`ap-tab${creditActive ? ' is-active' : ''}`} aria-current={creditActive ? 'page' : undefined}>
+          <span className="ap-tab-credit">{credits ?? '—'}</span>
+          <span className="ap-tab-label">{t('credits')}</span>
         </Link>
       </div>
+      <style>{`
+        .ap-tabbar {
+          position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+          background: linear-gradient(180deg, rgba(10,13,28,.82), rgba(7,9,20,.96));
+          backdrop-filter: blur(16px) saturate(140%); -webkit-backdrop-filter: blur(16px) saturate(140%);
+          border-top: 1px solid rgba(201,168,76,.22);
+          padding-bottom: env(safe-area-inset-bottom, 0px);
+        }
+        .ap-tabbar::before { content:""; position:absolute; left:10%; right:10%; top:-1px; height:1px;
+          background: linear-gradient(90deg, transparent, rgba(230,205,133,.6), transparent); }
+        .ap-tabbar-inner { max-width: 560px; margin: 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); height: var(--tab-h); }
+        .ap-tab { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+          text-decoration:none; color: rgba(241,237,228,.55); min-height:44px; position:relative;
+          transition: color .2s; }
+        .ap-tab.is-active { color: var(--gold-light); }
+        .ap-tab.is-active::after { content:""; position:absolute; top:0; width:22px; height:2px; border-radius:2px;
+          background: var(--gold-light); box-shadow: 0 0 10px rgba(230,205,133,.8); }
+        .ap-tab-icon { font-size: 23px; }
+        .ap-tab.is-active .ap-tab-icon { filter: drop-shadow(0 0 6px rgba(230,205,133,.55)); }
+        .ap-tab-label { font-size: 10.5px; letter-spacing: .02em; }
+        .ap-tab-credit { font-size: 17px; font-weight: 700; line-height: 23px; height: 23px; font-variant-numeric: tabular-nums; }
+      `}</style>
     </nav>
   )
 }

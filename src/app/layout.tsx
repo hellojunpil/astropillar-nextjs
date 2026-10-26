@@ -1,12 +1,8 @@
-import type { Metadata } from 'next'
-import Script from 'next/script'
-import { NextIntlClientProvider } from 'next-intl'
-import Providers from '@/components/Providers'
+import type { Metadata, Viewport } from 'next'
 import './globals.css'
-import enMessages from '../../messages/en.json'
 
-const GA_ID = process.env.NEXT_PUBLIC_GA4_ID
-
+// 실제 <html>/<body>는 app/[locale]/layout.tsx 가 렌더링 (next-intl 권장 구조).
+// 여기서 html을 또 그리면 html 중첩 → 하이드레이션 에러가 발생했음.
 export const metadata: Metadata = {
   title: 'AstroPillar — Where the stars meet your fate',
   description: 'Discover your destiny through Eastern BaZi and Western Astrology. Free personalized readings.',
@@ -33,31 +29,13 @@ export const metadata: Metadata = {
   },
 }
 
+export const viewport: Viewport = {
+  themeColor: '#070914',
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+}
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en">
-      <head>
-        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
-      </head>
-      <body>
-        <Script id="disable-pwa-install" strategy="afterInteractive">{`
-          window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault(); });
-        `}</Script>
-        {GA_ID && (
-          <>
-            <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />
-            <Script id="ga4-init" strategy="afterInteractive">{`
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', '${GA_ID}', { page_path: window.location.pathname });
-            `}</Script>
-          </>
-        )}
-        <NextIntlClientProvider locale="en" messages={enMessages}>
-          <Providers>{children}</Providers>
-        </NextIntlClientProvider>
-      </body>
-    </html>
-  )
+  return children
 }

@@ -61,3 +61,8 @@ android/.cxx/
 .gstack/
 
 .vercel
+
+# 비밀번호 등 민감정보가 담긴 로컬 문서 (공개 저장소에 올리지 않음)
+CLAUDE.md
+claude_back_*.md
+.claude/settings.local.json

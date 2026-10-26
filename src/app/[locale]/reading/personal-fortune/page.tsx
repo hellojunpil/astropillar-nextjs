@@ -1,1 +1,1 @@
-export { default } from '@/app/reading/personal-fortune/page'
+export { default } from '@/app/_pages/reading/personal-fortune/page'

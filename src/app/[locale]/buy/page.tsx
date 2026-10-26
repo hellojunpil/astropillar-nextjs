@@ -37,7 +37,6 @@ function BuyContent() {
   const [iapLoading, setIapLoading] = useState(false)
   const nativeApp = isNative()
 
-  const fontFamily = locale === 'ko' ? "'Noto Sans KR', sans-serif" : locale === 'ja' ? "'Noto Sans JP', sans-serif" : "'Noto Sans', sans-serif"
 
   // 카카오페이 모바일 리다이렉트 복귀 처리
   useEffect(() => {
@@ -231,137 +230,186 @@ function BuyContent() {
 
   const isPortOne = provider === 'portone'
 
+  const L = locale === 'ko' ? 'ko' : locale === 'ja' ? 'ja' : 'en'
+  const prefix = locale === 'en' ? '' : `/${locale}`
+  const UI = {
+    ko: { balance: '보유 크레딧', perCredit: '크레딧당', one: '1크레딧 리딩 1회', five: '1크레딧 리딩 기준 5회', best: '가장 알뜰한 구성', method: '카카오페이로 안전하게 결제되며, 결제 즉시 크레딧이 충전돼요.', methodG: '', svc: '서비스별 필요 크레딧', refund: '환불정책', terms: '이용약관', vat: '(VAT 별도)', what: '대부분의 리딩은 1크레딧이고, 신년 운세·궁합·심층 분석 타로는 2크레딧이에요.' },
+    ja: { balance: '保有クレジット', perCredit: '1クレジットあたり', one: '1クレジットのリーディング1回', five: '1クレジットのリーディング5回分', best: 'いちばんお得', method: '', methodG: 'Gumroadの安全な決済ページに移動します。ログイン中のメールアドレスで決済するとクレジットが自動で反映されます。', svc: 'サービス別クレジット', refund: '返金ポリシー', terms: '利用規約', vat: '(税抜)', what: 'ほとんどのリーディングは1クレジット、年運・相性・ケルト十字は2クレジットです。' },
+    en: { balance: 'Your balance', perCredit: 'per credit', one: 'One 1-credit reading', five: 'Five 1-credit readings', best: 'Best value', method: '', methodG: 'You will continue to Gumroad’s secure checkout. Pay with the same email you signed in with and credits are added automatically.', svc: 'Credits per reading', refund: 'Refund Policy', terms: 'Terms of Service', vat: '(excl. VAT)', what: 'Most readings use 1 credit. Yearly Fortune, Compatibility and Celtic Cross use 2.' },
+  }[L]
+
+  const price1 = locale === 'ko' ? '₩990' : locale === 'ja' ? '¥100' : t('pack1_price')
+  const price5 = locale === 'ko' ? '₩3,900' : locale === 'ja' ? '¥400' : t('pack5_price')
+  const per5 = locale === 'ko' ? '₩780' : locale === 'ja' ? '¥80' : (() => {
+    const n = parseFloat(t('pack5_price').replace(/[^0-9.]/g, ''))
+    return n ? `$${(n / 5).toFixed(2)}` : ''
+  })()
+  const methodNote = nativeApp ? '' : (isPortOne ? UI.method : UI.methodG)
+
+  // 결제 버튼: 분기/핸들러는 기존 로직 그대로 (네이티브 IAP / 카카오페이 / Gumroad)
+  function renderBuyButton(count: 1 | 5) {
+    if (nativeApp) {
+      return (
+        <button onClick={() => handleIAPBuy(count === 1 ? 'credits_1' : 'credits_5')} disabled={iapLoading} className="ap-btn bp-cta">
+          {iapLoading ? '...' : (count === 1 ? nativePrices?.credits1 ?? '$0.99' : nativePrices?.credits5 ?? '$3.99')}
+        </button>
+      )
+    }
+    if (isPortOne) {
+      return (
+        <>
+          <button onClick={() => handlePortOneBuy(count, 'kakaopay')} className="bp-kakao">
+            카카오페이
+          </button>
+          <p className="bp-vat">{locale === 'ko' ? '(VAT 별도)' : locale === 'ja' ? '(税抜)' : '(excl. VAT)'}</p>
+        </>
+      )
+    }
+    return (
+      <>
+        <button onClick={() => handleGumroadBuy(count, count === 1 ? GUMROAD_1 : GUMROAD_5)} className="ap-btn bp-cta">
+          {t('cta')}
+        </button>
+        <p className="bp-vat">{locale === 'ja' ? '(税抜)' : '(excl. VAT)'}</p>
+      </>
+    )
+  }
+
   return (
-    <main style={{ fontFamily, background: '#07071a', color: '#F6F6F8', minHeight: '100vh', paddingBottom: 96 }}>
-      {/* 헤더 */}
-      <div style={{ background: 'rgba(13,13,43,0.95)', borderBottom: '1px solid rgba(201,168,76,0.15)', padding: '16px 20px' }}>
-        <div style={{ maxWidth: 480, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, fontWeight: 700, color: '#C9A84C', letterSpacing: 3 }}>ASTROPILLAR</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <LanguageSwitcher />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.35)', borderRadius: 20, padding: '6px 12px' }}>
-              <span style={{ fontSize: 14, fontWeight: 700, color: '#C9A84C' }}>{credits ?? 0}</span>
-              <span style={{ fontSize: 11, color: 'rgba(201,168,76,0.8)' }}>{tMenu('credits_label')}</span>
-            </div>
+    <main className="ap-page bp">
+      {/* 모바일 헤더 (PC는 SiteNav) */}
+      <div className="bp-mhead ap-mobile-only">
+        <span className="bp-mlogo">ASTROPILLAR</span>
+        <LanguageSwitcher />
+      </div>
+
+      <div className="ap-container bp-wrap">
+        <header className="bp-head">
+          <div>
+            <h1 className="ap-h1">{t('title')}</h1>
+            <p className="ap-lead" style={{ marginTop: 8 }}>{t('subtitle')}</p>
           </div>
+          <div className="bp-balance ap-glass ap-glass-gold">
+            <span className="bp-balance-label">{UI.balance}</span>
+            <span className="bp-balance-num"><span className="ap-gold-text">{credits ?? 0}</span><small>{tMenu('credits_label')}</small></span>
+          </div>
+        </header>
+
+        <div className="bp-grid">
+          <section className="bp-packs">
+            <article className="bp-pack ap-glass">
+              <div className="bp-pack-top">
+                <div>
+                  <h2 className="bp-pack-title"><span aria-hidden="true" className="bp-star">✦</span>{t('pack1_title')}</h2>
+                  <p className="bp-pack-sub">{UI.one}</p>
+                </div>
+                <div className="bp-price">
+                  <span className="bp-price-main">{price1}</span>
+                  <span className="bp-price-per">{UI.perCredit} {price1}</span>
+                </div>
+              </div>
+              <div className="bp-btn-wrap">{renderBuyButton(1)}</div>
+            </article>
+
+            <article className="bp-pack bp-pack-best ap-glass ap-glass-gold">
+              <span className="bp-ribbon">{t('pack5_save')}</span>
+              <div className="bp-pack-top">
+                <div>
+                  <p className="bp-best-label">{UI.best}</p>
+                  <h2 className="bp-pack-title"><span aria-hidden="true" className="bp-star">✦✦✦</span>{t('pack5_title')}</h2>
+                  <p className="bp-pack-sub">{UI.five}</p>
+                </div>
+                <div className="bp-price">
+                  <span className="bp-price-main ap-gold-text">{price5}</span>
+                  {per5 && <span className="bp-price-per">{UI.perCredit} {per5}</span>}
+                </div>
+              </div>
+              <div className="bp-btn-wrap">{renderBuyButton(5)}</div>
+            </article>
+
+            <div className="bp-trust">
+              <p className="bp-what">{UI.what}</p>
+              {methodNote && <p className="bp-method">{methodNote}</p>}
+              <div className="bp-trust-row">
+                <span><span className="material-icons" aria-hidden="true">lock</span>{t('secure')}</span>
+                <span><span className="material-icons" aria-hidden="true">hourglass_empty</span>{t('no_expiry')}</span>
+              </div>
+              <div className="bp-links">
+                <a href={`${prefix}/refund`}>{UI.refund}</a>
+                <a href={`${prefix}/terms`}>{UI.terms}</a>
+              </div>
+            </div>
+          </section>
+
+          <aside className="bp-services ap-glass">
+            <h2 className="bp-svc-title">{UI.svc}</h2>
+            <ul>
+              {SERVICES.map((s, i) => (
+                <li key={i}>
+                  <span>{s.name}</span>
+                  <span className="ap-badge">{s.cost}</span>
+                </li>
+              ))}
+            </ul>
+          </aside>
         </div>
       </div>
 
-      <div style={{ maxWidth: 480, margin: '0 auto', padding: 20 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 6 }}>{t('title')}</h1>
-        <p style={{ fontSize: 13, color: 'rgba(200,195,220,0.6)', marginBottom: 28 }}>{t('subtitle')}</p>
-
-        {/* 패키지 카드 */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 32 }}>
-          {/* 1 크레딧 */}
-          <div style={{ background: 'rgba(22,33,62,0.8)', border: '1px solid rgba(201,168,76,0.25)', borderRadius: 18, padding: 20 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <div>
-                <div style={{ fontSize: 18, fontWeight: 700 }}>✦ {t('pack1_title')}</div>
-                <div style={{ fontSize: 12, color: 'rgba(200,195,220,0.5)', marginTop: 2 }}>
-                  {locale === 'ko' ? '리딩 1회 이용 가능' : locale === 'ja' ? 'リーディング1回分' : 'One premium reading'}
-                </div>
-              </div>
-              <div style={{ fontSize: 22, fontWeight: 700, color: '#C9A84C' }}>
-                {locale === 'ko' ? '₩990' : locale === 'ja' ? '¥100' : t('pack1_price')}
-              </div>
-            </div>
-            {nativeApp ? (
-              <button
-                onClick={() => handleIAPBuy('credits_1')}
-                disabled={iapLoading}
-                style={{ width: '100%', padding: '13px', background: '#C9A84C', color: '#16213E', fontFamily, fontSize: 14, fontWeight: 700, border: 'none', borderRadius: 50, cursor: iapLoading ? 'not-allowed' : 'pointer', opacity: iapLoading ? 0.7 : 1 }}
-              >
-                {iapLoading ? '...' : nativePrices?.credits1 ?? '$0.99'}
-              </button>
-            ) : isPortOne ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <button onClick={() => handlePortOneBuy(1, 'kakaopay')} style={{ width: '100%', padding: '12px', background: '#FAE100', color: '#3A1D1D', fontFamily, fontSize: 14, fontWeight: 700, border: 'none', borderRadius: 50, cursor: 'pointer' }}>
-                  카카오페이
-                </button>
-                <div style={{ textAlign: 'center', fontSize: 11, color: 'rgba(200,195,220,0.35)' }}>
-                  {locale === 'ko' ? '(VAT 별도)' : locale === 'ja' ? '(税抜)' : '(excl. VAT)'}
-                </div>
-              </div>
-            ) : (
-              <>
-                <button onClick={() => handleGumroadBuy(1, GUMROAD_1)} style={{ width: '100%', padding: '13px', background: '#C9A84C', color: '#16213E', fontFamily, fontSize: 14, fontWeight: 700, border: 'none', borderRadius: 50, cursor: 'pointer' }}>
-                  {t('cta')}
-                </button>
-                <div style={{ textAlign: 'center', fontSize: 11, color: 'rgba(200,195,220,0.35)', marginTop: 6 }}>
-                  {locale === 'ja' ? '(税抜)' : '(excl. VAT)'}
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* 5 크레딧 */}
-          <div style={{ background: 'rgba(22,33,62,0.8)', border: '2px solid rgba(201,168,76,0.5)', borderRadius: 18, padding: 20, position: 'relative' }}>
-            <div style={{ position: 'absolute', top: -10, right: 16, background: '#C9A84C', color: '#16213E', fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 12 }}>
-              {t('pack5_save')}
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <div>
-                <div style={{ fontSize: 18, fontWeight: 700 }}>✦✦✦ {t('pack5_title')}</div>
-                <div style={{ fontSize: 12, color: 'rgba(200,195,220,0.5)', marginTop: 2 }}>
-                  {locale === 'ko' ? '리딩 5회 이용 가능' : locale === 'ja' ? 'リーディング5回分' : 'Five premium readings'}
-                </div>
-              </div>
-              <div style={{ fontSize: 22, fontWeight: 700, color: '#C9A84C' }}>
-                {locale === 'ko' ? '₩3,900' : locale === 'ja' ? '¥400' : t('pack5_price')}
-              </div>
-            </div>
-            {nativeApp ? (
-              <button
-                onClick={() => handleIAPBuy('credits_5')}
-                disabled={iapLoading}
-                style={{ width: '100%', padding: '13px', background: '#C9A84C', color: '#16213E', fontFamily, fontSize: 14, fontWeight: 700, border: 'none', borderRadius: 50, cursor: iapLoading ? 'not-allowed' : 'pointer', opacity: iapLoading ? 0.7 : 1 }}
-              >
-                {iapLoading ? '...' : nativePrices?.credits5 ?? '$3.99'}
-              </button>
-            ) : isPortOne ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <button onClick={() => handlePortOneBuy(5, 'kakaopay')} style={{ width: '100%', padding: '12px', background: '#FAE100', color: '#3A1D1D', fontFamily, fontSize: 14, fontWeight: 700, border: 'none', borderRadius: 50, cursor: 'pointer' }}>
-                  카카오페이
-                </button>
-                <div style={{ textAlign: 'center', fontSize: 11, color: 'rgba(200,195,220,0.35)' }}>
-                  {locale === 'ko' ? '(VAT 별도)' : locale === 'ja' ? '(税抜)' : '(excl. VAT)'}
-                </div>
-              </div>
-            ) : (
-              <>
-                <button onClick={() => handleGumroadBuy(5, GUMROAD_5)} style={{ width: '100%', padding: '13px', background: '#C9A84C', color: '#16213E', fontFamily, fontSize: 14, fontWeight: 700, border: 'none', borderRadius: 50, cursor: 'pointer' }}>
-                  {t('cta')}
-                </button>
-                <div style={{ textAlign: 'center', fontSize: 11, color: 'rgba(200,195,220,0.35)', marginTop: 6 }}>
-                  {locale === 'ja' ? '(税抜)' : '(excl. VAT)'}
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* 서비스별 가격 */}
-        <div style={{ background: 'rgba(22,33,62,0.5)', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 14, padding: 16, marginBottom: 20 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(201,168,76,0.6)', letterSpacing: 2, marginBottom: 14 }}>
-            {locale === 'ko' ? '서비스별 크레딧' : locale === 'ja' ? 'サービス別クレジット' : 'CREDITS PER SERVICE'}
-          </div>
-          {SERVICES.map((s, i) => (
-            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: i < SERVICES.length - 1 ? '1px solid rgba(201,168,76,0.08)' : 'none' }}>
-              <span style={{ fontSize: 13, color: 'rgba(200,195,220,0.7)' }}>{s.name}</span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: '#C9A84C' }}>{s.cost}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* 신뢰 배지 */}
-        <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
-          <span style={{ fontSize: 12, color: 'rgba(200,195,220,0.4)' }}>🔒 {t('secure')}</span>
-          <span style={{ fontSize: 12, color: 'rgba(200,195,220,0.4)' }}>∞ {t('no_expiry')}</span>
-        </div>
-
-      </div>
       <BottomNav />
+
+      <style>{`
+        .bp-mhead { display:flex; justify-content:space-between; align-items:center; padding: 12px 16px; }
+        .bp-mlogo { font-family:'Cormorant Garamond',serif; font-weight:700; font-size:16px; letter-spacing:.2em; color: var(--gold); }
+        .bp-wrap { padding-top: 16px; }
+        .bp-head { display:flex; flex-direction:column; gap: 20px; margin-bottom: 28px; }
+        .bp-balance { display:flex; align-items:center; justify-content:space-between; gap: 16px; padding: 16px 20px; }
+        .bp-balance-label { font-size: 13px; color: var(--ink-2); }
+        .bp-balance-num { display:flex; align-items:baseline; gap: 6px; font-family: var(--font-display); font-size: 34px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+        .bp-balance-num small { font-family: var(--font-body); font-size: 13px; color: var(--gold-light); font-weight: 500; }
+        .bp-grid { display:grid; grid-template-columns: 1fr; gap: 20px; }
+        .bp-packs { display:flex; flex-direction:column; gap: 18px; }
+        .bp-pack { position:relative; padding: 22px; display:flex; flex-direction:column; gap: 18px; }
+        .bp-pack-best { padding-top: 26px; background: radial-gradient(120% 120% at 100% 0%, rgba(201,168,76,.14), transparent 55%), linear-gradient(180deg, rgba(30,37,64,.7), rgba(15,19,36,.82)); box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 24px 60px -24px rgba(201,168,76,.35); }
+        .bp-ribbon { position:absolute; top: -11px; right: 18px; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; color: #1a1408;
+          background: linear-gradient(180deg, #e3c879, #c9a84c); box-shadow: 0 6px 18px -6px rgba(201,168,76,.6); }
+        .bp-best-label { font-size: 12px; color: var(--lavender); letter-spacing: .06em; margin-bottom: 4px; }
+        .bp-pack-top { display:flex; justify-content:space-between; align-items:flex-start; gap: 12px; }
+        .bp-pack-title { display:flex; align-items:center; gap: 8px; font-size: 19px; font-weight: 700; }
+        .bp-star { color: var(--gold-light); font-size: 13px; letter-spacing: 2px; }
+        .bp-pack-sub { margin-top: 4px; font-size: 13.5px; color: var(--ink-2); }
+        .bp-price { display:flex; flex-direction:column; align-items:flex-end; gap: 2px; }
+        .bp-price-main { font-family: var(--font-display); font-size: 30px; font-weight: 700; color: var(--gold-light); line-height: 1.1; font-variant-numeric: tabular-nums; }
+        .bp-price-per { font-size: 12px; color: var(--ink-3); white-space: nowrap; }
+        .bp-btn-wrap { display:flex; flex-direction:column; gap: 8px; }
+        .bp-cta { width: 100%; }
+        .bp-kakao { width:100%; min-height: 50px; display:flex; align-items:center; justify-content:center; border: none; border-radius: 999px; cursor:pointer;
+          background: #FAE100; color: #3A1D1D; font: inherit; font-size: 15px; font-weight: 700; transition: transform .16s, filter .2s; }
+        .bp-kakao:hover { filter: brightness(1.04); }
+        .bp-kakao:active { transform: scale(.98); }
+        .bp-vat { text-align:center; font-size: 12px; color: var(--ink-3); }
+        .bp-trust { padding: 4px 4px 0; display:flex; flex-direction:column; gap: 12px; }
+        .bp-what { font-size: 14px; line-height: 1.7; color: var(--ink-2); }
+        .bp-method { font-size: 13px; line-height: 1.7; color: var(--ink-3); }
+        .bp-trust-row { display:flex; flex-wrap:wrap; gap: 8px 18px; font-size: 13px; color: var(--ink-2); }
+        .bp-trust-row > span { display:inline-flex; align-items:center; gap: 6px; }
+        .bp-trust-row .material-icons { font-size: 16px; color: var(--success); }
+        .bp-links { display:flex; gap: 16px; }
+        .bp-links a { font-size: 13px; color: var(--gold-light); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(230,205,133,.35); }
+        .bp-services { padding: 22px; align-self: start; }
+        .bp-svc-title { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
+        .bp-services ul { list-style: none; }
+        .bp-services li { display:flex; justify-content:space-between; align-items:center; gap: 12px; padding: 11px 0; font-size: 14px; color: var(--ink-2); }
+        .bp-services li + li { border-top: 1px solid var(--line); }
+        @media (min-width: 900px) {
+          .bp-head { flex-direction: row; align-items: flex-end; justify-content: space-between; }
+          .bp-balance { min-width: 260px; }
+          .bp-grid { grid-template-columns: 1.35fr 1fr; gap: 28px; }
+          .bp-packs { display:grid; grid-template-columns: 1fr 1fr; gap: 20px; align-content: start; }
+          .bp-pack { justify-content: space-between; min-height: 230px; }
+          .bp-trust { grid-column: span 2; }
+        }
+        @media (min-width: 1024px) { .bp-wrap { padding-top: 48px; } }
+      `}</style>
     </main>
   )
 }

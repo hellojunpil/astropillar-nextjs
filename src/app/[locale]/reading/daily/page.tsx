@@ -1,1 +1,1 @@
-export { default } from '@/app/reading/daily/page'
+export { default } from '@/app/_pages/reading/daily/page'

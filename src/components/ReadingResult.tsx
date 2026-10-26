@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { apiPost } from '@/lib/api'
@@ -384,7 +385,7 @@ function TenGodTooltip({ term, explanation }: { term: string; explanation: strin
   return (
     <span style={{ position: 'relative', display: 'inline' }}>
       <span
-        style={{ color: 'var(--gold)', borderBottom: '1px dotted rgba(201,168,76,0.6)', cursor: 'help', fontWeight: 600 }}
+        style={{ color: 'var(--gold-light)', borderBottom: '1px dotted rgba(201,168,76,0.6)', cursor: 'help', fontWeight: 600 }}
         onMouseEnter={() => setVisible(true)}
         onMouseLeave={() => setVisible(false)}
         onClick={() => setVisible(v => !v)}
@@ -394,8 +395,8 @@ function TenGodTooltip({ term, explanation }: { term: string; explanation: strin
       {visible && (
         <span style={{
           position: 'absolute', bottom: 'calc(100% + 6px)', left: '50%', transform: 'translateX(-50%)',
-          background: '#1a1a2e', border: '1px solid rgba(201,168,76,0.4)', borderRadius: 8,
-          padding: '8px 12px', fontSize: 12, color: '#ddd', lineHeight: 1.6,
+          background: 'rgba(14,18,36,0.97)', border: '1px solid var(--gold-line)', borderRadius: 10,
+          padding: '10px 14px', fontSize: 13, color: 'var(--ink)', lineHeight: 1.6,
           whiteSpace: 'normal', width: 220, zIndex: 100,
           boxShadow: '0 4px 20px rgba(0,0,0,0.6)', pointerEvents: 'none',
           display: 'block',
@@ -430,10 +431,10 @@ function RichText({ text }: { text: string }) {
   const parts = annotated.split(splitRe)
 
   return (
-    <p style={{ color:'#ddd', fontSize:14, lineHeight:1.9, whiteSpace:'pre-wrap', margin:0 }}>
+    <p className="rr-prose" style={{ whiteSpace:'pre-wrap', margin:0 }}>
       {parts.map((part, i) => {
         if (labels.includes(part))
-          return <strong key={i} style={{ color:'var(--gold)', fontWeight:700 }}>{part}</strong>
+          return <strong key={i} style={{ color:'var(--gold-light)', fontWeight:700 }}>{part}</strong>
         if (tenGodsTerms.includes(part))
           return <TenGodTooltip key={i} term={part} explanation={tenGodsMap[part]} />
         return part
@@ -484,9 +485,9 @@ function RadarChart({ scores, axes }: { scores: Record<string, number>; axes?: s
           const score = Math.round(scores[RADAR_KEYS[i]] ?? 50)
           return (
             <g key={i}>
-              <text x={x} y={y - 1} textAnchor={anchor} fontSize="8" fill={RADAR_COLORS[i]}
+              <text x={x} y={y - 1} textAnchor={anchor} fontSize="10" fill={RADAR_COLORS[i]}
                 fontWeight="700" letterSpacing="0.8" fontFamily="'Noto Sans', sans-serif">{label.toUpperCase()}</text>
-              <text x={x} y={y + 9} textAnchor={anchor} fontSize="8" fill="rgba(255,255,255,0.55)"
+              <text x={x} y={y + 11} textAnchor={anchor} fontSize="10" fill="rgba(255,255,255,0.65)"
                 fontFamily="'Noto Sans', sans-serif">{score}</text>
             </g>
           )
@@ -533,7 +534,7 @@ function LifespanChart({ points }: { points: Array<{age:number, energy:number}> 
     const gradId = `lifespan_${label.replace(/\s/g,'')}`
     return (
       <div key={label}>
-        <p style={{ color:'rgba(201,168,76,0.6)', fontSize:9, letterSpacing:1.5, textTransform:'uppercase', marginBottom:2 }}>Ages {label}</p>
+        <p style={{ color:'rgba(201,168,76,0.6)', fontSize:12, letterSpacing:1, textTransform:'uppercase', marginBottom:2 }}>Ages {label}</p>
         <svg width={W} height={H} style={{ maxWidth:'100%', display:'block', overflow:'visible' }}>
           <defs>
             <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
@@ -547,10 +548,10 @@ function LifespanChart({ points }: { points: Array<{age:number, energy:number}> 
           {areaPath && <path d={areaPath} fill={`url(#${gradId})`} />}
           {linePath && <path d={linePath} fill="none" stroke="#a78bfa" strokeWidth="1.8" strokeLinecap="round" />}
           {data.filter((_,i) => i % Math.ceil(data.length/8) === 0 || data.indexOf(_) === data.length-1).map(p => (
-            <text key={p.age} x={xScale(p.age)} y={H-3} textAnchor="middle" fontSize="7" fill="rgba(255,255,255,0.3)" fontFamily="'Noto Sans', sans-serif">{p.age}</text>
+            <text key={p.age} x={xScale(p.age)} y={H-3} textAnchor="middle" fontSize="9" fill="rgba(255,255,255,0.3)" fontFamily="'Noto Sans', sans-serif">{p.age}</text>
           ))}
-          <text x={PAD.left-2} y={PAD.top+h} textAnchor="end" fontSize="7" fill="rgba(255,255,255,0.28)" fontFamily="'Noto Sans', sans-serif">0</text>
-          <text x={PAD.left-2} y={PAD.top+5} textAnchor="end" fontSize="7" fill="rgba(255,255,255,0.28)" fontFamily="'Noto Sans', sans-serif">100</text>
+          <text x={PAD.left-2} y={PAD.top+h} textAnchor="end" fontSize="9" fill="rgba(255,255,255,0.28)" fontFamily="'Noto Sans', sans-serif">0</text>
+          <text x={PAD.left-2} y={PAD.top+5} textAnchor="end" fontSize="9" fill="rgba(255,255,255,0.28)" fontFamily="'Noto Sans', sans-serif">100</text>
         </svg>
       </div>
     )
@@ -558,7 +559,7 @@ function LifespanChart({ points }: { points: Array<{age:number, energy:number}> 
 
   return (
     <div style={{ marginBottom:14 }}>
-      <p style={{ color:'#a78bfa', fontSize:10, fontWeight:700, letterSpacing:1.5, textTransform:'uppercase', marginBottom:8, fontFamily:"'Cormorant Garamond', serif" }}>{t('fortune_life_chapters')}</p>
+      <p style={{ color:'var(--lavender)', fontSize:13, fontWeight:700, letterSpacing:1, textTransform:'uppercase', marginBottom:8, fontFamily:"'Cormorant Garamond', serif" }}>{t('fortune_life_chapters')}</p>
       <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
         {renderRow(ROW1, '0 – 60')}
         {renderRow(ROW2, '61 – 120')}
@@ -575,7 +576,7 @@ function LuckCycleBarChart({ cycles }: { cycles: Array<{period:string, score:num
   const W = cycles.length * (BAR_W + GAP) + PAD * 2
   return (
     <div style={{ marginBottom:14 }}>
-      <p style={{ color:'#a78bfa', fontSize:10, fontWeight:700, letterSpacing:1.5, textTransform:'uppercase', marginBottom:4, fontFamily:"'Cormorant Garamond', serif" }}>{t('fortune_luck_cycle')}</p>
+      <p style={{ color:'var(--lavender)', fontSize:13, fontWeight:700, letterSpacing:1, textTransform:'uppercase', marginBottom:4, fontFamily:"'Cormorant Garamond', serif" }}>{t('fortune_luck_cycle')}</p>
       <svg width={Math.min(W, 380)} height={H + 32} style={{ maxWidth:'100%', overflow:'visible' }}>
         {cycles.map((c, i) => {
           const barH = Math.max(4, (c.score / 100) * H)
@@ -587,9 +588,9 @@ function LuckCycleBarChart({ cycles }: { cycles: Array<{period:string, score:num
                 fill="rgba(167,139,250,0.2)" stroke="#a78bfa" strokeWidth="1" rx="3" />
               <text x={x + BAR_W/2} y={H - barH - 4} textAnchor="middle" fontSize="9"
                 fill="#a78bfa" fontWeight="700" fontFamily="'Noto Sans', sans-serif">{c.score}</text>
-              <text x={x + BAR_W/2} y={H + 12} textAnchor="middle" fontSize="8"
+              <text x={x + BAR_W/2} y={H + 12} textAnchor="middle" fontSize="9.5"
                 fill="rgba(255,255,255,0.45)" fontFamily="'Noto Sans', sans-serif">{start}</text>
-              <text x={x + BAR_W/2} y={H + 22} textAnchor="middle" fontSize="7"
+              <text x={x + BAR_W/2} y={H + 22} textAnchor="middle" fontSize="9"
                 fill="rgba(255,255,255,0.3)" fontFamily="'Noto Sans', sans-serif">~{end?.slice(-2)}</text>
             </g>
           )
@@ -606,7 +607,7 @@ function AmPmBarChart({ am, pm }: { am:number, pm:number }) {
   const H = 72, BAR_W = 52, GAP = 22
   return (
     <div style={{ marginBottom:14 }}>
-      <p style={{ color:'var(--text-muted)', fontSize:10, fontWeight:700, letterSpacing:1.5, textTransform:'uppercase', marginBottom:4, fontFamily:"'Cormorant Garamond', serif" }}>{t('todays_energy')}</p>
+      <p style={{ color:'var(--ink-2)', fontSize:13, fontWeight:700, letterSpacing:1, textTransform:'uppercase', marginBottom:4, fontFamily:"'Cormorant Garamond', serif" }}>{t('todays_energy')}</p>
       <svg width={BAR_W*2 + GAP + 24} height={H + 28} style={{ overflow:'visible' }}>
         {(['am','pm'] as const).map((slot, i) => {
           const score = slot === 'am' ? am : pm
@@ -803,7 +804,7 @@ function MonthlyLineChart({ label, data, color, width = 330 }: { label: string; 
   const gradId = `grad_${label}_${W}`
   return (
     <div style={{ marginBottom: 10 }}>
-      <p style={{ color: color, fontSize: 10, fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 3, fontFamily: "'Cormorant Garamond', serif" }}>{label}</p>
+      <p style={{ color: color, fontSize: 13, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 3, fontFamily: "'Cormorant Garamond', serif" }}>{label}</p>
       <svg width={W} height={H} style={{ display: 'block', overflow: 'visible', maxWidth: '100%' }}>
         <defs>
           <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
@@ -832,10 +833,10 @@ function MonthlyLineChart({ label, data, color, width = 330 }: { label: string; 
           )
         })}
         {MONTHS_SHORT.map((m, i) => (
-          <text key={m} x={PAD.left + i * xStep} y={H - 3} textAnchor="middle" fontSize="7" fill="rgba(255,255,255,0.3)" fontFamily="'Noto Sans', sans-serif">{m}</text>
+          <text key={m} x={PAD.left + i * xStep} y={H - 3} textAnchor="middle" fontSize="9" fill="rgba(255,255,255,0.3)" fontFamily="'Noto Sans', sans-serif">{m}</text>
         ))}
-        <text x={PAD.left - 3} y={PAD.top + h} textAnchor="end" fontSize="7" fill="rgba(255,255,255,0.28)" fontFamily="'Noto Sans', sans-serif">{Math.round(min)}</text>
-        <text x={PAD.left - 3} y={PAD.top + 6} textAnchor="end" fontSize="7" fill="rgba(255,255,255,0.28)" fontFamily="'Noto Sans', sans-serif">{Math.round(max)}</text>
+        <text x={PAD.left - 3} y={PAD.top + h} textAnchor="end" fontSize="9" fill="rgba(255,255,255,0.28)" fontFamily="'Noto Sans', sans-serif">{Math.round(min)}</text>
+        <text x={PAD.left - 3} y={PAD.top + 6} textAnchor="end" fontSize="9" fill="rgba(255,255,255,0.28)" fontFamily="'Noto Sans', sans-serif">{Math.round(max)}</text>
       </svg>
     </div>
   )
@@ -926,9 +927,9 @@ function CompatibilityRadarChart({ scores }: { scores: Record<string, {label:str
           const anchor = x < CX - 4 ? 'end' : x > CX + 4 ? 'start' : 'middle'
           return (
             <g key={i}>
-              <text x={x} y={y - 1} textAnchor={anchor} fontSize="7.5" fill={COLORS[i % COLORS.length]}
+              <text x={x} y={y - 1} textAnchor={anchor} fontSize="9.5" fill={COLORS[i % COLORS.length]}
                 fontWeight="700" letterSpacing="0.8" fontFamily="'Noto Sans', sans-serif">{d.label.toUpperCase()}</text>
-              <text x={x} y={y + 9} textAnchor={anchor} fontSize="8" fill="rgba(255,255,255,0.55)"
+              <text x={x} y={y + 11} textAnchor={anchor} fontSize="10" fill="rgba(255,255,255,0.65)"
                 fontFamily="'Noto Sans', sans-serif">{d.score}</text>
             </g>
           )
@@ -952,14 +953,14 @@ function PlanetCardBig({ planet, symbol, sign }: { planet: string; symbol: strin
   const src = zodiacSvg(sign)
   const label = sign ? sign.charAt(0).toUpperCase() + sign.slice(1).toLowerCase() : 'Unknown'
   return (
-    <div style={{ flex:1, background:'rgba(22,33,62,0.85)', border:'1px solid rgba(201,168,76,0.3)', borderRadius:16, padding:'14px 6px', display:'flex', flexDirection:'column', alignItems:'center', gap:8 }}>
-      <span style={{ fontSize:9, color:'#C9A84C', letterSpacing:2, textTransform:'uppercase', opacity:0.85 }}>{planet}</span>
+    <div className="rr-planet rr-planet-big">
+      <span style={{ fontSize:12, color:'var(--gold-light)', letterSpacing:1.5, textTransform:'uppercase' }}>{planet}</span>
       <span style={{ fontSize:18, color:'rgba(246,246,248,0.7)', lineHeight:1 }}>{symbol}</span>
       {src ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={src} alt={sign} width={62} height={62} />
       ) : <div style={{ width:62, height:62, display:'flex', alignItems:'center', justifyContent:'center', fontSize:28 }}>{ZODIAC_SYMBOL[sign.toLowerCase()] ?? '✦'}</div>}
-      <span style={{ fontSize:12, color:'#F6F6F8', fontWeight:700, textAlign:'center' }}>{label}</span>
+      <span style={{ fontSize:14, color:'var(--ink)', fontWeight:700, textAlign:'center' }}>{label}</span>
     </div>
   )
 }
@@ -968,24 +969,24 @@ function PlanetCardSm({ planet, symbol, sign }: { planet: string; symbol: string
   const src = zodiacSvg(sign)
   const label = sign ? sign.charAt(0).toUpperCase() + sign.slice(1).toLowerCase() : 'Unknown'
   return (
-    <div style={{ flex:1, background:'rgba(22,33,62,0.6)', border:'1px solid rgba(201,168,76,0.18)', borderRadius:12, padding:'10px 4px', display:'flex', flexDirection:'column', alignItems:'center', gap:5 }}>
-      <span style={{ fontSize:8, color:'#C9A84C', letterSpacing:1.5, textTransform:'uppercase', opacity:0.75 }}>{planet}</span>
+    <div className="rr-planet">
+      <span style={{ fontSize:12, color:'var(--gold-light)', letterSpacing:.5 }}>{planet}</span>
       <span style={{ fontSize:13, color:'rgba(246,246,248,0.55)', lineHeight:1 }}>{symbol}</span>
       {src ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={src} alt={sign} width={36} height={36} />
       ) : <div style={{ width:36, height:36, display:'flex', alignItems:'center', justifyContent:'center', fontSize:20 }}>{ZODIAC_SYMBOL[sign.toLowerCase()] ?? '✦'}</div>}
-      <span style={{ fontSize:9, color:'rgba(246,246,248,0.75)', fontWeight:700, textAlign:'center' }}>{label}</span>
+      <span style={{ fontSize:12, color:'var(--ink)', fontWeight:700, textAlign:'center' }}>{label}</span>
     </div>
   )
 }
 
 function Divider({ label }: { label: string }) {
   return (
-    <div style={{ margin:'14px 0 10px', display:'flex', alignItems:'center', gap:8 }}>
-      <div style={{ flex:1, height:1, background:'rgba(201,168,76,0.2)' }} />
-      <span style={{ fontSize:8, color:'rgba(201,168,76,0.5)', letterSpacing:2, textTransform:'uppercase' }}>{label}</span>
-      <div style={{ flex:1, height:1, background:'rgba(201,168,76,0.2)' }} />
+    <div style={{ margin:'20px 0 12px', display:'flex', alignItems:'center', gap:10 }}>
+      <div style={{ flex:1, height:1, background:'linear-gradient(90deg, transparent, rgba(201,168,76,0.3))' }} />
+      <span style={{ fontSize:12, color:'var(--gold-light)', letterSpacing:1.5, opacity:.85 }}>{label}</span>
+      <div style={{ flex:1, height:1, background:'linear-gradient(90deg, rgba(201,168,76,0.3), transparent)' }} />
     </div>
   )
 }
@@ -1010,7 +1011,7 @@ function AstrologyProfile({ western, data }: { western: WesternData | null; data
   const hasAny = sunSign || moonSign || ascSign
 
   if (!hasAny) {
-    return <p style={{ color:'var(--text-muted)', fontSize:13, textAlign:'center', padding:20 }}>{t('no_western')}</p>
+    return <p style={{ color:'var(--ink-2)', fontSize:14, textAlign:'center', padding:20 }}>{t('no_western')}</p>
   }
 
   return (
@@ -1023,7 +1024,7 @@ function AstrologyProfile({ western, data }: { western: WesternData | null; data
       </div>
       <div style={{ display:'flex', gap:8, marginTop:10 }}>
         {[t('sun_desc'), t('moon_desc'), t('rising_desc')].map((desc,i) => (
-          <div key={i} style={{ flex:1, textAlign:'center', fontSize:10, color:'rgba(215,215,217,0.55)', lineHeight:1.6 }}>{desc}</div>
+          <div key={i} style={{ flex:1, textAlign:'center', fontSize:12, color:'var(--ink-2)', lineHeight:1.55 }}>{desc}</div>
         ))}
       </div>
 
@@ -1066,6 +1067,12 @@ function ZodiacBadge({ sign }: { sign: string }) {
 
 function ShareButton({ shareId: shareIdProp, raw, birthData }: { shareId?: string; raw?: unknown; birthData?: BirthData }) {
   const t = useTranslations('reading')
+  const locale = useLocale()
+  const SHARE_TXT = {
+    ko: { text: '사주와 별자리로 읽은 나의 운명 리딩이에요 ✨ 오늘의 운세는 무료로 볼 수 있어요.', copied: '링크를 복사했어요!' },
+    ja: { text: '四柱推命と星で読んだ私の運命リーディング ✨ 今日の運勢は無料で見られます。', copied: 'リンクをコピーしました！' },
+    en: { text: 'My BaZi + Astrology reading ✨ Your daily fortune is free.', copied: 'Link copied!' },
+  }[locale as 'ko' | 'ja' | 'en'] ?? { text: 'My BaZi + Astrology reading ✨ Your daily fortune is free.', copied: 'Link copied!' }
   const [msg, setMsg] = useState('')
   const [loading, setLoading] = useState(false)
   const [shareId, setShareId] = useState<string | null>(shareIdProp ?? null)
@@ -1091,21 +1098,23 @@ function ShareButton({ shareId: shareIdProp, raw, birthData }: { shareId?: strin
     if (loading) return
     setLoading(true)
     const origin = typeof window !== 'undefined' ? window.location.origin : 'https://astropillar.com'
-    const shareUrl = shareId ? `${origin}/share/${shareId}` : origin
-    const shareData = { title:'AstroPillar — Where the stars meet your fate', text:'Get your free BaZi + Astrology reading ✨', url:shareUrl }
+    // 공유한 사람의 언어 유지 (en은 접두어 없음)
+    const prefix = locale === 'en' ? '' : `/${locale}`
+    const shareUrl = shareId ? `${origin}${prefix}/share/${shareId}` : `${origin}${prefix}/today`
+    const shareData = { title:'AstroPillar', text: SHARE_TXT.text, url:shareUrl }
     try {
       if (navigator.share) { await navigator.share(shareData) }
-      else { await navigator.clipboard.writeText(`${shareData.text} ${shareUrl}`); setMsg('Link copied!') }
+      else { await navigator.clipboard.writeText(`${shareData.text} ${shareUrl}`); setMsg(SHARE_TXT.copied) }
     } catch { setMsg('') }
     finally { setLoading(false) }
   }
   return (
     <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6 }}>
-      <button onClick={handleShare} disabled={loading} style={{ width:'100%', background:'rgba(201,168,76,0.08)', border:'1px solid var(--gold)', color:'var(--gold)', borderRadius:50, padding:12, fontSize:14, cursor:loading?'not-allowed':'pointer', opacity:loading?0.7:1 }}>
+      <button onClick={handleShare} disabled={loading} className="ap-btn-ghost rr-action" style={{ color:'var(--gold-light)', borderColor:'var(--gold-line)', opacity:loading?0.7:1 }}>
         {loading ? t('sharing') : t('share_earn')}
       </button>
-      {msg && <p style={{ color:'#aaa', fontSize:12, textAlign:'center' }}>{msg}</p>}
-      <p style={{ color:'var(--text-muted)', fontSize:11, textAlign:'center' }}>{t('share_info')}</p>
+      {msg && <p style={{ color:'var(--success)', fontSize:13, textAlign:'center' }}>{msg}</p>}
+      <p style={{ color:'var(--ink-3)', fontSize:12.5, textAlign:'center' }}>{t('share_info')}</p>
     </div>
   )
 }
@@ -1136,20 +1145,23 @@ function NatalChartViewer({ birthData }: { birthData: BirthData }) {
 
   return (
     <>
-      <button onClick={loadChart} disabled={loading} style={{ width:'100%', background:'rgba(201,168,76,0.08)', border:'1px solid rgba(201,168,76,0.4)', color:'var(--gold)', borderRadius:50, padding:12, fontSize:14, cursor:loading?'not-allowed':'pointer', opacity:loading?0.7:1 }}>
+      <button onClick={loadChart} disabled={loading} className="ap-btn-ghost rr-action" style={{ opacity:loading?0.7:1 }}>
         {loading ? t('loading_chart') : t('view_birth_chart')}
       </button>
-      {open && svg && (
-        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.88)', zIndex:9999, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:16 }}
+      {/* body로 portal: 등장 애니메이션(transform) 부모 안에서는 fixed가 화면 전체를 못 덮음 */}
+      {open && svg && typeof document !== 'undefined' && createPortal(
+        <div role="dialog" aria-modal="true" style={{ position:'fixed', inset:0, background:'rgba(5,7,16,0.9)', backdropFilter:'blur(6px)', zIndex:9999, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:16 }}
           onClick={() => setOpen(false)}>
-          <div style={{ background:'#fff', borderRadius:12, maxWidth:480, maxHeight:'85vh', overflow:'auto', padding:8 }}
+          <div style={{ background:'#fff', borderRadius:16, maxWidth:560, width:'100%', maxHeight:'82vh', overflow:'auto', padding:8, boxShadow:'0 30px 80px rgba(0,0,0,.6)' }}
             onClick={e => e.stopPropagation()}>
-            <div dangerouslySetInnerHTML={{ __html: svg }} style={{ width:'100%' }} />
+            <div className="rr-chart-svg" dangerouslySetInnerHTML={{ __html: svg }} style={{ width:'100%' }} />
+            <style>{`.rr-chart-svg svg { width: 100% !important; height: auto !important; display: block; }`}</style>
           </div>
-          <button onClick={() => setOpen(false)} style={{ marginTop:16, color:'#fff', background:'none', border:'1px solid rgba(255,255,255,0.3)', borderRadius:50, padding:'8px 24px', cursor:'pointer', fontSize:14 }}>
+          <button onClick={() => setOpen(false)} className="ap-btn-ghost" style={{ marginTop:16 }}>
             {t('close')}
           </button>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   )
@@ -1172,20 +1184,20 @@ function ScenarioButton({ birthData }: { birthData: BirthData }) {
     router.push('/reading/scenario')
   }
   if (!open) return (
-    <button onClick={() => setOpen(true)} style={{ width:'100%', background:'rgba(167,139,250,0.08)', border:'1px solid #a78bfa', color:'#a78bfa', borderRadius:50, padding:12, fontSize:14, cursor:'pointer' }}>
+    <button onClick={() => setOpen(true)} className="ap-btn-ghost rr-action" style={{ color:'var(--lavender)', borderColor:'rgba(170,165,209,.4)', background:'var(--lavender-soft)' }}>
       {t('analyze_scenario')}
     </button>
   )
   return (
-    <div style={{ background:'var(--card)', border:'1px solid #a78bfa', borderRadius:16, padding:20 }}>
-      <p style={{ color:'#a78bfa', fontSize:11, letterSpacing:2, textTransform:'uppercase', marginBottom:12 }}>{t('ask_scenario_q')}</p>
+    <div className="ap-glass" style={{ borderColor:'rgba(170,165,209,.4)', padding:20 }}>
+      <p style={{ color:'var(--lavender)', fontSize:15, fontWeight:700, marginBottom:12 }}>{t('ask_scenario_q')}</p>
       <textarea value={question} onChange={e=>setQuestion(e.target.value)} placeholder={t('scenario_textarea_ph')} rows={3}
-        style={{ width:'100%', background:'#0f1829', border:'1px solid var(--border)', borderRadius:10, color:'#fff', padding:'12px 14px', fontSize:14, outline:'none', resize:'vertical', fontFamily:"'Noto Sans', sans-serif", lineHeight:1.6, marginBottom:12 }}
+        className="rr-textarea"
       />
-      <div style={{ display:'flex', gap:8 }}>
-        <button onClick={()=>setOpen(false)} style={{ flex:1, background:'none', border:'1px solid var(--border)', borderRadius:50, color:'var(--text-muted)', fontSize:13, padding:10, cursor:'pointer' }}>{t('cancel')}</button>
-        <button onClick={handleGo} disabled={!question.trim()} style={{ flex:2, background:'#a78bfa', border:'none', borderRadius:50, color:'#fff', fontSize:14, fontWeight:700, padding:10, cursor:'pointer', opacity:!question.trim()?0.5:1 }}>
-          {t('analyze_btn')} <span style={{ background:'rgba(22,33,62,0.4)', borderRadius:20, padding:'2px 8px', fontSize:12 }}>{locale === 'ko' ? `${scenarioCost} 크레딧` : locale === 'ja' ? `${scenarioCost}クレジット` : `${scenarioCost} ${scenarioCost === 1 ? 'Credit' : 'Credits'}`}</span>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 2fr', gap:8 }}>
+        <button onClick={()=>setOpen(false)} className="ap-btn-ghost">{t('cancel')}</button>
+        <button onClick={handleGo} disabled={!question.trim()} className="ap-btn" style={{ background:'linear-gradient(180deg,#c3bdf0,#9a92d6)', color:'#14112a', boxShadow:'0 10px 30px -10px rgba(170,165,209,.6)' }}>
+          {t('analyze_btn')} <span style={{ background:'rgba(20,17,42,0.18)', borderRadius:20, padding:'2px 8px', fontSize:12.5 }}>{locale === 'ko' ? `${scenarioCost} 크레딧` : locale === 'ja' ? `${scenarioCost}クレジット` : `${scenarioCost} ${scenarioCost === 1 ? 'Credit' : 'Credits'}`}</span>
         </button>
       </div>
     </div>
@@ -1196,18 +1208,15 @@ function ScenarioButton({ birthData }: { birthData: BirthData }) {
 function AccordionSection({ title, content, defaultOpen, chartContent }: { title: string; content: string; defaultOpen?: boolean; chartContent?: React.ReactNode }) {
   const [open, setOpen] = useState(defaultOpen ?? false)
   return (
-    <div style={{ border:'1px solid rgba(201,168,76,0.2)', borderRadius:14, overflow:'hidden', marginBottom:10 }}>
-      <button type="button" onClick={()=>setOpen(o=>!o)} style={{
-        width:'100%', display:'flex', justifyContent:'space-between', alignItems:'center',
-        padding:'15px 18px', background:'var(--card)', border:'none', cursor:'pointer',
-        textAlign:'left',
-      }}>
-        <span style={{ color:'var(--gold)', fontSize:12, fontWeight:700, letterSpacing:1.5, textTransform:'uppercase', fontFamily:"'Cormorant Garamond', serif" }}>{title}</span>
-        <span style={{ color:'var(--gold)', fontSize:11, transform:open?'rotate(180deg)':'none', transition:'transform 0.2s', flexShrink:0, marginLeft:10 }}>▼</span>
+    <div className={`rr-acc${open ? ' is-open' : ''}`}>
+      <button type="button" onClick={()=>setOpen(o=>!o)} className="rr-acc-head" aria-expanded={open}>
+        <span className="rr-acc-star" aria-hidden="true">✦</span>
+        <span className="rr-acc-title">{title}</span>
+        <span className="rr-acc-chev" aria-hidden="true">⌄</span>
       </button>
       {open && (
-        <div style={{ padding:'16px 18px', background:'var(--card)', borderTop:'1px solid rgba(201,168,76,0.12)' }}>
-          {chartContent}
+        <div className="rr-acc-body">
+          {chartContent && <div className="rr-acc-chart">{chartContent}</div>}
           <RichText text={content} />
         </div>
       )}
@@ -1299,22 +1308,18 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
     { key:'astrology', label: t('tab_astrology') },
   ] as const
 
-  const tabStyle = (active: boolean): React.CSSProperties => ({
-    flex:1, padding:'9px 0', borderRadius:8, border:'none', cursor:'pointer',
-    fontSize:12, fontWeight:600, background: active ? 'var(--gold)' : 'transparent',
-    color: active ? '#16213E' : 'var(--text-muted)',
-  })
 
   return (
-    <div>
+    <div className="rr">
+      <div className="rr-top">
       {/* ── Compatibility Score Card ── */}
       {isCompatibility && compatScores && (
-        <div className="card" style={{ marginBottom:20, padding:'16px 16px 12px' }}>
+        <div className="rr-card ap-glass rr-reveal" style={{ padding:'22px 18px 14px' }}>
           {overallCompatScore !== null && (
             <div style={{ textAlign:'center', marginBottom:10 }}>
-              <p style={{ color:'rgba(201,168,76,0.65)', fontSize:9, letterSpacing:2, textTransform:'uppercase', fontWeight:700, marginBottom:6 }}>{t('compat_score')}</p>
-              <p style={{ fontSize:42, fontWeight:800, color:'#C9A84C', fontFamily:"'Cormorant Garamond', serif", lineHeight:1, margin:0 }}>
-                {overallCompatScore} <span style={{ fontSize:18, color:'rgba(201,168,76,0.45)', fontWeight:400 }}>/ 100</span>
+              <p className="rr-kicker">{t('compat_score')}</p>
+              <p className="ap-gold-text" style={{ fontSize:56, fontWeight:700, fontFamily:"'Cormorant Garamond', serif", lineHeight:1.05, margin:0 }}>
+                {overallCompatScore} <span style={{ fontSize:22, color:'rgba(201,168,76,0.55)', WebkitTextFillColor:'rgba(201,168,76,0.55)', fontWeight:400 }}>/ 100</span>
               </p>
             </div>
           )}
@@ -1324,18 +1329,12 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
 
       {/* ── Chart Tabs ── */}
       {(activePillars || activeWestern || isCompatibility) && (
-        <div className="card" style={{ marginBottom:20, padding:'16px' }}>
+        <div className="rr-card ap-glass rr-reveal" style={{ padding:'18px' }}>
           {/* Person Switcher (Compatibility only) */}
           {isCompatibility && (
-            <div style={{ display:'flex', gap:6, marginBottom:14 }}>
+            <div className="rr-seg rr-seg-person" role="tablist">
               {(['p1','p2'] as const).map(p => (
-                <button key={p} onClick={() => setPersonTab(p)} style={{
-                  flex:1, padding:'8px 0', borderRadius:50,
-                  border: personTab === p ? 'none' : '1px solid rgba(201,168,76,0.3)',
-                  cursor:'pointer', fontSize:12, fontWeight:600,
-                  background: personTab === p ? 'var(--gold)' : 'transparent',
-                  color: personTab === p ? '#16213E' : 'var(--text-muted)',
-                }}>
+                <button key={p} role="tab" aria-selected={personTab === p} onClick={() => setPersonTab(p)} className={`rr-seg-btn${personTab === p ? ' is-on' : ''}`}>
                   {p === 'p1' ? `${t('you_label')}${p1Name ? ` (${p1Name})` : ''}` : `${t('partner_label')}${p2Name ? ` (${p2Name})` : ''}`}
                 </button>
               ))}
@@ -1343,9 +1342,9 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
           )}
 
           {/* Tab switcher */}
-          <div style={{ display:'flex', background:'#0a0a1a', borderRadius:10, padding:4, marginBottom:16 }}>
+          <div className="rr-seg" role="tablist">
             {TABS.map(t => (
-              <button key={t.key} onClick={() => setChartTab(t.key)} style={tabStyle(chartTab === t.key)}>
+              <button key={t.key} role="tab" aria-selected={chartTab === t.key} onClick={() => setChartTab(t.key)} className={`rr-seg-btn${chartTab === t.key ? ' is-on' : ''}`}>
                 {t.label}
               </button>
             ))}
@@ -1356,16 +1355,16 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
             <div>
               {activePillars && activePillars.length >= 2 ? (
                 <>
-                  <div style={{ display:'grid', gridTemplateColumns:`repeat(${activePillars.length},1fr)`, gap:10, marginBottom:16 }}>
+                  <div className="rr-pillars" style={{ gridTemplateColumns:`repeat(${activePillars.length},1fr)` }}>
                     {activePillars.map((p,i) => (
-                      <div key={i} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
-                        <p style={{ color:'var(--text-muted)', fontSize:9, letterSpacing:1.5, textTransform:'uppercase' }}>{pillarLabels[i]}</p>
-                        <Image src={ganImg(p.gan)} alt={p.gan} width={56} height={56} unoptimized style={{ borderRadius:8 }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
-                        <p style={{ color:'rgba(201,168,76,0.75)', fontSize:8, textAlign:'center', lineHeight:1.3 }}>
+                      <div key={i} className={`rr-pillar${i === 2 ? ' is-day' : ''}`}>
+                        <p className="rr-pillar-label">{pillarLabels[i]}</p>
+                        <Image src={ganImg(p.gan)} alt={p.gan} width={64} height={64} unoptimized className="rr-pillar-img" onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
+                        <p className="rr-pillar-note" style={{ color:'var(--gold-light)' }}>
                           {p.gan}{ANNOTATIONS_BY_LOCALE[locale]?.[p.gan] ? ` (${ANNOTATIONS_BY_LOCALE[locale][p.gan]})` : ''}
                         </p>
-                        <Image src={zhiImg(p.zhi)} alt={p.zhi} width={56} height={56} unoptimized style={{ borderRadius:8 }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
-                        <p style={{ color:'rgba(170,170,170,0.7)', fontSize:8, textAlign:'center', lineHeight:1.3 }}>
+                        <Image src={zhiImg(p.zhi)} alt={p.zhi} width={64} height={64} unoptimized className="rr-pillar-img" onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
+                        <p className="rr-pillar-note">
                           {p.zhi}{ANNOTATIONS_BY_LOCALE[locale]?.[p.zhi] ? ` (${ANNOTATIONS_BY_LOCALE[locale][p.zhi]})` : ''}
                         </p>
                       </div>
@@ -1373,14 +1372,9 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
                   </div>
                   {activeYourSignName && activeYourSignLabel && (
                     <div style={{ display:'flex', justifyContent:'center', marginBottom:14 }}>
-                      <div style={{
-                        display:'inline-flex', flexDirection:'column', alignItems:'center', gap:4,
-                        background:'linear-gradient(135deg,rgba(201,168,76,0.14) 0%,rgba(201,168,76,0.06) 100%)',
-                        border:'1px solid rgba(201,168,76,0.45)',
-                        borderRadius:50, padding:'8px 20px',
-                      }}>
-                        <span style={{ fontSize:9, color:'rgba(201,168,76,0.65)', letterSpacing:2, textTransform:'uppercase', fontWeight:700 }}>{t('your_sign')}</span>
-                        <span style={{ color:'#fff', fontSize:15, fontWeight:700, fontFamily:'sans-serif', letterSpacing:0.3 }}>
+                      <div className="rr-sign">
+                        <span className="rr-kicker" style={{ marginBottom:0 }}>{t('your_sign')}</span>
+                        <span style={{ color:'var(--ink)', fontSize:16, fontWeight:700, letterSpacing:0.2 }}>
                           {activeYourSignName}
                           <span style={{ color:'rgba(201,168,76,0.5)', margin:'0 8px', fontWeight:400 }}>·</span>
                           {activeYourSignLabel}
@@ -1389,13 +1383,13 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
                     </div>
                   )}
                   {hasExplainData && (
-                    <Link href={explainUrl} style={{ display:'block', textAlign:'center', background:'rgba(201,168,76,0.08)', border:'1px solid rgba(201,168,76,0.3)', borderRadius:10, padding:'10px 16px', color:'var(--gold)', fontSize:13, textDecoration:'none' }}>
+                    <Link href={explainUrl} className="rr-link">
                       {t('what_means')}
                     </Link>
                   )}
                 </>
               ) : (
-                <p style={{ color:'var(--text-muted)', fontSize:13, textAlign:'center', padding:20 }}>{t('no_bazi')}</p>
+                <p style={{ color:'var(--ink-2)', fontSize:14, textAlign:'center', padding:20 }}>{t('no_bazi')}</p>
               )}
             </div>
           )}
@@ -1406,22 +1400,22 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
               {activeDayElement ? (
                 <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
                   <div style={{ background:'rgba(201,168,76,0.04)', border:`1px solid ${ELEMENT_COLOR[activeDayElement]}40`, borderRadius:12, padding:'16px' }}>
-                    <p style={{ color:'var(--text-muted)', fontSize:10, letterSpacing:2, textTransform:'uppercase', marginBottom:8 }}>{t('day_master_element')}</p>
+                    <p className="rr-kicker" style={{ textAlign:'left' }}>{t('day_master_element')}</p>
                     <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:10 }}>
                       <div style={{ width:44, height:44, borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', background:`${ELEMENT_COLOR[activeDayElement]}18`, border:`1.5px solid ${ELEMENT_COLOR[activeDayElement]}`, color:ELEMENT_COLOR[activeDayElement], fontSize:20, fontWeight:700 }}>
                         {activeDayPillar?.gan}
                       </div>
                       <div>
-                        <p style={{ color:'#fff', fontSize:16, fontWeight:700, textTransform:'capitalize' }}>{activeDayElement}</p>
-                        <p style={{ color:'var(--text-muted)', fontSize:12 }}>{activeDayGanKey ? activeDayGanKey.charAt(0).toUpperCase()+activeDayGanKey.slice(1) : ''} {t('day_master')}</p>
+                        <p style={{ color:'var(--ink)', fontSize:18, fontWeight:700, textTransform:'capitalize' }}>{activeDayElement}</p>
+                        <p style={{ color:'var(--ink-2)', fontSize:13 }}>{activeDayGanKey ? activeDayGanKey.charAt(0).toUpperCase()+activeDayGanKey.slice(1) : ''} {t('day_master')}</p>
                       </div>
                     </div>
-                    <p style={{ color:'var(--text-muted)', fontSize:13, lineHeight:1.7, fontStyle:'italic' }}>{ELEMENT_DESC[activeDayElement]}</p>
+                    <p style={{ color:'var(--ink-2)', fontSize:14.5, lineHeight:1.75 }}>{ELEMENT_DESC[activeDayElement]}</p>
                   </div>
 
                   {/* Wu Xing Relationship Chart */}
-                  <div style={{ background:'rgba(22,33,62,0.5)', border:'1px solid rgba(201,168,76,0.15)', borderRadius:12, padding:'16px 12px 12px' }}>
-                    <p style={{ color:'var(--text-muted)', fontSize:10, letterSpacing:2, textTransform:'uppercase', marginBottom:12, textAlign:'center' }}>{t('five_elements')}</p>
+                  <div style={{ background:'rgba(9,12,26,0.45)', border:'1px solid var(--line)', borderRadius:14, padding:'16px 12px 12px' }}>
+                    <p className="rr-kicker">{t('five_elements')}</p>
                     <WuXingChart
                       soulElement={activeSoulElement}
                       wood={activeWoodScore} fire={activeFireScore} earth={activeEarthScore} metal={activeMetalScore} water={activeWaterScore}
@@ -1429,13 +1423,13 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
                   </div>
 
                   {hasExplainData && (
-                    <Link href={explainUrl} style={{ textAlign:'center', background:'rgba(201,168,76,0.08)', border:'1px solid rgba(201,168,76,0.3)', borderRadius:10, padding:'10px 16px', color:'var(--gold)', fontSize:13, textDecoration:'none', display:'block' }}>
+                    <Link href={explainUrl} className="rr-link">
                       {t('explore_elements')}
                     </Link>
                   )}
                 </div>
               ) : (
-                <p style={{ color:'var(--text-muted)', fontSize:13, textAlign:'center', padding:20 }}>{t('no_elements')}</p>
+                <p style={{ color:'var(--ink-2)', fontSize:14, textAlign:'center', padding:20 }}>{t('no_elements')}</p>
               )}
             </div>
           )}
@@ -1450,8 +1444,8 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
       {/* ── Overall Radar Chart (Personal Fortune / Daily) ── */}
       {(data.reading_type === 'personal_fortune' || data.reading_type === 'personal_daily_fortune') &&
         data.overall_scores != null && (
-        <div className="card" style={{ marginBottom:16, padding:'16px 16px 8px' }}>
-          <p style={{ color:'var(--gold)', fontSize:11, fontWeight:700, letterSpacing:2, textTransform:'uppercase', textAlign:'center', marginBottom:2, fontFamily:"'Cormorant Garamond', serif" }}>
+        <div className="rr-card ap-glass rr-reveal" style={{ padding:'20px 16px 12px' }}>
+          <p className="rr-card-title">
             {data.reading_type === 'personal_daily_fortune' ? t('todays_fortune') : t('lifetime_fortune')}
           </p>
           <RadarChart scores={data.overall_scores as Record<string,number>} axes={radarAxes} />
@@ -1466,9 +1460,11 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
         </div>
       )}
 
+      </div>
+
       {/* ── GPT Reading ── */}
       {sections.length > 0 && (
-        <div style={{ marginBottom:20 }}>
+        <div className="rr-sections">
           {sections.map((s,i) => {
             let normTitle = s.title ? normalizeTitle(s.title) : `Section ${i+1}`
             if (data.reading_type === 'daily' && normTitle === 'Who You Are Today' && data.target_date) {
@@ -1507,22 +1503,101 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
       )}
 
       {/* ── Actions ── */}
-      <div style={{ display:'flex', flexDirection:'column', gap:10, marginTop:8 }}>
+      <div className="rr-actions">
         {fromCache && (
-          <div style={{ textAlign:'center', padding:'6px 12px', background:'rgba(46,204,113,0.08)', border:'1px solid rgba(46,204,113,0.3)', borderRadius:10 }}>
-            <span style={{ color:'#2ecc71', fontSize:12 }}>{t('cached_result')}</span>
+          <div style={{ textAlign:'center', padding:'8px 12px', background:'rgba(147,197,174,0.08)', border:'1px solid rgba(147,197,174,0.3)', borderRadius:12 }}>
+            <span style={{ color:'var(--success)', fontSize:13 }}>{t('cached_result')}</span>
           </div>
         )}
         {birthData && <NatalChartViewer birthData={birthData} />}
         {!isSharedView && birthData && <ScenarioButton birthData={birthData} />}
         {!isSharedView && userEmail && <ShareButton shareId={shareId} raw={raw} birthData={birthData} />}
-        <button onClick={onReset} style={{ background:'none', border:'1px solid var(--border)', color:'var(--text-muted)', borderRadius:50, padding:12, fontSize:14, cursor:'pointer' }}>
+        <button onClick={onReset} className="ap-btn-ghost rr-action">
           {t('new_reading')}
         </button>
-        <Link href="/menu" style={{ textAlign:'center', color:'var(--text-muted)', fontSize:13, textDecoration:'none' }}>
+        <Link href="/menu" className="rr-back">
           {t('back_to_menu')}
         </Link>
       </div>
+      <style>{RR_CSS}</style>
     </div>
   )
 }
+
+const RR_CSS = `
+  .rr { --rrw: 100%; }
+  .rr-top { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 24px; }
+  .rr-card { padding: 18px; min-width: 0; }
+  .rr-reveal { animation: apRise .7s var(--ease-out) both; }
+  .rr-kicker { text-align: center; font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: rgba(230,205,133,.8); margin-bottom: 10px; }
+  .rr-card-title { text-align: center; font-family: 'Cormorant Garamond','Noto Serif KR','Noto Serif JP',serif; font-size: 20px; font-weight: 600; color: var(--gold-light); margin-bottom: 4px; letter-spacing: .04em; }
+
+  .rr-seg { display: flex; gap: 4px; padding: 4px; margin-bottom: 18px; border-radius: 14px;
+    background: rgba(7,9,20,.6); border: 1px solid var(--line); }
+  .rr-seg-person { margin-bottom: 12px; }
+  .rr-seg-btn { flex: 1; min-height: 42px; padding: 0 8px; border-radius: 10px; border: 1px solid transparent; background: transparent; cursor: pointer;
+    font: inherit; font-size: 14px; font-weight: 600; color: var(--ink-2); transition: all var(--t-fast); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rr-seg-btn:hover { color: var(--ink); }
+  .rr-seg-btn.is-on { color: #1a1408; background: linear-gradient(180deg, #e3c879, #c9a84c); box-shadow: 0 6px 18px -8px rgba(201,168,76,.7); }
+
+  .rr-pillars { display: grid; gap: 8px; margin-bottom: 18px; }
+  .rr-pillar { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 2px 12px; border-radius: 14px;
+    border: 1px solid transparent; }
+  .rr-pillar.is-day { border-color: var(--gold-line); background: linear-gradient(180deg, rgba(201,168,76,.10), rgba(201,168,76,.02)); }
+  .rr-pillar-label { font-size: 12px; font-weight: 700; letter-spacing: .08em; color: var(--ink-2); }
+  .rr-pillar.is-day .rr-pillar-label { color: var(--gold-light); }
+  .rr-pillar-img { border-radius: 10px; width: 100%; max-width: 64px; height: auto; aspect-ratio: 1; }
+  .rr-pillar-note { font-size: 12px; text-align: center; line-height: 1.35; color: var(--ink-2); word-break: keep-all; }
+  .rr-sign { display: inline-flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 22px; border-radius: 999px;
+    background: linear-gradient(135deg, rgba(201,168,76,.16), rgba(120,104,190,.10)); border: 1px solid var(--gold-line); }
+  .rr-link { display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 16px; border-radius: 12px; text-decoration: none;
+    font-size: 14px; font-weight: 600; color: var(--gold-light); background: var(--gold-soft); border: 1px solid var(--gold-line); transition: background var(--t-fast); }
+  .rr-link:hover { background: rgba(201,168,76,.22); }
+
+  .rr-planet { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 4px;
+    border-radius: 14px; background: rgba(9,12,26,.5); border: 1px solid var(--line); }
+  .rr-planet-big { gap: 8px; padding: 16px 6px; border-color: var(--gold-line); background: linear-gradient(180deg, rgba(201,168,76,.08), rgba(9,12,26,.5)); }
+
+  .rr-sections { margin-bottom: 24px; }
+  .rr-acc { margin-bottom: 12px; border-radius: 16px; overflow: hidden; border: 1px solid var(--line);
+    background: linear-gradient(180deg, rgba(27,34,58,.62), rgba(13,17,33,.78));
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); transition: border-color var(--t-med); }
+  .rr-acc.is-open { border-color: var(--gold-line); }
+  .rr-acc-head { width: 100%; display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 16px 20px; border: 0; background: transparent;
+    cursor: pointer; text-align: left; font: inherit; color: inherit; }
+  .rr-acc-head:hover .rr-acc-title { color: var(--gold-light); }
+  .rr-acc-star { color: var(--gold); font-size: 12px; flex-shrink: 0; transition: transform var(--t-med); }
+  .rr-acc.is-open .rr-acc-star { transform: rotate(45deg); color: var(--gold-light); }
+  .rr-acc-title { flex: 1; font-family: 'Noto Serif KR','Noto Serif JP','Cormorant Garamond',serif; font-size: 17px; font-weight: 700; line-height: 1.4;
+    color: var(--ink); transition: color var(--t-fast); }
+  .rr-acc-chev { color: var(--gold); font-size: 18px; line-height: 1; transition: transform var(--t-med); flex-shrink: 0; }
+  .rr-acc.is-open .rr-acc-chev { transform: rotate(180deg); }
+  .rr-acc-body { padding: 4px 20px 22px; border-top: 1px solid rgba(201,168,76,.12); animation: fadeIn .35s var(--ease-out); }
+  .rr-acc-chart { margin: 14px 0 6px; overflow-x: auto; }
+  .rr-prose { padding-top: 14px; font-size: 16px; line-height: 1.85; color: rgba(241,237,228,.9); max-width: 68ch; }
+  html[lang="ko"] .rr-prose, html[lang="ja"] .rr-prose { line-height: 1.9; }
+
+  .rr-textarea { display: block; width: 100%; min-height: 96px; padding: 12px 14px; margin-bottom: 12px; resize: vertical;
+    font: inherit; font-size: 16px; line-height: 1.6; color: var(--ink); background: rgba(9,12,26,.72);
+    border: 1px solid var(--line-strong); border-radius: var(--r-sm); outline: none; transition: border-color var(--t-fast), box-shadow var(--t-fast); }
+  .rr-textarea:focus { border-color: var(--lavender); box-shadow: 0 0 0 3px rgba(170,165,209,.22); }
+  .rr-textarea::placeholder { color: var(--ink-3); }
+
+  .rr-actions { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
+  .rr-action { width: 100%; }
+  .rr-back { align-self: center; padding: 10px; min-height: 44px; display: inline-flex; align-items: center; font-size: 14px; color: var(--ink-2); text-decoration: none; }
+  .rr-back:hover { color: var(--gold-light); }
+
+  /* PC: 차트는 넓게 2단, 본문은 읽기 좋은 폭 유지 */
+  @media (min-width: 1024px) {
+    .rr { --rrw: min(1040px, calc(100vw - 96px)); width: var(--rrw); margin-left: calc((100% - var(--rrw)) / 2); }
+    .rr-top { grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); align-items: start; gap: 20px; margin-bottom: 32px; }
+    .rr-card { padding: 24px !important; }
+    .rr-sections, .rr-actions { max-width: 720px; margin-left: auto; margin-right: auto; }
+    .rr-acc-head { padding: 18px 24px; }
+    .rr-acc-body { padding: 4px 28px 26px; }
+    .rr-acc-title { font-size: 18px; }
+    .rr-prose { font-size: 16.5px; }
+    .rr-pillar-img { max-width: 72px; }
+  }
+`

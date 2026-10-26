@@ -5,7 +5,6 @@ import { getMessages, getTranslations } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 import { routing } from '@/i18n/routing'
 import Providers from '@/components/Providers'
-import '../globals.css'
 
 const GA_ID = process.env.NEXT_PUBLIC_GA4_ID
 
@@ -23,9 +22,9 @@ export async function generateMetadata({
     ja: 'AstroPillar — 星と四柱推命が導く、あなたの運命',
   }
   const descs: Record<string, string> = {
-    en: 'Discover your destiny through Eastern BaZi and Western Astrology. Free personalized readings.',
-    ko: '동양 사주와 서양 점성술로 나의 운명을 알아보세요. 무료 개인 맞춤 운세.',
-    ja: '東洋の四柱推命と西洋占星術であなたの運命を読み解きます。無料パーソナルリーディング。',
+    en: 'Read your destiny through Eastern BaZi and Western astrology. Daily tarot, horoscope and zodiac fortunes are free.',
+    ko: '동양 사주와 서양 점성술로 나의 운명을 읽어보세요. 오늘의 타로·별자리·띠 운세는 매일 무료예요.',
+    ja: '東洋の四柱推命と西洋占星術であなたの運命を読み解きます。今日のタロット・星座・干支運勢は毎日無料。',
   }
 
   return {
@@ -63,18 +62,24 @@ export default async function LocaleLayout({
   const messages = await getMessages()
 
   const fontLinks: Record<string, string> = {
-    ko: 'https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap',
-    ja: 'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap',
+    // 전체 서체: Pretendard (일본어는 Pretendard JP)
+    ko: '',
+    ja: 'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-jp-dynamic-subset.min.css',
     en: '',
   }
 
   return (
     <html lang={locale}>
       <head>
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
+        <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
         {fontLinks[locale] && <link href={fontLinks[locale]} rel="stylesheet" />}
       </head>
       <body>
+        <Script id="disable-pwa-install" strategy="afterInteractive">{`
+          window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault(); });
+        `}</Script>
         {GA_ID && (
           <>
             <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />

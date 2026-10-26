@@ -47,8 +47,6 @@ function LoginContent() {
   const [error, setError] = useState('')
   const [resetSent, setResetSent] = useState(false)
 
-  const fontFamily = locale === 'ko' ? "'Noto Sans KR', sans-serif" : locale === 'ja' ? "'Noto Sans JP', sans-serif" : "'Noto Sans', sans-serif"
-
   // 가입 크레딧 지급 — 일시 오류로 계정만 생기고 크레딧 0이 되지 않도록 3회 재시도
   async function registerUser(userEmail: string) {
     const platform = window.matchMedia('(display-mode: standalone)').matches ? 'mo' : 'on'
@@ -191,107 +189,176 @@ function LoginContent() {
     }
   }
 
-  const inputSt: React.CSSProperties = {
-    width: '100%', padding: '14px 16px',
-    background: 'rgba(255,255,255,0.05)', border: '1.5px solid rgba(201,168,76,0.3)',
-    borderRadius: 12, color: '#F6F6F8', fontFamily, fontSize: 15,
-    outline: 'none', boxSizing: 'border-box',
-  }
-  const btnSt: React.CSSProperties = {
-    width: '100%', padding: '15px', background: '#C9A84C', color: '#16213E',
-    fontFamily, fontSize: 15, fontWeight: 700, border: 'none',
-    borderRadius: 50, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1,
-  }
+  const L = locale === 'ko' ? 'ko' : locale === 'ja' ? 'ja' : 'en'
+  const BRAND = {
+    ko: { title: '당신의 별 지도를\n펼칠 시간이에요', body: '사주와 별자리, 타로가 하나의 이야기로 이어지는 곳. 가입하면 첫 리딩을 위한 크레딧 1개를 드려요.', points: ['사주 + 서양 점성술 통합 리딩', '나의 리딩 기록과 인물 저장', '매일 무료 타로와 별자리 운세'] },
+    ja: { title: 'あなたの星の地図を\n広げるときです', body: '四柱推命と星座、タロットがひとつの物語につながる場所。登録すると最初のリーディング用に1クレジットを差し上げます。', points: ['四柱推命 + 西洋占星術の統合リーディング', 'リーディング履歴と人物の保存', '毎日無料のタロットと星座運勢'] },
+    en: { title: 'Time to unfold\nyour star map', body: 'Where BaZi, astrology and tarot become one story. Sign up and get 1 free credit for your first reading.', points: ['BaZi + Western astrology in one reading', 'Your reading history and saved people', 'Free daily tarot and horoscope'] },
+  }[L]
+
+  const submitLabel = loading ? '...' : mode === 'forgot' ? (locale === 'ko' ? '재설정 이메일 보내기' : locale === 'ja' ? 'リセットメールを送る' : 'Send Reset Email') : mode === 'login' ? t('signin_btn') : t('signup_btn')
 
   return (
-    <main style={{ background: '#07071a', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily, color: '#F6F6F8', padding: '20px' }}>
-      <div style={{ width: '100%', maxWidth: 380 }}>
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 26, fontWeight: 700, color: '#C9A84C', letterSpacing: 3, marginBottom: 8 }}>ASTROPILLAR</div>
-          <div style={{ fontSize: 14, color: 'rgba(200,195,220,0.6)' }}>{t('welcome')}</div>
-        </div>
-
-        {mode !== 'forgot' && (
-          <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderRadius: 12, marginBottom: 28, padding: 4, gap: 4 }}>
-            {(['login','signup'] as const).map(m => (
-              <button key={m} onClick={() => setMode(m)} style={{
-                flex: 1, padding: '10px', borderRadius: 9, border: 'none', cursor: 'pointer', fontFamily, fontSize: 14, fontWeight: 600, transition: 'all 0.2s',
-                background: mode === m ? '#C9A84C' : 'transparent',
-                color: mode === m ? '#16213E' : 'rgba(200,195,220,0.6)',
-              }}>
-                {m === 'login' ? t('signin_tab') : t('signup_tab')}
-              </button>
-            ))}
+    <main className="ap-page lg">
+      <div className="lg-wrap ap-container">
+        {/* 브랜드 패널 (PC 전용) */}
+        <aside className="lg-brand ap-desktop-only" aria-hidden="true">
+          <div className="lg-arch">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/home.png" alt="" />
           </div>
-        )}
+          <div className="lg-brand-copy">
+            <h2 className="lg-brand-title">{BRAND.title}</h2>
+            <p className="lg-brand-body">{BRAND.body}</p>
+            <ul className="lg-points">
+              {BRAND.points.map(p => <li key={p}><span className="lg-point-star">✦</span>{p}</li>)}
+            </ul>
+          </div>
+        </aside>
 
-        {mode !== 'forgot' && (
-          <>
-            <button onClick={() => handleSocial(googleProvider, 'google')} disabled={loading} style={{ width: '100%', padding: '14px', background: 'rgba(255,255,255,0.07)', border: '1.5px solid rgba(201,168,76,0.3)', borderRadius: 50, color: '#F6F6F8', fontFamily, fontSize: 14, fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, opacity: loading ? 0.7 : 1 }}>
-              <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"/></svg>
-              {t('google')}
-            </button>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0' }}>
-              <div style={{ flex: 1, height: 1, background: 'rgba(201,168,76,0.2)' }} />
-              <span style={{ fontSize: 11, color: 'rgba(200,195,220,0.4)' }}>{locale === 'ko' ? '또는 이메일로' : locale === 'ja' ? 'またはメールで' : 'or continue with email'}</span>
-              <div style={{ flex: 1, height: 1, background: 'rgba(201,168,76,0.2)' }} />
+        {/* 폼 카드 */}
+        <section className="lg-card ap-glass ap-glass-gold">
+          <div className="lg-head">
+            <Link href={locale === 'en' ? '/' : `/${locale}`} className="lg-logo">ASTROPILLAR</Link>
+            <p className="lg-welcome">{t('welcome')}</p>
+          </div>
+
+          {mode !== 'forgot' && (
+            <div className="lg-tabs" role="tablist">
+              {(['login', 'signup'] as const).map(m => (
+                <button key={m} role="tab" aria-selected={mode === m} onClick={() => setMode(m)} className={`lg-tab${mode === m ? ' is-on' : ''}`}>
+                  {m === 'login' ? t('signin_tab') : t('signup_tab')}
+                </button>
+              ))}
             </div>
-          </>
-        )}
+          )}
 
-        {resetSent ? (
-          <div style={{ textAlign: 'center', color: '#C9A84C', padding: 20 }}>{t('reset_sent')}</div>
-        ) : (
-          <form onSubmit={mode === 'forgot' ? handleForgot : handleEmailAuth} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {mode === 'forgot' && (
-              <div style={{ textAlign: 'center', color: 'rgba(200,195,220,0.7)', marginBottom: 8, fontSize: 14 }}>
-                {locale === 'ko' ? '가입하신 이메일을 입력해주세요.' : locale === 'ja' ? '登録したメールアドレスを入力してください。' : 'Enter your email to reset your password.'}
+          {mode !== 'forgot' && (
+            <>
+              <button onClick={() => handleSocial(googleProvider, 'google')} disabled={loading} className="lg-google">
+                <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"/></svg>
+                {t('google')}
+              </button>
+              <div className="lg-divider">
+                <span>{locale === 'ko' ? '또는 이메일로' : locale === 'ja' ? 'またはメールで' : 'or continue with email'}</span>
               </div>
-            )}
-            <input style={inputSt} type="email" placeholder={t('email')} value={email} onChange={e => setEmail(e.target.value)} required />
-            {mode !== 'forgot' && (
-              <input style={inputSt} type="password" placeholder={t('password')} value={password} onChange={e => setPassword(e.target.value)} required />
-            )}
-            {mode === 'signup' && (
-              <input style={inputSt} type="password" placeholder={t('confirm_password')} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required />
-            )}
-            {error && <div style={{ color: '#ff6b6b', fontSize: 13, textAlign: 'center' }}>{error}</div>}
-            <button type="submit" style={btnSt} disabled={loading}>
-              {loading ? '...' : mode === 'forgot' ? (locale === 'ko' ? '재설정 이메일 보내기' : locale === 'ja' ? 'リセットメールを送る' : 'Send Reset Email') : mode === 'login' ? t('signin_btn') : t('signup_btn')}
+            </>
+          )}
+
+          {resetSent ? (
+            <div className="lg-reset-sent">{t('reset_sent')}</div>
+          ) : (
+            <form onSubmit={mode === 'forgot' ? handleForgot : handleEmailAuth} className="lg-form">
+              {mode === 'forgot' && (
+                <p className="lg-forgot-note">
+                  {locale === 'ko' ? '가입하신 이메일을 입력해주세요.' : locale === 'ja' ? '登録したメールアドレスを入力してください。' : 'Enter your email to reset your password.'}
+                </p>
+              )}
+              <label className="lg-field">
+                <span>{t('email')}</span>
+                <input className="lg-input" type="email" autoComplete="email" placeholder="name@example.com" value={email} onChange={e => setEmail(e.target.value)} required />
+              </label>
+              {mode !== 'forgot' && (
+                <label className="lg-field">
+                  <span>{t('password')}</span>
+                  <input className="lg-input" type="password" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} value={password} onChange={e => setPassword(e.target.value)} required />
+                </label>
+              )}
+              {mode === 'signup' && (
+                <label className="lg-field">
+                  <span>{t('confirm_password')}</span>
+                  <input className="lg-input" type="password" autoComplete="new-password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required />
+                </label>
+              )}
+              {error && <div className="lg-error" role="alert">{error}</div>}
+              <button type="submit" className="ap-btn lg-submit" disabled={loading}>{submitLabel}</button>
+            </form>
+          )}
+
+          {mode === 'login' && (
+            <button onClick={() => setMode('forgot')} className="lg-textbtn">{t('forgot')}</button>
+          )}
+          {mode === 'forgot' && (
+            <button onClick={() => setMode('login')} className="lg-textbtn">← {t('signin_link')}</button>
+          )}
+
+          {mode === 'signup' && (
+            <p className="lg-gift">
+              <span aria-hidden="true">✦</span>
+              {locale === 'ko' ? '가입하면 무료 크레딧 1개를 드려요' : locale === 'ja' ? '登録で無料クレジット1個プレゼント' : 'Get 1 free Credit on sign-up'}
+            </p>
+          )}
+
+          <p className="lg-switch">
+            {mode === 'login' ? t('no_account') : t('have_account')}{' '}
+            <button onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}>
+              {mode === 'login' ? t('signup_link') : t('signin_link')}
             </button>
-          </form>
-        )}
+          </p>
 
-        {mode === 'login' && (
-          <button onClick={() => setMode('forgot')} style={{ background: 'none', border: 'none', color: 'rgba(201,168,76,0.6)', fontFamily, fontSize: 12, cursor: 'pointer', display: 'block', margin: '12px auto 0', textDecoration: 'underline' }}>
-            {t('forgot')}
-          </button>
-        )}
-        {mode === 'forgot' && (
-          <button onClick={() => setMode('login')} style={{ background: 'none', border: 'none', color: 'rgba(201,168,76,0.6)', fontFamily, fontSize: 12, cursor: 'pointer', display: 'block', margin: '12px auto 0' }}>
-            ← {t('signin_link')}
-          </button>
-        )}
-
-        {mode === 'signup' && (
-          <div style={{ textAlign: 'center', marginTop: 16, fontSize: 12, color: 'rgba(201,168,76,0.8)' }}>
-            {locale === 'ko' ? '🎁 가입하면 무료 크레딧 1개를 드려요' : locale === 'ja' ? '🎁 登録で無料クレジット1個プレゼント' : '🎁 Get 1 free Credit on sign-up'}
+          <div className="lg-home">
+            <Link href={locale === 'en' ? '/' : `/${locale}`}>
+              {locale === 'ko' ? '← 홈으로 가기' : locale === 'ja' ? '← ホームへ戻る' : '← Back to Home'}
+            </Link>
           </div>
-        )}
-
-        <div style={{ textAlign: 'center', marginTop: 24, fontSize: 12, color: 'rgba(200,195,220,0.4)' }}>
-          {mode === 'login' ? t('no_account') : t('have_account')}{' '}
-          <button onClick={() => setMode(mode === 'login' ? 'signup' : 'login')} style={{ background: 'none', border: 'none', color: '#C9A84C', fontFamily, fontSize: 12, cursor: 'pointer', textDecoration: 'underline' }}>
-            {mode === 'login' ? t('signup_link') : t('signin_link')}
-          </button>
-        </div>
-
-        <div style={{ textAlign: 'center', marginTop: 20 }}>
-          <Link href="/" style={{ color: 'rgba(200,195,220,0.3)', fontSize: 12, textDecoration: 'none' }}>
-            {locale === 'ko' ? '← 홈으로 가기' : locale === 'ja' ? '← ホームへ戻る' : '← Back to Home'}
-          </Link>
-        </div>
+        </section>
       </div>
+
+      <style>{`
+        .lg { display:flex; align-items:center; padding-bottom: 32px; }
+        .lg-wrap { display:grid; grid-template-columns: 1fr; gap: 48px; align-items:center; padding-top: 32px; padding-bottom: 32px; }
+        .lg-card { width: 100%; max-width: 440px; margin: 0 auto; padding: 32px 24px; }
+        .lg-head { text-align:center; margin-bottom: 26px; }
+        .lg-logo { font-family:'Cormorant Garamond',serif; font-size: 26px; font-weight: 700; letter-spacing: .2em; color: var(--gold); text-decoration:none; }
+        .lg-welcome { margin-top: 8px; font-size: 14px; color: var(--ink-2); }
+        .lg-tabs { display:grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 999px; background: rgba(255,255,255,.04); border: 1px solid var(--line); margin-bottom: 22px; }
+        .lg-tab { min-height: 40px; border: 0; border-radius: 999px; background: transparent; color: var(--ink-2); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; transition: background .2s, color .2s; }
+        .lg-tab.is-on { background: linear-gradient(180deg, #e3c879, #c9a84c); color: #1a1408; }
+        .lg-google { width:100%; min-height: 52px; display:flex; align-items:center; justify-content:center; gap: 10px; border-radius: 999px; cursor: pointer;
+          background: #f6f4ef; color: #1f2330; border: 1px solid rgba(255,255,255,.6); font: inherit; font-size: 15px; font-weight: 600;
+          transition: transform .16s, box-shadow .2s; box-shadow: 0 10px 24px -12px rgba(0,0,0,.6); }
+        .lg-google:hover { box-shadow: 0 14px 30px -12px rgba(230,205,133,.35); }
+        .lg-google:active { transform: scale(.98); }
+        .lg-google:disabled { opacity: .6; cursor: not-allowed; }
+        .lg-divider { display:flex; align-items:center; gap: 12px; margin: 22px 0; font-size: 12px; color: var(--ink-3); }
+        .lg-divider::before, .lg-divider::after { content:""; flex:1; height:1px; background: var(--line-strong); }
+        .lg-form { display:flex; flex-direction:column; gap: 14px; }
+        .lg-field { display:flex; flex-direction:column; gap: 6px; }
+        .lg-field > span { font-size: 13px; color: var(--ink-2); font-weight: 500; }
+        .lg-input { width:100%; min-height: 50px; padding: 0 16px; border-radius: 12px; outline: none;
+          background: rgba(7,9,20,.55); border: 1px solid var(--line-strong); color: var(--ink); transition: border-color .2s, box-shadow .2s; }
+        .lg-input::placeholder { color: var(--ink-3); }
+        .lg-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,168,76,.18); }
+        .lg-error { color: var(--danger); font-size: 13px; text-align:center; }
+        .lg-submit { width: 100%; margin-top: 4px; }
+        .lg-forgot-note { text-align:center; color: var(--ink-2); font-size: 14px; margin-bottom: 4px; }
+        .lg-reset-sent { text-align:center; color: var(--gold-light); padding: 20px; line-height: 1.7; }
+        .lg-textbtn { display:block; margin: 14px auto 0; background:none; border:none; color: var(--gold-light); font: inherit; font-size: 13px; cursor:pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(230,205,133,.35); min-height: 32px; }
+        .lg-gift { display:flex; align-items:center; justify-content:center; gap: 8px; margin-top: 16px; padding: 10px 14px; border-radius: 12px;
+          background: var(--gold-soft); border: 1px solid var(--gold-line); color: var(--gold-light); font-size: 13px; }
+        .lg-switch { text-align:center; margin-top: 22px; font-size: 13px; color: var(--ink-2); }
+        .lg-switch button { background:none; border:none; color: var(--gold-light); font: inherit; font-size: 13px; font-weight: 600; cursor:pointer; text-decoration: underline; text-underline-offset: 3px; }
+        .lg-home { text-align:center; margin-top: 18px; }
+        .lg-home a { color: var(--ink-3); font-size: 12.5px; text-decoration:none; }
+        .lg-home a:hover { color: var(--ink-2); }
+
+        .lg-brand { display:grid; grid-template-columns: 220px 1fr; gap: 40px; align-items:center; }
+        .lg-arch { aspect-ratio: 3 / 4.4; border-radius: 999px 999px 20px 20px; overflow:hidden; border: 1px solid var(--gold-line);
+          box-shadow: 0 0 0 6px rgba(201,168,76,.05), 0 30px 80px -20px rgba(120,104,190,.45); }
+        .lg-arch img { width:100%; height:100%; object-fit:cover; object-position: center 22%; display:block; }
+        .lg-brand-title { font-family: var(--font-display); font-size: 40px; line-height: 1.25; font-weight: 600; white-space: pre-line; }
+        html[lang="ko"] .lg-brand-title, html[lang="ja"] .lg-brand-title { font-family: 'Noto Serif KR','Noto Serif JP',serif; font-size: 34px; }
+        .lg-brand-body { margin-top: 16px; font-size: 15.5px; line-height: 1.75; color: var(--ink-2); max-width: 42ch; }
+        .lg-points { list-style:none; margin-top: 22px; display:flex; flex-direction:column; gap: 10px; }
+        .lg-points li { display:flex; gap: 10px; font-size: 14.5px; color: var(--ink); }
+        .lg-point-star { color: var(--gold-light); font-size: 12px; line-height: 22px; }
+
+        @media (min-width: 1024px) {
+          .lg { min-height: calc(100dvh - var(--nav-h)); }
+          .lg-wrap { grid-template-columns: 1.25fr 1fr; gap: 64px; }
+          .lg-card { padding: 40px 36px; margin: 0; justify-self: end; }
+        }
+      `}</style>
     </main>
   )
 }

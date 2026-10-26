@@ -6,6 +6,10 @@ interface Props {
   onComplete: () => void
 }
 
+// 텍스트 기호 강제 (︎): 이모지로 바뀌는 것 방지
+const ZODIAC = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓'].map(z => z + '︎')
+const STEMS = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸']
+
 export default function ReadingLoader({ onComplete }: Props) {
   const t = useTranslations('reading')
   const phrases = t.raw('loader_phrases') as string[]
@@ -50,44 +54,74 @@ export default function ReadingLoader({ onComplete }: Props) {
   }, [phrases.length])
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 24px', gap: 32 }}>
-      <div style={{ fontSize: 36, color: 'var(--gold)', animation: 'spin 3s linear infinite' }}>✦</div>
-
-      <div style={{ width: '100%', maxWidth: 360 }}>
-        <div style={{ background: 'rgba(201,168,76,0.12)', borderRadius: 99, height: 6, overflow: 'hidden' }}>
-          <div style={{
-            height: '100%', borderRadius: 99,
-            background: 'linear-gradient(90deg, #C9A84C, #e8cc7a)',
-            width: `${progress}%`,
-            transition: 'width 0.2s linear',
-          }} />
+    <div className="rl-wrap" role="status" aria-live="polite">
+      <div className="rl-scene" aria-hidden="true">
+        <div className="rl-halo" />
+        <div className="rl-ring rl-ring-outer">
+          {ZODIAC.map((z, i) => (
+            <span key={i} style={{ transform: `rotate(${i * 30}deg) translateY(-50cqw) rotate(${-i * 30}deg)` }}>{z}</span>
+          ))}
         </div>
-        <p style={{ color: 'var(--text-muted)', fontSize: 11, textAlign: 'right', marginTop: 6 }}>
-          {Math.round(progress)}%
-        </p>
+        <div className="rl-ring rl-ring-mid">
+          {STEMS.map((s, i) => (
+            <span key={i} style={{ transform: `rotate(${i * 36}deg) translateY(-34cqw) rotate(${-i * 36}deg)` }}>{s}</span>
+          ))}
+        </div>
+        <div className="rl-ring rl-ring-inner" />
+        <div className="rl-planet" />
+        <div className="rl-core">✦</div>
       </div>
 
-      <div style={{
-        background: 'rgba(201,168,76,0.08)',
-        border: '1px solid rgba(201,168,76,0.25)',
-        borderRadius: 12,
-        padding: '16px 20px',
-        maxWidth: 360,
-        width: '100%',
-        opacity: fadeIn ? 1 : 0,
-        transition: 'opacity 0.4s ease',
-      }}>
-        <p style={{ color: 'var(--gold)', fontSize: 13, fontStyle: 'italic', lineHeight: 1.7, textAlign: 'center' }}>
-          {phrases[phraseIndex]}
-        </p>
+      <div className="rl-progress">
+        <div className="rl-track">
+          <div className="rl-fill" style={{ width: `${progress}%` }} />
+        </div>
+        <p className="rl-pct">{Math.round(progress)}%</p>
       </div>
 
-      <p style={{ color: 'var(--text-muted)', fontSize: 12, textAlign: 'center', lineHeight: 1.6, maxWidth: 320 }}>
+      <p className="rl-phrase" style={{ opacity: fadeIn ? 1 : 0, transform: fadeIn ? 'none' : 'translateY(4px)' }}>
+        {phrases[phraseIndex]}
+      </p>
+
+      <p className="rl-note">
         {t('loader_for_you')}<br />
         {t('loader_notice')}
       </p>
 
-      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+      <style>{`
+        .rl-wrap { display: flex; flex-direction: column; align-items: center; gap: 28px; padding: 40px 8px 24px; }
+        .rl-scene { position: relative; width: min(72vw, 280px); aspect-ratio: 1; container-type: inline-size; }
+        .rl-halo { position: absolute; inset: 18%; border-radius: 50%;
+          background: radial-gradient(circle, rgba(230,205,133,.28), rgba(120,104,190,.14) 45%, transparent 70%);
+          animation: rlBreath 4.5s ease-in-out infinite; }
+        .rl-ring { position: absolute; border-radius: 50%; left: 50%; top: 50%; translate: -50% -50%; }
+        .rl-ring span { position: absolute; left: 50%; top: 50%; width: 22px; height: 22px; margin: -11px 0 0 -11px;
+          display: grid; place-items: center; line-height: 1; }
+        .rl-ring-outer { width: 100%; height: 100%; border: 1px solid rgba(201,168,76,.22); animation: apSpin 60s linear infinite; }
+        .rl-ring-outer span { font-family: 'Segoe UI Symbol','Noto Sans Symbols 2','Apple Symbols',serif; font-variant-emoji: text;
+          font-size: 14px; color: rgba(230,205,133,.75); }
+        .rl-ring-mid { width: 68%; height: 68%; border: 1px dashed rgba(170,165,209,.28); animation: apSpinRev 40s linear infinite; }
+        .rl-ring-mid span { font-family: 'Noto Serif KR','Noto Serif JP',serif; font-size: 13px; color: rgba(170,165,209,.85); }
+        .rl-ring-inner { width: 40%; height: 40%; border: 1px solid rgba(201,168,76,.35);
+          box-shadow: 0 0 40px rgba(201,168,76,.18), inset 0 0 30px rgba(201,168,76,.12); }
+        .rl-planet { position: absolute; left: 50%; top: 50%; width: 52%; height: 52%; translate: -50% -50%; border-radius: 50%;
+          animation: apSpin 9s linear infinite; }
+        .rl-planet::before { content: ""; position: absolute; top: -4px; left: 50%; width: 8px; height: 8px; margin-left: -4px; border-radius: 50%;
+          background: var(--gold-light); box-shadow: 0 0 12px 3px rgba(230,205,133,.7); }
+        .rl-core { position: absolute; left: 50%; top: 50%; translate: -50% -50%; font-size: 30px; color: var(--gold-light);
+          text-shadow: 0 0 22px rgba(230,205,133,.85); animation: apGlow 2.6s ease-in-out infinite; }
+        @keyframes rlBreath { 0%,100% { transform: scale(.92); opacity: .7; } 50% { transform: scale(1.08); opacity: 1; } }
+
+        .rl-progress { width: 100%; max-width: 360px; }
+        .rl-track { height: 4px; border-radius: 999px; overflow: hidden; background: rgba(201,168,76,.12); }
+        .rl-fill { height: 100%; border-radius: 999px; transition: width .2s linear;
+          background: linear-gradient(90deg, #8f7bd0, #c9a84c 60%, #f0dc9c); box-shadow: 0 0 12px rgba(230,205,133,.6); }
+        .rl-pct { margin-top: 8px; text-align: right; font-size: 12.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+
+        .rl-phrase { max-width: 400px; min-height: 3.4em; text-align: center; font-family: 'Noto Serif KR','Noto Serif JP', var(--font-display), serif;
+          font-size: 17px; line-height: 1.7; color: var(--gold-light); transition: opacity .4s ease, transform .4s ease; }
+        .rl-note { max-width: 340px; text-align: center; font-size: 13.5px; line-height: 1.7; color: var(--ink-2); }
+      `}</style>
     </div>
   )
 }

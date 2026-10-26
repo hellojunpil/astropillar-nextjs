@@ -1,1 +1,1 @@
-export { default } from '@/app/reading/compatibility/page'
+export { default } from '@/app/_pages/reading/compatibility/page'

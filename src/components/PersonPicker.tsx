@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
 import { SavedPerson, savePerson, birthDateStr } from '@/lib/firestore'
 import { monthOptionLabel, timeRangeLabel } from '@/lib/birthLabels'
-import BirthForm, { BirthData } from './BirthForm'
+import BirthForm, { BirthData, FORM_CSS } from './BirthForm'
 
 export function personToBirthData(p: SavedPerson): BirthData {
   const [year, month, day] = p.birth_date.split('-').map(Number)
@@ -36,15 +36,46 @@ const TIME_RANGES: { label: string; hour: number | null; minute: number }[] = [
   { label: '21:30 - 23:30', hour: 21, minute: 30 },
 ]
 
-const inputStyle: React.CSSProperties = {
-  background: '#0f1829', border: '1px solid var(--border)', borderRadius: 10,
-  color: '#fff', padding: '10px 14px', fontSize: 14, width: '100%', outline: 'none',
-  fontFamily: "'Noto Sans', sans-serif",
-}
-const labelStyle: React.CSSProperties = {
-  color: 'var(--text-muted)', fontSize: 11, letterSpacing: 1.5,
-  textTransform: 'uppercase', marginBottom: 5, display: 'block',
-}
+const inputStyle: React.CSSProperties = { width: '100%' }
+const labelStyle: React.CSSProperties = {}
+
+const PICKER_CSS = `
+  .pp-add { display: flex; flex-direction: column; gap: 16px; padding: 22px 18px; margin-top: 4px;
+    border-radius: var(--r-md); border: 1px solid var(--gold-line);
+    background: linear-gradient(180deg, rgba(201,168,76,.06), rgba(201,168,76,.015)); }
+  .pp-add-title { font-family: var(--font-display); font-size: 19px; font-weight: 600; color: var(--gold-light); }
+  .pp-err { color: var(--danger); font-size: 13.5px; }
+  .pp-actions { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; margin-top: 4px; }
+  .pp-empty { text-align: center; padding: 40px 24px; }
+  .pp-empty-glyph { width: 64px; height: 64px; margin: 0 auto 16px; border-radius: 50%; display: grid; place-items: center;
+    font-size: 26px; color: var(--gold-light); border: 1px solid var(--gold-line);
+    background: radial-gradient(circle, rgba(201,168,76,.18), rgba(201,168,76,.02) 70%); }
+  .pp-empty-title { font-size: 17px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
+  .pp-empty-sub { font-size: 14.5px; line-height: 1.7; color: var(--ink-2); margin: 0 auto 22px; max-width: 36ch; }
+  .pp-list { display: grid; grid-template-columns: 1fr; gap: 10px; max-height: 452px; overflow-y: auto; padding: 2px 4px 2px 2px; overscroll-behavior: contain; }
+  @media (min-width: 560px) { .pp-list { grid-template-columns: 1fr 1fr; } }
+  .pp-person { width: 100%; text-align: left; padding: 16px 18px; border-radius: var(--r-md); cursor: pointer; position: relative;
+    font: inherit; color: inherit; border: 1px solid var(--line-strong);
+    background: linear-gradient(180deg, rgba(30,37,64,.55), rgba(15,19,36,.7));
+    transition: border-color var(--t-fast), background var(--t-fast), transform var(--t-fast), box-shadow var(--t-med); }
+  .pp-person:hover { border-color: var(--gold-line); }
+  .pp-person:active { transform: scale(.985); }
+  .pp-person.is-on { border-color: var(--gold); background: linear-gradient(180deg, rgba(201,168,76,.14), rgba(201,168,76,.04));
+    box-shadow: 0 0 0 3px rgba(201,168,76,.12), 0 16px 40px -20px rgba(201,168,76,.45); }
+  .pp-name { font-size: 16px; font-weight: 700; color: var(--ink); padding-right: 22px; }
+  .pp-person.is-on .pp-name { color: var(--gold-light); }
+  .pp-meta { font-size: 13.5px; color: var(--ink-2); margin-top: 6px; }
+  .pp-time { font-size: 12.5px; color: var(--ink-3); margin-top: 3px; }
+  .pp-check { position: absolute; top: 14px; right: 16px; color: var(--gold-light); font-size: 15px; }
+  .pp-add-btn { min-height: 48px; border-radius: var(--r-md); border: 1px dashed var(--gold-line); background: rgba(201,168,76,.04);
+    color: var(--gold-light); font: inherit; font-size: 14.5px; font-weight: 600; cursor: pointer; transition: background var(--t-fast); }
+  .pp-add-btn:hover { background: var(--gold-soft); }
+  .pp-text-btn { align-self: center; background: none; border: none; cursor: pointer; font: inherit; font-size: 14px; color: var(--ink-2);
+    padding: 10px 6px; min-height: 44px; text-decoration: underline; text-underline-offset: 4px; text-decoration-color: var(--line-strong); }
+  .pp-text-btn:hover { color: var(--gold-light); text-decoration-color: var(--gold-line); }
+  .pp-back { align-self: flex-start; background: none; border: none; cursor: pointer; font: inherit; font-size: 14px; color: var(--ink-2); padding: 8px 0; min-height: 40px; }
+  .pp-back:hover { color: var(--gold-light); }
+`
 
 interface Props {
   people: SavedPerson[]
@@ -106,52 +137,44 @@ export default function PersonPicker({
   }
 
   const addPersonForm = (
-    <form onSubmit={handleAddPerson} style={{ display:'flex', flexDirection:'column', gap:12, background:'rgba(201,168,76,0.04)', border:'1px solid rgba(201,168,76,0.2)', borderRadius:14, padding:'18px 16px', marginTop:4 }}>
-      <p style={{ color:'var(--gold)', fontSize:11, letterSpacing:2, textTransform:'uppercase', marginBottom:4 }}>{t('new_person')}</p>
+    <form onSubmit={handleAddPerson} className="pp-add">
+      <p className="pp-add-title">{t('new_person')}</p>
       <div>
-        <label style={labelStyle}>{t('name_label')}</label>
-        <input style={inputStyle} placeholder={t('name_placeholder')} value={pName} onChange={e => setPName(e.target.value)} required />
+        <label className="ap-label" style={labelStyle}>{t('name_label')}</label>
+        <input className="ap-input" style={inputStyle} placeholder={t('name_placeholder')} value={pName} onChange={e => setPName(e.target.value)} required />
       </div>
       <div>
-        <label style={labelStyle}>{t('gender_label')}</label>
-        <div style={{ display:'flex', gap:8 }}>
+        <label className="ap-label" style={labelStyle}>{t('gender_label')}</label>
+        <div className="ap-seg" role="radiogroup" aria-label={t('gender_label')}>
           {(['F','M'] as const).map(s => (
-            <button key={s} type="button" onClick={() => setPSex(s)} style={{
-              flex:1, padding:'9px', borderRadius:10, cursor:'pointer', fontWeight:600, fontSize:13,
-              border:`1px solid ${pSex === s ? 'var(--gold)' : 'var(--border)'}`,
-              background: pSex === s ? 'rgba(201,168,76,0.12)' : 'transparent',
-              color: pSex === s ? 'var(--gold)' : 'var(--text-muted)',
-            }}>{s === 'F' ? t('female') : t('male')}</button>
+            <button key={s} type="button" role="radio" aria-checked={pSex === s} onClick={() => setPSex(s)} className={`ap-seg-btn${pSex === s ? ' is-on' : ''}`}>{s === 'F' ? t('female') : t('male')}</button>
           ))}
         </div>
       </div>
       <div>
-        <label style={labelStyle}>{t('birth_date_label')}</label>
-        <div style={{ display:'grid', gridTemplateColumns:'2fr 2fr 3fr', gap:8 }}>
-          <select style={inputStyle} value={pMonth} onChange={e => setPMonth(e.target.value)}>
+        <label className="ap-label" style={labelStyle}>{t('birth_date_label')}</label>
+        <div className="ap-date-grid">
+          <select className="ap-input" style={inputStyle} value={pMonth} onChange={e => setPMonth(e.target.value)}>
             {MONTHS.map((_, i) => <option key={i} value={i+1}>{monthOptionLabel(i, locale)}</option>)}
           </select>
-          <input style={inputStyle} placeholder={t('day_placeholder')} type="number" min={1} max={31} value={pDay} onChange={e => setPDay(e.target.value)} required />
-          <input style={inputStyle} placeholder={t('year_placeholder')} type="number" min={1900} max={2025} value={pYear} onChange={e => setPYear(e.target.value)} required />
+          <input className="ap-input" style={inputStyle} placeholder={t('day_placeholder')} type="number" min={1} max={31} value={pDay} onChange={e => setPDay(e.target.value)} required />
+          <input className="ap-input" style={inputStyle} placeholder={t('year_placeholder')} type="number" min={1900} max={new Date().getFullYear()} value={pYear} onChange={e => setPYear(e.target.value)} required />
         </div>
       </div>
       <div>
-        <label style={labelStyle}>{t('birth_time_label')} <span style={{ color:'var(--text-muted)', textTransform:'none', letterSpacing:0 }}>({t('optional')})</span></label>
-        <select style={inputStyle} value={pHourIndex} onChange={e => setPHourIndex(parseInt(e.target.value))}>
+        <label className="ap-label" style={labelStyle}>{t('birth_time_label')} <span className="ap-label-opt">({t('optional')})</span></label>
+        <select className="ap-input" style={inputStyle} value={pHourIndex} onChange={e => setPHourIndex(parseInt(e.target.value))}>
           {TIME_RANGES.map((tr, i) => <option key={i} value={i}>{timeRangeLabel(tr.label, locale)}</option>)}
         </select>
       </div>
       <div>
-        <label style={labelStyle}>{t('birth_city_label')}</label>
-        <input style={inputStyle} placeholder={t('city_placeholder')} value={pCity} onChange={e => setPCity(e.target.value)} required />
+        <label className="ap-label" style={labelStyle}>{t('birth_city_label')}</label>
+        <input className="ap-input" style={inputStyle} placeholder={t('city_placeholder')} value={pCity} onChange={e => setPCity(e.target.value)} required />
       </div>
-      {saveError && <p style={{ color:'#ef4444', fontSize:12 }}>{saveError}</p>}
-      <div style={{ display:'flex', gap:8, marginTop:4 }}>
-        <button type="button" onClick={() => { setShowAddForm(false); setSaveError('') }} style={{
-          flex:1, background:'none', border:'1px solid var(--border)', borderRadius:50,
-          color:'var(--text-muted)', fontSize:13, padding:'10px', cursor:'pointer',
-        }}>{t('cancel')}</button>
-        <button type="submit" disabled={saving} className="btn-gold" style={{ flex:2, opacity: saving ? 0.7 : 1 }}>
+      {saveError && <p className="pp-err" role="alert">{saveError}</p>}
+      <div className="pp-actions">
+        <button type="button" onClick={() => { setShowAddForm(false); setSaveError('') }} className="ap-btn-ghost">{t('cancel')}</button>
+        <button type="submit" disabled={saving} className="btn-gold">
           {saving ? t('saving') : t('save_select')}
         </button>
       </div>
@@ -163,34 +186,33 @@ export default function PersonPicker({
       <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
         {headerSlot}
         {people.length > 0 && (
-          <button type="button" onClick={() => setMode('select')} style={{ background:'none', border:'none', color:'var(--text-muted)', fontSize:13, cursor:'pointer', textAlign:'left', padding:0 }}>
-            {t('select_saved')}
+          <button type="button" onClick={() => setMode('select')} className="pp-back">
+            ← {t('select_saved')}
           </button>
         )}
         <BirthForm onSubmit={onSubmit} loading={loading} submitLabel={resolvedSubmitLabel} costBadge={costBadge} />
+        <style>{PICKER_CSS}</style>
       </div>
     )
   }
 
   return (
-    <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+    <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
       {headerSlot}
 
       {people.length === 0 ? (
         <div style={{ display:'flex', flexDirection:'column', gap:0 }}>
           {!showAddForm && (
-            <div style={{ textAlign:'center', padding:'36px 24px', background:'var(--card)', border:'1px solid var(--border)', borderRadius:14 }}>
-              <p style={{ fontSize:28, marginBottom:12 }}>👤</p>
-              <p style={{ color:'#fff', fontSize:15, fontWeight:600, marginBottom:8 }}>{t('no_saved_title')}</p>
-              <p style={{ color:'var(--text-muted)', fontSize:13, marginBottom:20, lineHeight:1.6 }}>
-                {t('no_saved_sub')}
-              </p>
+            <div className="pp-empty ap-glass">
+              <div className="pp-empty-glyph" aria-hidden="true">☾</div>
+              <p className="pp-empty-title">{t('no_saved_title')}</p>
+              <p className="pp-empty-sub">{t('no_saved_sub')}</p>
               {userEmail ? (
-                <button type="button" onClick={() => setShowAddForm(true)} className="btn-gold" style={{ padding:'11px 24px', fontSize:13 }}>
+                <button type="button" onClick={() => setShowAddForm(true)} className="btn-gold">
                   {t('add_person')}
                 </button>
               ) : (
-                <p style={{ color:'var(--text-muted)', fontSize:12 }}>{t('please_sign_in')}</p>
+                <p style={{ color:'var(--ink-2)', fontSize:14 }}>{t('please_sign_in')}</p>
               )}
             </div>
           )}
@@ -198,7 +220,7 @@ export default function PersonPicker({
         </div>
       ) : (
         <>
-          <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+          <div className="pp-list">
             {people.map(p => {
               const selected = p.id === selectedId
               return (
@@ -206,21 +228,15 @@ export default function PersonPicker({
                   key={p.id}
                   type="button"
                   onClick={() => setSelectedId(p.id ?? '')}
-                  style={{
-                    width:'100%', textAlign:'left', padding:'14px 16px', borderRadius:14, cursor:'pointer',
-                    border:`1.5px solid ${selected ? 'var(--gold)' : 'var(--border)'}`,
-                    background: selected ? 'rgba(201,168,76,0.08)' : 'var(--card)',
-                    transition:'border-color 0.15s, background 0.15s',
-                  }}
+                  aria-pressed={selected}
+                  className={`pp-person${selected ? ' is-on' : ''}`}
                 >
-                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                    <p style={{ color: selected ? 'var(--gold)' : '#fff', fontSize:15, fontWeight:700 }}>{p.name}</p>
-                    {selected && <span style={{ color:'var(--gold)', fontSize:16 }}>✦</span>}
-                  </div>
-                  <p style={{ color:'var(--text-muted)', fontSize:12, marginTop:4 }}>
-                    {p.birth_date} · {p.sex === 'F' ? '♀' : '♂'} · {p.birth_city}
+                  {selected && <span className="pp-check" aria-hidden="true">✦</span>}
+                  <p className="pp-name">{p.name}</p>
+                  <p className="pp-meta">
+                    {p.birth_date} · {p.sex === 'F' ? '♀\uFE0E' : '♂\uFE0E'} · {p.birth_city}
                   </p>
-                  <p style={{ color:'var(--text-muted)', fontSize:11, marginTop:2 }}>{birthTimeLabel(p, locale)}</p>
+                  <p className="pp-time">{birthTimeLabel(p, locale)}</p>
                 </button>
               )
             })}
@@ -228,10 +244,7 @@ export default function PersonPicker({
 
           {showAddForm ? addPersonForm : (
             userEmail && (
-              <button type="button" onClick={() => setShowAddForm(true)} style={{
-                background:'rgba(201,168,76,0.06)', border:'1px dashed rgba(201,168,76,0.35)',
-                borderRadius:12, padding:'10px', color:'var(--gold)', fontSize:13, cursor:'pointer',
-              }}>
+              <button type="button" onClick={() => setShowAddForm(true)} className="pp-add-btn">
                 {t('add_another')}
               </button>
             )
@@ -241,27 +254,21 @@ export default function PersonPicker({
             type="button"
             onClick={() => selectedPerson && onSubmit(personToBirthData(selectedPerson))}
             disabled={!selectedPerson || loading}
-            className="btn-gold"
-            style={{
-              marginTop:4,
-              opacity: (!selectedPerson || loading) ? 0.5 : 1,
-              cursor: (!selectedPerson || loading) ? 'not-allowed' : 'pointer',
-              display:'flex', alignItems:'center', justifyContent:'center', gap:10,
-            }}
+            className="btn-gold ap-submit"
           >
             {loading
-              ? <><span style={{ display:'inline-block', animation:'spin 1s linear infinite' }}>✦</span> {t('reading_stars')}</>
-              : <>{resolvedSubmitLabel}{costBadge && <span style={{ background:'rgba(22,33,62,0.6)', borderRadius:20, padding:'2px 10px', fontSize:12 }}>{costBadge}</span>}</>
+              ? <><span aria-hidden="true" style={{ display:'inline-block', animation:'spin 1.6s linear infinite' }}>✦</span> {t('reading_stars')}</>
+              : <>{resolvedSubmitLabel}{costBadge && <span className="ap-submit-cost">{costBadge}</span>}</>
             }
           </button>
         </>
       )}
 
-      <button type="button" onClick={() => setMode('manual')} style={{ background:'none', border:'none', color:'var(--text-muted)', fontSize:12, cursor:'pointer', textAlign:'center', padding:'4px 0', textDecoration:'underline', textUnderlineOffset:3 }}>
+      <button type="button" onClick={() => setMode('manual')} className="pp-text-btn">
         {t('enter_manually')}
       </button>
 
-      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+      <style>{FORM_CSS + PICKER_CSS}</style>
     </div>
   )
 }

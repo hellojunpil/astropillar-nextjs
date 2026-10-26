@@ -17,6 +17,8 @@ const withPWA = withPWAInit({
 })
 
 const nextConfig: NextConfig = {
+  // 상위 폴더(E:\My Team)의 lockfile을 루트로 오인하지 않도록 고정
+  turbopack: { root: process.cwd() },
   ...(isCapacitor ? {
     output: 'export',
     images: { unoptimized: true },
