@@ -7,6 +7,8 @@ import { useTranslations, useLocale } from 'next-intl'
 import { apiPost } from '@/lib/api'
 import { createShare, birthDateStr } from '@/lib/firestore'
 import { zodiacSignName } from '@/lib/birthLabels'
+import { useAuth } from '@/hooks/useAuth'
+import { isNewYearSeason, yearlyPromo } from '@/lib/season'
 import { BirthData } from './BirthForm'
 import { usePricing } from '@/hooks/usePricing'
 
@@ -1181,6 +1183,39 @@ function ScenarioButton({ birthData }: { birthData: BirthData }) {
 }
 
 // ─── Accordion section ────────────────────────────────────────────────────────
+// 결과 아래 '다음 리딩' 안내 — 크레딧이 없으면 충전, 있으면 시즌 신년운세
+function NextReadingCard({ current }: { current?: string }) {
+  const { credits } = useAuth()
+  const locale = useLocale()
+  const prefix = locale === 'en' ? '' : `/${locale}`
+  const ga = (target: string) => { try { (window as Window & { gtag?: (...a: unknown[]) => void }).gtag?.('event', 'next_reading_click', { target, from: current ?? '' }) } catch { /* ignore */ } }
+  if (credits === 0) {
+    const t = locale === 'ko' ? { k: '다음 리딩', title: '다른 질문도 이어서 볼까요?', d: '1크레딧 990원부터, 5개 묶음이면 더 저렴해요.', cta: '크레딧 충전하기' }
+      : locale === 'ja' ? { k: '次のリーディング', title: 'ほかの悩みも続けて見てみる？', d: '1クレジット100円から。5個セットならさらにお得です。', cta: 'クレジットを購入' }
+      : { k: 'Next reading', title: 'Have another question on your mind?', d: 'From $0.99 per credit — the 5-pack saves more.', cta: 'Get credits' }
+    return (
+      <Link href={`${prefix}/buy`} className="rr-next" onClick={() => ga('buy')}>
+        <span className="rr-next-k">{t.k}</span>
+        <span className="rr-next-t">{t.title}</span>
+        <span className="rr-next-d">{t.d}</span>
+        <span className="rr-next-cta">{t.cta} →</span>
+      </Link>
+    )
+  }
+  if (current !== 'yearly' && isNewYearSeason()) {
+    const yp = yearlyPromo(locale)
+    return (
+      <Link href={`${prefix}/reading/yearly`} className="rr-next" onClick={() => ga('yearly')}>
+        <span className="rr-next-k">{yp.kicker}</span>
+        <span className="rr-next-t">{yp.title}</span>
+        <span className="rr-next-d">{yp.desc}</span>
+        <span className="rr-next-cta">{yp.cta} →</span>
+      </Link>
+    )
+  }
+  return null
+}
+
 function AccordionSection({ id, index, title, content, open, onToggle, chartContent }: { id: string; index: number; title: string; content: string; open: boolean; onToggle: () => void; chartContent?: React.ReactNode }) {
   return (
     <div id={id} className={`rr-acc${open ? ' is-open' : ''}`}>
@@ -1553,6 +1588,7 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
         )}
         {birthData && <NatalChartViewer birthData={birthData} />}
         {!isSharedView && birthData && <ScenarioButton birthData={birthData} />}
+        {!isSharedView && userEmail && <NextReadingCard current={data.reading_type as string | undefined} />}
         {!isSharedView && userEmail && <ShareButton shareId={shareId} raw={raw} birthData={birthData} />}
         <button onClick={onReset} className="ap-btn-ghost rr-action">
           {t('new_reading')}
@@ -1686,6 +1722,13 @@ const RR_CSS = `
   .rr-scn-desc { font-size: 13px; line-height: 1.5; color: var(--ink-2); }
   .rr-scn-arrow { flex-shrink: 0; color: var(--lavender); }
   .rr-action { width: 100%; }
+  .rr-next { display:flex; flex-direction:column; gap: 6px; padding: 18px 20px; border-radius: 16px; text-decoration:none; color: inherit;
+    background: radial-gradient(120% 140% at 100% 0%, rgba(201,168,76,.16), transparent 55%), rgba(14,18,36,.8); border: 1px solid rgba(201,168,76,.3); transition: border-color .2s; }
+  .rr-next:hover { border-color: rgba(201,168,76,.55); }
+  .rr-next-k { font-size: 11.5px; font-weight: 600; letter-spacing: .14em; color: var(--gold-light); }
+  .rr-next-t { font-size: 18px; font-weight: 700; letter-spacing: -.03em; color: #f4efe3; word-break: keep-all; }
+  .rr-next-d { font-size: 13.5px; line-height: 1.6; color: var(--ink-2); word-break: keep-all; }
+  .rr-next-cta { margin-top: 4px; font-size: 14.5px; font-weight: 600; color: #e2cf96; }
   .rr-back { align-self: center; padding: 10px; min-height: 44px; display: inline-flex; align-items: center; font-size: 14px; color: var(--ink-2); text-decoration: none; }
   .rr-back:hover { color: var(--gold-light); }
 

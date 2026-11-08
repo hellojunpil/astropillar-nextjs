@@ -8,6 +8,7 @@ import BottomNav from '@/components/BottomNav'
 import LegalFooter from '@/components/LegalFooter'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 import { usePricing } from '@/hooks/usePricing'
+import { isNewYearSeason, yearlyPromo } from '@/lib/season'
 
 function ga(name: string, params?: Record<string, string>) {
   try { (window as Window & { gtag?: (...args: unknown[]) => void }).gtag?.('event', name, params || {}) } catch { /* ignore */ }
@@ -262,6 +263,23 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ══ 시즌: 신년운세 안내 (11~1월) ══ */}
+      {isNewYearSeason() && (() => {
+        const yp = yearlyPromo(locale)
+        const target = `${locale === 'en' ? '' : `/${locale}`}/reading/yearly`
+        const href = authed ? '/reading/yearly' : `/login?tab=signup&returnUrl=${encodeURIComponent(target)}`
+        return (
+          <section className="ap-container">
+            <Link href={href} className="lp-season" onClick={() => ga('season_yearly_click', { from: 'landing', auth: authed ? 'member' : 'guest' })}>
+              <span className="lp-season-k">{yp.kicker}</span>
+              <span className="lp-season-t">{yp.title}</span>
+              <span className="lp-season-d">{yp.desc}</span>
+              <span className="lp-season-cta">{yp.cta} →{!authed && <em>{yp.guestNote}</em>}</span>
+            </Link>
+          </section>
+        )
+      })()}
+
       {/* ══ 세 개의 시선 ══ */}
       <section className="ap-container lp-section">
         <h2 className="ap-h2 lp-center ap-reveal">{c.lensTitle}</h2>
@@ -445,6 +463,16 @@ export default function LandingPage() {
           color: rgba(230,205,133,.7); font-size: 13px; }
         .lp-ring-2 { width: 106%; border: 1px dashed rgba(170,165,209,.14); }
 
+        .lp-season { display:flex; flex-direction:column; gap: 8px; padding: 22px 22px 20px; border-radius: 18px; text-decoration:none; color: inherit;
+          background: radial-gradient(120% 140% at 100% 0%, rgba(201,168,76,.18), transparent 55%), linear-gradient(180deg, rgba(24,29,52,.85), rgba(12,15,30,.9));
+          border: 1px solid rgba(201,168,76,.3); transition: border-color .2s, transform .2s var(--ease-out); }
+        .lp-season:hover { border-color: rgba(201,168,76,.55); transform: translateY(-2px); }
+        .lp-season-k { font-size: 11.5px; font-weight: 600; letter-spacing: .16em; color: var(--gold-light); }
+        .lp-season-t { font-size: 22px; font-weight: 700; letter-spacing: -.035em; color: #f4efe3; word-break: keep-all; }
+        .lp-season-d { font-size: 14px; line-height: 1.65; color: var(--ink-2); word-break: keep-all; }
+        .lp-season-cta { margin-top: 6px; display:flex; flex-wrap:wrap; align-items:baseline; gap: 4px 12px; font-size: 15px; font-weight: 600; color: #e2cf96; }
+        .lp-season-cta em { font-style: normal; font-size: 12.5px; font-weight: 400; color: var(--ink-3); }
+        @media (min-width: 1024px) { .lp-season { padding: 32px 40px; } .lp-season-t { font-size: 30px; } }
         .lp-section { padding-top: 72px; }
         .lp-center { text-align:center; }
 

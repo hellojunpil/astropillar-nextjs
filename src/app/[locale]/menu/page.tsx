@@ -11,6 +11,7 @@ import { usePricing } from '@/hooks/usePricing'
 import BottomNav from '@/components/BottomNav'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 import LegalFooter from '@/components/LegalFooter'
+import { isNewYearSeason } from '@/lib/season'
 
 // 각 서비스가 답하는 "질문" (Codex 기획: 서비스 목록 → 질문 중심 안내)
 const QUESTIONS: Record<string, Record<string, string>> = {
@@ -144,7 +145,9 @@ export default function MenuPage() {
           <span className={`ap-badge${cost === 0 ? ' ap-badge-free' : ''}`}>{creditBadge(cost)}</span>
         </div>
         {feature && <span className="mn-reco">{ui.recommended}</span>}
-        <p className="mn-q">“{qs[def.id]}”</p>
+        <p className="mn-q">“{def.id === 'yearly' && isNewYearSeason()
+          ? (locale === 'ko' ? `${getFortuneYear()}년엔 어떤 흐름으로 흘러갈까?` : locale === 'ja' ? `${getFortuneYear()}年はどんな流れになる？` : `Where is ${getFortuneYear()} taking me?`)
+          : qs[def.id]}”</p>
         <div className="mn-meta">
           <p className="mn-title">{tData.title}</p>
           <p className="mn-sub">{fillYear(def.id, tData.subtitle)}</p>
@@ -204,7 +207,9 @@ export default function MenuPage() {
             <p className="mn-section-sub">{ui.sajuSub}</p>
           </div>
           <div className="mn-grid mn-grid-saju">
-            {SERVICE_DEFS.map((svc, i) => renderCard(svc, i === 0))}
+            {(isNewYearSeason()
+              ? [...SERVICE_DEFS.filter(s => s.id === 'yearly'), ...SERVICE_DEFS.filter(s => s.id !== 'yearly')]
+              : SERVICE_DEFS).map((svc, i) => renderCard(svc, i === 0))}
           </div>
         </section>
 

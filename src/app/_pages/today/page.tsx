@@ -9,6 +9,7 @@ import { useLocale } from 'next-intl'
 import BottomNav from '@/components/BottomNav'
 import { apiGet, apiPost } from '@/lib/api'
 import { gtagEvent } from '@/lib/gtag'
+import { isNewYearSeason, yearlyPromo } from '@/lib/season'
 
 const IMG = 'https://raw.githubusercontent.com/hellojunpil/astropillar_images/main/'
 
@@ -521,11 +522,11 @@ export default function TodayFortunePage() {
   const menuHref = `${localePrefix}/menu`
 
   // 무료 결과 아래 부드러운 다음 단계 안내 (결과를 가리지 않음)
-  function renderDeeperCta(title: string, desc: string, target: '/tarot/three-card' | '/reading/personal-fortune') {
+  function renderDeeperCta(title: string, desc: string, target: '/tarot/three-card' | '/reading/personal-fortune' | '/reading/yearly', memberLabel?: string) {
     const targetHref = `${localePrefix}${target}`
     // 비회원은 가입 탭으로 → 가입 후 바로 그 리딩으로 복귀 (가입 시 1크레딧 지급)
     const href = user ? targetHref : `${localePrefix}/login?tab=signup&returnUrl=${encodeURIComponent(targetHref)}`
-    const label = user ? (target === '/tarot/three-card' ? ui.ctaThreeCard : ui.ctaPersonal) : ui.ctaSignup
+    const label = user ? (memberLabel ?? (target === '/tarot/three-card' ? ui.ctaThreeCard : ui.ctaPersonal)) : ui.ctaSignup
     return (
       <div className="ap-glass ap-glass-gold td-deeper">
         <span className="td-deeper-glyph" aria-hidden="true">☉</span>
@@ -614,7 +615,9 @@ export default function TodayFortunePage() {
             )}
             <button className="ap-btn-ghost td-again" onClick={onBack}>{ui.checkAnother}</button>
           </div>
-          {renderDeeperCta(ui.deepTitle, ui.personalCtaDesc, '/reading/personal-fortune')}
+          {isNewYearSeason()
+            ? (() => { const yp = yearlyPromo(locale); return renderDeeperCta(yp.title, yp.desc, '/reading/yearly', yp.cta) })()
+            : renderDeeperCta(ui.deepTitle, ui.personalCtaDesc, '/reading/personal-fortune')}
         </div>
       </div>
     )
