@@ -84,10 +84,10 @@ html[lang="ja"] body { line-break: strict; --font-pretendard: 'Pretendard JP Var
 
 /* 모든 글씨는 Pretendard — 페이지 곳곳의 인라인 폰트 지정(Cormorant/Noto 등)까지 덮어씀.
    단, 아이콘 폰트(Material Icons)는 제외 */
-*:not(.material-icons):not(.material-icons-outlined):not(.ap-hanja):not(.rr-mx-char):not(.lp-mx-char):not(.rr-glyph):not(.rr-wx-han):not(.td-sign-hanja):not(.is-cn):not(.ex-sym) { font-family: var(--font-pretendard) !important; }
+*:not(.material-icons):not(.material-icons-outlined):not(.ap-hanja):not(.rr-mx-char):not(.lp-mx-char):not(.rr-glyph):not(.rr-wx-han):not(.td-sign-hanja):not(.is-cn):not(.ex-sym):not(.lp-pillar-char) { font-family: var(--font-pretendard) !important; }
 
 /* 한자(천간·지지·오행)는 명조 계열 — 붓글씨 느낌의 획 대비로 고급스럽게 */
-.ap-hanja, .rr-mx-char, .lp-mx-char, .rr-glyph, .rr-wx-han, .td-sign-hanja, .td-sign-orb.is-cn, .ex-sym {
+.ap-hanja, .rr-mx-char, .lp-mx-char, .lp-pillar-char, .rr-glyph, .rr-wx-han, .td-sign-hanja, .td-sign-orb.is-cn, .ex-sym {
   font-family: var(--font-hanja) !important; font-feature-settings: normal; letter-spacing: 0;
 }
 
