@@ -12,9 +12,21 @@ import { getPaymentProviderByLocale } from '@/lib/paymentProvider'
 import { isNative, initRevenueCat, getIAPPrices, buyCreditsIAP } from '@/lib/iap'
 import { useEffect, useRef, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
+import Script from 'next/script'
 
 const GUMROAD_1 = process.env.NEXT_PUBLIC_GUMROAD_URL_1 || ''
 const GUMROAD_5 = process.env.NEXT_PUBLIC_GUMROAD_URL_5 || ''
+// Gumroad 오버레이 결제 링크 — email(로그인 이메일 미리 채움: 크레딧 지급 매칭용).
+// wanted=true나 data-gumroad-overlay-checkout를 붙이면 gumroad.js가 오버레이 대신 페이지 이동을 하므로 넣지 않음
+function gumroadOverlayUrl(base: string, email?: string | null) {
+  if (!base) return ''
+  try {
+    const u = new URL(base)
+    if (email) u.searchParams.set('email', email)
+    return u.toString()
+  } catch { return base }
+}
+
 const PORTONE_STORE_ID = process.env.NEXT_PUBLIC_PORTONE_STORE_ID || ''
 const PORTONE_KAKAOPAY_KEY = process.env.NEXT_PUBLIC_PORTONE_KAKAOPAY_CHANNEL_KEY || ''
 const PORTONE_TOSS_KEY = process.env.NEXT_PUBLIC_PORTONE_TOSS_CHANNEL_KEY || ''
@@ -29,6 +41,8 @@ function BuyContent() {
   const t = useTranslations('buy')
   const tMenu = useTranslations('menu')
   const { user, credits, loading, refreshCredits } = useAuth()
+  const pollRef = useRef<number | null>(null)
+  useEffect(() => () => { if (pollRef.current) window.clearInterval(pollRef.current) }, [])
   const pricing = usePricing()
   const provider = getPaymentProviderByLocale(locale)
   const searchParams = useSearchParams()
@@ -223,7 +237,15 @@ function BuyContent() {
       currency: locale === 'ja' ? 'JPY' : 'USD',
       items: [{ item_id: `credits_${creditCount}`, item_name: `${creditCount} Credits`, quantity: 1 }],
     })
-    window.open(gumroadUrl, '_blank')
+    void gumroadUrl
+    // 오버레이 결제 후 웹훅으로 크레딧이 들어오므로, 잠시 동안 잔액을 다시 불러옴
+    if (pollRef.current) window.clearInterval(pollRef.current)
+    let n = 0
+    pollRef.current = window.setInterval(() => {
+      n += 1
+      refreshCredits?.()
+      if (n >= 36 && pollRef.current) { window.clearInterval(pollRef.current); pollRef.current = null }
+    }, 5000)
   }
 
   if (loading) return null
@@ -234,8 +256,8 @@ function BuyContent() {
   const prefix = locale === 'en' ? '' : `/${locale}`
   const UI = {
     ko: { balance: '보유 크레딧', perCredit: '크레딧당', one: '1크레딧 리딩 1회', five: '1크레딧 리딩 기준 5회', best: '가장 알뜰한 구성', method: '카카오페이로 안전하게 결제되며, 결제 즉시 크레딧이 충전돼요.', methodG: '', svc: '서비스별 필요 크레딧', refund: '환불정책', terms: '이용약관', vat: '(VAT 별도)', what: '대부분의 리딩은 1크레딧이고, 신년 운세·궁합·심층 분석 타로는 2크레딧이에요.' },
-    ja: { balance: '保有クレジット', perCredit: '1クレジットあたり', one: '1クレジットのリーディング1回', five: '1クレジットのリーディング5回分', best: 'いちばんお得', method: '', methodG: 'Gumroadの安全な決済ページに移動します。ログイン中のメールアドレスで決済するとクレジットが自動で反映されます。', svc: 'サービス別クレジット', refund: '返金ポリシー', terms: '利用規約', vat: '(税抜)', what: 'ほとんどのリーディングは1クレジット、年運・相性・ケルト十字は2クレジットです。' },
-    en: { balance: 'Your balance', perCredit: 'per credit', one: 'One 1-credit reading', five: 'Five 1-credit readings', best: 'Best value', method: '', methodG: 'You will continue to Gumroad’s secure checkout. Pay with the same email you signed in with and credits are added automatically.', svc: 'Credits per reading', refund: 'Refund Policy', terms: 'Terms of Service', vat: '(excl. VAT)', what: 'Most readings use 1 credit. Yearly Fortune, Compatibility and Celtic Cross use 2.' },
+    ja: { balance: '保有クレジット', perCredit: '1クレジットあたり', one: '1クレジットのリーディング1回', five: '1クレジットのリーディング5回分', best: 'いちばんお得', method: '', methodG: 'このページの上にGumroadの安全な決済画面が開きます。ログイン中のメールアドレスが入力済みなので、そのまま決済すればクレジットが自動で反映されます。', svc: 'サービス別クレジット', refund: '返金ポリシー', terms: '利用規約', vat: '(税抜)', what: 'ほとんどのリーディングは1クレジット、年運・相性・ケルト十字は2クレジットです。' },
+    en: { balance: 'Your balance', perCredit: 'per credit', one: 'One 1-credit reading', five: 'Five 1-credit readings', best: 'Best value', method: '', methodG: 'Gumroad’s secure checkout opens right on this page. Your sign-in email is pre-filled, so credits are added automatically once you pay.', svc: 'Credits per reading', refund: 'Refund Policy', terms: 'Terms of Service', vat: '(excl. VAT)', what: 'Most readings use 1 credit. Yearly Fortune, Compatibility and Celtic Cross use 2.' },
   }[L]
 
   const price1 = locale === 'ko' ? '₩990' : locale === 'ja' ? '¥100' : t('pack1_price')
@@ -267,9 +289,13 @@ function BuyContent() {
     }
     return (
       <>
-        <button onClick={() => handleGumroadBuy(count, count === 1 ? GUMROAD_1 : GUMROAD_5)} className="ap-btn bp-cta">
+        <a
+          href={gumroadOverlayUrl(count === 1 ? GUMROAD_1 : GUMROAD_5, user?.email)}
+          onClick={() => handleGumroadBuy(count, count === 1 ? GUMROAD_1 : GUMROAD_5)}
+          className="ap-btn bp-cta"
+        >
           {t('cta')}
-        </button>
+        </a>
         <p className="bp-vat">{locale === 'ja' ? '(税抜)' : '(excl. VAT)'}</p>
       </>
     )
@@ -277,6 +303,8 @@ function BuyContent() {
 
   return (
     <main className="ap-page bp">
+      {/* Gumroad 오버레이 결제: 상품 링크 클릭을 가로채 사이트 위에 결제창을 띄움 (해외 결제일 때만) */}
+      {!isPortOne && !nativeApp && <Script src="https://gumroad.com/js/gumroad.js" strategy="afterInteractive" />}
       {/* 모바일 헤더 (PC는 SiteNav) */}
       <div className="bp-mhead ap-mobile-only">
         <span className="bp-mlogo">ASTROPILLAR</span>

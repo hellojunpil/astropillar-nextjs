@@ -1,5 +1,5 @@
 'use client'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter, Link } from '@/navigation'
 import { useLocale } from 'next-intl'
 import { onAuthStateChanged } from 'firebase/auth'
@@ -32,10 +32,10 @@ type Copy = {
 
 const COPY: Record<string, Copy> = {
   ko: {
-    eyebrow: '사주 · 점성술 · 타로',
-    h1a: '오늘 밤,', h1b: '별이 당신에게 답합니다',
-    sub: '태어난 순간의 하늘과 사주팔자를 함께 읽어, 지금 당신의 흐름을 들려드려요.',
-    cta: '오늘의 운세 무료로 보기', ctaNote: '가입 없이 바로 확인', secondary: '운세 둘러보기', signIn: '로그인',
+    eyebrow: '사주 × 서양 점성술',
+    h1a: '사주로 한 번,', h1b: '별자리로 한 번.',
+    sub: '태어난 날의 네 기둥과, 그 순간의 하늘. 두 개의 오래된 지도를 겹쳐 보면 나에 대한 이야기가 더 또렷해져요.',
+    cta: '오늘의 운세 무료로 보기', ctaNote: '가입 없이 바로 확인', secondary: '리딩 둘러보기', signIn: '로그인',
     lensTitle: '세 개의 시선으로 한 사람을 읽습니다',
     lenses: [
       { key: 'bazi', name: '사주', line: '타고난 기질', body: '태어난 해·달·날·시의 네 기둥으로 당신이 어떤 결을 가진 사람인지 읽어요.' },
@@ -62,9 +62,9 @@ const COPY: Record<string, Copy> = {
     free: '무료', credit: n => `${n} 크레딧`,
   },
   ja: {
-    eyebrow: '四柱推命 · 西洋占星術 · タロット',
-    h1a: '今夜、', h1b: '星があなたに答える',
-    sub: '生まれた瞬間の空と四柱推命を重ねて読み、今のあなたの流れをお伝えします。',
+    eyebrow: '四柱推命 × 西洋占星術',
+    h1a: '四柱推命で一度、', h1b: '星でもう一度。',
+    sub: '生まれた日の四つの柱と、その瞬間の空。二つの古い地図を重ねると、あなたの物語がもっとはっきり見えてきます。',
     cta: '今日の運勢を無料で見る', ctaNote: '登録不要ですぐに', secondary: '占いを見てみる', signIn: 'ログイン',
     lensTitle: '三つのまなざしで、ひとりを読む',
     lenses: [
@@ -92,9 +92,9 @@ const COPY: Record<string, Copy> = {
     free: '無料', credit: n => `${n} クレジット`,
   },
   en: {
-    eyebrow: 'BaZi · Astrology · Tarot',
-    h1a: 'Tonight,', h1b: 'the stars answer you',
-    sub: 'We read the sky of your birth alongside your Four Pillars to show where your life is flowing now.',
+    eyebrow: 'BaZi × Western Astrology',
+    h1a: 'Read once by your pillars.', h1b: 'Again by your stars.',
+    sub: 'The four pillars of the day you were born, and the sky at that exact moment. Lay the two old maps over each other and your story comes into focus.',
     cta: "See Today's Fortune Free", ctaNote: 'No sign-up needed', secondary: 'Browse readings', signIn: 'Sign In',
     lensTitle: 'Three lenses on one life',
     lenses: [
@@ -132,24 +132,75 @@ const PILLARS = [
 // ︎ = 텍스트 표기 강제 (Windows/Android에서 이모지로 바뀌는 것 방지)
 const ZODIAC = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓'].map(z => z + '︎') // 텍스트 기호 강제 (이모지 방지)
 
+// 히어로: 선으로 그린 출생 차트 (12궁 링 + 행성 + 각도선)
+function HeroChart() {
+  const C = 200
+  const pt = (deg: number, r: number) => {
+    const a = (deg - 90) * Math.PI / 180
+    // 서버·브라우저 소수점 차이로 하이드레이션 경고가 나지 않게 반올림
+    return [Math.round((C + r * Math.cos(a)) * 100) / 100, Math.round((C + r * Math.sin(a)) * 100) / 100]
+  }
+  const planets = [
+    { g: '☉', d: 28 }, { g: '☽', d: 96 }, { g: '☿', d: 47 }, { g: '♀', d: 141 },
+    { g: '♂', d: 203 }, { g: '♃', d: 252 }, { g: '♄', d: 311 }, { g: '♅', d: 338 },
+  ]
+  const aspects: [number, number][] = [[0, 4], [1, 5], [2, 6], [3, 7], [0, 3], [5, 7]]
+  return (
+    <svg className="lp-chart" viewBox="0 0 400 400">
+      <g className="ap-orbit" style={{ transformOrigin: '200px 200px' }}>
+        <circle cx={C} cy={C} r={186} className="lp-c-line" />
+        <circle cx={C} cy={C} r={152} className="lp-c-line" />
+        {Array.from({ length: 12 }, (_, i) => {
+          const [x1, y1] = pt(i * 30, 152), [x2, y2] = pt(i * 30, 186)
+          const [gx, gy] = pt(i * 30 + 15, 169)
+          return (
+            <g key={i}>
+              <line x1={x1} y1={y1} x2={x2} y2={y2} className="lp-c-line" />
+              <text x={gx} y={gy} className="lp-c-sign">{ZODIAC[i]}</text>
+            </g>
+          )
+        })}
+        {Array.from({ length: 72 }, (_, i) => {
+          const [x1, y1] = pt(i * 5, 186), [x2, y2] = pt(i * 5, i % 6 === 0 ? 194 : 190)
+          return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} className="lp-c-tick" />
+        })}
+      </g>
+      <circle cx={C} cy={C} r={104} className="lp-c-inner" />
+      {aspects.map(([a, b], i) => {
+        const [x1, y1] = pt(planets[a].d, 104), [x2, y2] = pt(planets[b].d, 104)
+        return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} className="lp-c-aspect" />
+      })}
+      {planets.map(p => {
+        const [x, y] = pt(p.d, 104), [gx, gy] = pt(p.d, 128)
+        return (
+          <g key={p.g}>
+            <circle cx={x} cy={y} r={2.6} className="lp-c-dot" />
+            <text x={gx} y={gy} className="lp-c-planet">{p.g + '\uFE0E'}</text>
+          </g>
+        )
+      })}
+    </svg>
+  )
+}
+
 export default function LandingPage() {
   const router = useRouter()
   const locale = useLocale()
   const c = COPY[locale] ?? COPY.en
   const pricing = usePricing()
+  const [authed, setAuthed] = useState(false)
 
   useEffect(() => {
     let tracked = false
     const unsub = onAuthStateChanged(auth, (u) => {
-      if (u) {
-        router.replace('/menu')
-      } else if (!tracked) {
+      setAuthed(!!u)
+      if (!u && !tracked) {
         tracked = true
         ga('view_1_landing')
       }
     })
     return () => unsub()
-  }, [router])
+  }, [])
 
   function goToToday() {
     ga('cta_click_v1', { target: 'today' })
@@ -163,7 +214,9 @@ export default function LandingPage() {
         <span className="lp-mlogo">ASTROPILLAR</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <LanguageSwitcher />
-          <button className="ap-btn-ghost ap-btn-sm" onClick={() => { ga('login_attempt'); router.push('/login') }}>{c.signIn}</button>
+          {authed
+            ? <Link href="/menu" className="ap-btn-ghost ap-btn-sm">{c.secondary}</Link>
+            : <button className="ap-btn-ghost ap-btn-sm" onClick={() => { ga('login_attempt'); router.push('/login') }}>{c.signIn}</button>}
         </div>
       </div>
 
@@ -173,12 +226,12 @@ export default function LandingPage() {
           <p className="lp-eyebrow ap-rise">{c.eyebrow}</p>
           <h1 className="lp-h1 ap-rise ap-d1">
             <span>{c.h1a}</span>
-            <span className="ap-gold-text">{c.h1b}</span>
+            <span className="lp-h1-b">{c.h1b}</span>
           </h1>
           <p className="lp-sub ap-rise ap-d2">{c.sub}</p>
           <div className="lp-ctas ap-rise ap-d3">
             <button className="ap-btn lp-cta" onClick={goToToday}>
-              <span aria-hidden="true">✦</span>{c.cta}
+              {c.cta}
             </button>
             <Link href="/menu" className="ap-btn-ghost" onClick={() => ga('cta_click_v1', { target: 'menu' })}>{c.secondary}</Link>
           </div>
@@ -186,15 +239,15 @@ export default function LandingPage() {
         </div>
 
         <div className="lp-hero-art ap-rise ap-d2" aria-hidden="true">
-          <div className="lp-ring lp-ring-1 ap-orbit">
-            {ZODIAC.map((z, i) => (
-              <span key={z} style={{ transform: `rotate(${i * 30}deg) translateY(-44cqw) rotate(${-i * 30}deg)` }}>{z}</span>
+          <HeroChart />
+          <div className="lp-mx">
+            {PILLARS.map((p, i) => (
+              <div key={p.stem} className={`lp-mx-col${i === 2 ? ' is-day' : ''}`}>
+                <span className="lp-mx-label">{p.label[locale as 'ko' | 'ja' | 'en'] ?? p.label.en}</span>
+                <span className="lp-mx-char">{p.stem}</span>
+                <span className="lp-mx-char">{p.branch}</span>
+              </div>
             ))}
-          </div>
-          <div className="lp-ring lp-ring-2 ap-orbit-rev" />
-          <div className="lp-arch">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/home.png" alt="" fetchPriority="high" />
           </div>
         </div>
       </section>
@@ -314,15 +367,35 @@ export default function LandingPage() {
         .lp-hero { display:grid; grid-template-columns: 1fr; gap: 8px; align-items:center; padding-top: 8px; padding-bottom: 40px; }
         .lp-hero-copy { order: 2; text-align:center; }
         .lp-hero-art { order: 1; }
-        .lp-eyebrow { font-size: 12.5px; letter-spacing: .28em; color: var(--lavender); margin-bottom: 14px; }
-        .lp-h1 { font-family: var(--font-display); font-weight: 600; font-size: clamp(34px, 8.6vw, 44px); line-height: 1.18; display:flex; flex-direction:column; padding-bottom: 4px; }
+        .lp-eyebrow { font-size: 12.5px; letter-spacing: .2em; color: var(--ink-3); margin-bottom: 16px; }
+        .lp-h1 { font-family: var(--font-display); font-weight: 600; font-size: clamp(32px, 8.2vw, 42px); line-height: 1.2; letter-spacing: -.025em; display:flex; flex-direction:column; padding-bottom: 4px; }
         html[lang="ko"] .lp-h1, html[lang="ja"] .lp-h1 { font-family: 'Noto Serif KR','Noto Serif JP', serif; font-weight: 700; letter-spacing: -.01em; }
         .lp-sub { margin: 18px auto 0; max-width: 34ch; font-size: 15.5px; line-height: 1.75; color: var(--ink-2); }
         .lp-ctas { margin-top: 28px; display:flex; flex-direction:column; gap: 12px; align-items: stretch; }
         .lp-cta { min-height: 54px; font-size: 16px; }
         .lp-note { margin-top: 12px; font-size: 12.5px; color: var(--ink-3); }
 
-        .lp-hero-art { position: relative; width: min(74vw, 320px); aspect-ratio: 1 / 1.08; margin: 0 auto; container-type: inline-size; }
+        .lp-hero-art { position: relative; width: min(80vw, 340px); aspect-ratio: 1 / 1.06; margin: 0 auto 8px; }
+        .lp-chart { position: absolute; inset: 0 0 auto 0; width: 100%; height: auto; overflow: visible; }
+        .lp-c-line { fill: none; stroke: rgba(201,168,76,.32); stroke-width: 1; }
+        .lp-c-tick { stroke: rgba(201,168,76,.22); stroke-width: 1; }
+        .lp-c-inner { fill: rgba(9,12,26,.35); stroke: rgba(170,165,209,.22); stroke-width: 1; }
+        .lp-c-aspect { stroke: rgba(170,165,209,.32); stroke-width: .8; }
+        .lp-c-dot { fill: #e6cd85; }
+        .lp-c-sign { fill: rgba(230,205,133,.7); font-size: 15px; text-anchor: middle; dominant-baseline: central; font-variant-emoji: text; }
+        .lp-c-planet { fill: rgba(241,237,228,.75); font-size: 14px; text-anchor: middle; dominant-baseline: central; font-variant-emoji: text; }
+        .lp-mx { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); display: grid; grid-template-columns: repeat(4, 1fr);
+          width: 74%; background: rgba(10,13,28,.86); border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
+          backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 24px 50px -24px rgba(0,0,0,.9); }
+        .lp-mx-col { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 0 12px; position: relative; }
+        .lp-mx-col + .lp-mx-col { border-left: 1px solid var(--line); }
+        .lp-mx-col.is-day { background: rgba(201,168,76,.07); }
+        .lp-mx-col.is-day::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: var(--gold); }
+        .lp-mx-label { font-size: 10.5px; letter-spacing: .12em; color: var(--ink-3); }
+        .lp-mx-col.is-day .lp-mx-label { color: var(--gold-light); }
+        .lp-mx-char { font-size: 24px; font-weight: 300; line-height: 1.05; color: var(--ink); }
+        .lp-mx-col.is-day .lp-mx-char { color: #f3e6bd; }
+        .lp-h1-b { color: var(--gold-light); }
         .lp-arch { position:absolute; inset: 9% 13% 0; border-radius: 999px 999px 24px 24px; overflow:hidden;
           border: 1px solid var(--gold-line); box-shadow: 0 30px 80px -30px rgba(0,0,0,.8); }
         .lp-arch img { width:100%; height:100%; object-fit:cover; object-position: center 22%; display:block; filter: saturate(.5) brightness(.82) contrast(1.08); }
@@ -396,8 +469,8 @@ export default function LandingPage() {
         @media (min-width: 1024px) {
           .lp-hero { grid-template-columns: 1.05fr 1fr; gap: 48px; min-height: calc(100dvh - var(--nav-h) - 24px); padding-top: 24px; padding-bottom: 24px; }
           .lp-hero-copy { order: 1; text-align:left; }
-          .lp-hero-art { order: 2; width: min(42vw, 520px); }
-          .lp-h1 { font-size: clamp(48px, 5vw, 68px); }
+          .lp-hero-art { order: 2; width: min(40vw, 500px); }
+          .lp-h1 { font-size: clamp(44px, 4.4vw, 62px); }
           .lp-sub { margin-left: 0; font-size: 17px; max-width: 40ch; }
           .lp-ctas { justify-content:flex-start; }
           .lp-ring-1 span { font-size: 16px; }
