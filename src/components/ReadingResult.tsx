@@ -1201,7 +1201,10 @@ function AccordionSection({ id, index, title, content, open, onToggle, chartCont
 
 // 리딩 첫 문장 → 맨 위 '한 줄 요약' 카드
 function firstSentence(text: string): string {
-  const plain = text.replace(/\*\*|__|#+\s*/g, '').replace(/\s+/g, ' ').trim()
+  let plain = text.replace(/\*\*|__|#+\s*/g, '').replace(/\s+/g, ' ').trim()
+  // 궁합의 '○○님 입장에서 본 관계' 같은 안내 문장은 요약으로 쓰지 않고 다음 문장부터
+  const intro = plain.match(/^[^.!?。！？]{0,80}(입장에서|立場から|from your perspective)[^.!?。！？]*[.!?。！？]\s*/i)
+  if (intro) plain = plain.slice(intro[0].length)
   const m = plain.match(/^.{12,140}?[.!?。！？](?=\s|$|["”’])/)
   if (m) return m[0].trim()
   return plain.length > 110 ? plain.slice(0, 110).trim() + '…' : plain
