@@ -33,8 +33,8 @@ type Copy = {
 const COPY: Record<string, Copy> = {
   ko: {
     eyebrow: '사주 × 서양 점성술',
-    h1a: '사주 앱 따로,', h1b: '별자리 앱 따로 보셨죠?',
-    sub: '이제 한 번에 봐요. 사주와 서양 점성술을 동시에 읽고, 하나의 해석으로 섞어드려요.',
+    h1a: '사주와 점성술이', h1b: '내 얘기로 만나는 곳.',
+    sub: '내 사주와 서양 점성술의 출생 차트를 함께 읽고, 하나의 해석으로 연결해요.',
     cta: '오늘의 운세 무료로 보기', ctaNote: '가입 없이 바로 확인', secondary: '리딩 둘러보기', signIn: '로그인',
     lensTitle: '세 개의 시선으로 한 사람을 읽습니다',
     lenses: [
@@ -63,8 +63,8 @@ const COPY: Record<string, Copy> = {
   },
   ja: {
     eyebrow: '四柱推命 × 西洋占星術',
-    h1a: '四柱推命はこのアプリ、', h1b: '星座占いはあのアプリ。',
-    sub: 'これからは一度に。四柱推命と西洋占星術を同時に読み、ひとつの答えにまとめます。',
+    h1a: '四柱推命と占星術が', h1b: 'わたしの物語で出会う場所。',
+    sub: 'あなたの命式と西洋占星術のホロスコープを一緒に読み、ひとつの解釈につなげます。',
     cta: '今日の運勢を無料で見る', ctaNote: '登録不要ですぐに', secondary: '占いを見てみる', signIn: 'ログイン',
     lensTitle: '三つのまなざしで、ひとりを読む',
     lenses: [
@@ -93,8 +93,8 @@ const COPY: Record<string, Copy> = {
   },
   en: {
     eyebrow: 'BaZi × Western Astrology',
-    h1a: 'BaZi in one app,', h1b: 'your horoscope in another?',
-    sub: 'Now read both at once. We blend Eastern saju and Western astrology into a single reading.',
+    h1a: 'Where BaZi and astrology', h1b: 'meet in your story.',
+    sub: 'We read your Four Pillars and your Western birth chart together, and connect them into one reading.',
     cta: "See Today's Fortune Free", ctaNote: 'No sign-up needed', secondary: 'Browse readings', signIn: 'Sign In',
     lensTitle: 'Three lenses on one life',
     lenses: [
@@ -230,16 +230,20 @@ export default function LandingPage() {
           </h1>
           <p className="lp-sub ap-rise ap-d2">{c.sub}</p>
           <div className="lp-ctas ap-rise ap-d3">
-            <button className="ap-btn lp-cta" onClick={goToToday}>
+            <button className="lp-cta" onClick={goToToday}>
               {c.cta}
             </button>
-            <Link href="/menu" className="ap-btn-ghost" onClick={() => ga('cta_click_v1', { target: 'menu' })}>{c.secondary}</Link>
+            <p className="lp-note">
+              <span>{c.ctaNote}</span>
+              <span className="lp-note-dot" aria-hidden="true" />
+              <Link href="/menu" className="lp-link" onClick={() => ga('cta_click_v1', { target: 'menu' })}>{c.secondary} →</Link>
+            </p>
           </div>
-          <p className="lp-note ap-rise ap-d4">{c.ctaNote}</p>
         </div>
 
-        <div className="lp-hero-art ap-rise ap-d2" aria-hidden="true">
-          <HeroChart />
+        <div className="lp-hero-art ap-rise" aria-hidden="true">
+          <div className="lp-duo-side">
+            <span className="lp-duo-cap">{locale === 'ja' ? '命式' : locale === 'en' ? 'Four Pillars' : '사주 명식'}</span>
           <div className="lp-mx">
             {PILLARS.map((p, i) => (
               <div key={p.stem} className={`lp-mx-col${i === 2 ? ' is-day' : ''}`}>
@@ -248,6 +252,12 @@ export default function LandingPage() {
                 <span className="lp-mx-char">{p.branch}</span>
               </div>
             ))}
+          </div>
+          </div>
+          <span className="lp-duo-x">×</span>
+          <div className="lp-duo-side">
+            <span className="lp-duo-cap">{locale === 'ja' ? 'ホロスコープ' : locale === 'en' ? 'Birth Chart' : '출생 차트'}</span>
+            <div className="lp-duo-chart"><HeroChart /></div>
           </div>
         </div>
       </section>
@@ -364,19 +374,48 @@ export default function LandingPage() {
           padding: 12px 16px; background: rgba(7,9,20,.88); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); }
         .lp-mlogo { font-family:'Cormorant Garamond',serif; font-weight:700; font-size:16px; letter-spacing:.2em; color: var(--gold); }
 
-        .lp-hero { display:grid; grid-template-columns: 1fr; gap: 8px; align-items:center; padding-top: 8px; padding-bottom: 40px; }
-        .lp-hero-copy { order: 2; text-align:center; }
+        /* 히어로: 모바일 한 화면 안에 그림·문구·버튼이 모두 들어오게 */
+        .lp-hero { display:flex; flex-direction:column; justify-content:center; gap: 26px;
+          min-height: calc(100svh - 58px - 76px); padding-top: 18px; padding-bottom: 22px; }
+        .lp-hero-copy { order: 2; text-align:left; }
         .lp-hero-art { order: 1; }
-        .lp-eyebrow { font-size: 12.5px; letter-spacing: .2em; color: var(--ink-3); margin-bottom: 16px; }
-        .lp-h1 { font-family: var(--font-display); font-weight: 600; font-size: clamp(32px, 8.2vw, 42px); line-height: 1.2; letter-spacing: -.025em; display:flex; flex-direction:column; padding-bottom: 4px; }
-        html[lang="ko"] .lp-h1, html[lang="ja"] .lp-h1 { font-family: 'Noto Serif KR','Noto Serif JP', serif; font-weight: 700; letter-spacing: -.01em; }
-        .lp-sub { margin: 18px auto 0; max-width: 34ch; font-size: 15.5px; line-height: 1.75; color: var(--ink-2); }
-        .lp-ctas { margin-top: 28px; display:flex; flex-direction:column; gap: 12px; align-items: stretch; }
-        .lp-cta { min-height: 54px; font-size: 16px; }
-        .lp-note { margin-top: 12px; font-size: 12.5px; color: var(--ink-3); }
+        .lp-eyebrow { display:inline-flex; align-items:center; gap: 10px; font-size: 11.5px; font-weight: 500; letter-spacing: .22em; color: var(--gold-light); margin-bottom: 14px; }
+        .lp-eyebrow::before { content:""; width: 22px; height: 1px; background: var(--gold-light); opacity: .7; }
+        .lp-h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(30px, 8.4vw, 38px); line-height: 1.22; letter-spacing: -.04em;
+          display:flex; flex-direction:column; color: #f4efe3; word-break: keep-all; }
+        .lp-sub { margin: 14px 0 0; max-width: 30em; font-size: 15px; line-height: 1.7; color: rgba(241,237,228,.66); word-break: keep-all; letter-spacing: -.01em; }
+        .lp-ctas { margin-top: 24px; display:flex; flex-direction:column; gap: 14px; align-items: stretch; }
+        .lp-cta { height: 54px; border: 0; border-radius: 14px; cursor: pointer; font: inherit; font-size: 16px; font-weight: 600; letter-spacing: -.01em;
+          color: #15130e; background: linear-gradient(180deg, #efe3bf, #d9c48c); box-shadow: 0 1px 0 rgba(255,255,255,.35) inset, 0 14px 30px -14px rgba(217,196,140,.55);
+          transition: transform .15s var(--ease-out), box-shadow .2s; }
+        .lp-cta:hover { box-shadow: 0 1px 0 rgba(255,255,255,.35) inset, 0 18px 38px -14px rgba(217,196,140,.7); }
+        .lp-cta:active { transform: scale(.985); }
+        .lp-note { display:flex; align-items:center; justify-content:center; gap: 10px; font-size: 13px; color: var(--ink-3); }
+        .lp-note-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--ink-3); }
+        .lp-link { color: var(--ink-2); text-decoration: none; font-weight: 500; }
+        .lp-link:hover { color: var(--gold-light); }
 
-        .lp-hero-art { position: relative; width: min(80vw, 340px); aspect-ratio: 1 / 1.06; margin: 0 auto 8px; }
-        .lp-chart { position: absolute; inset: 0 0 auto 0; width: 100%; height: auto; overflow: visible; }
+        /* 명식 × 출생 차트: 두 지도를 나란히 → '동시에 본다' */
+        .lp-hero-art { display:grid; grid-template-columns: 1fr auto 1fr; align-items: end; gap: 10px; width: 100%; max-width: 420px; margin: 0 auto; }
+        .lp-duo-side { display:flex; flex-direction:column; align-items:center; gap: 10px; min-width: 0; }
+        .lp-duo-cap { font-size: 10.5px; letter-spacing: .18em; color: var(--ink-3); text-transform: uppercase; }
+        .lp-duo-x { align-self: center; margin-top: 22px; font-size: 22px; font-weight: 300; color: var(--gold-light); opacity: .9; }
+        .lp-duo-chart { position: relative; width: 100%; aspect-ratio: 1; }
+        .lp-duo-chart .lp-c-planet { display: none; }
+        html[lang="ja"] .lp-h1 { font-size: clamp(26px, 7.2vw, 34px); letter-spacing: -.02em; }
+        /* 키가 작은 폰: 그림을 줄여 버튼·링크까지 한 화면에 */
+        @media (max-height: 700px) and (max-width: 640px) {
+          .lp-hero { gap: 18px; padding-top: 12px; padding-bottom: 14px; }
+          .lp-hero-art { max-width: 300px; }
+          .lp-duo-cap { display: none; }
+          .lp-duo-x { margin-top: 0; }
+          .lp-h1 { font-size: clamp(27px, 7.6vw, 32px); }
+          .lp-sub { margin-top: 10px; font-size: 14px; }
+          .lp-ctas { margin-top: 18px; gap: 10px; }
+          .lp-cta { height: 50px; }
+          .lp-eyebrow { margin-bottom: 10px; }
+        }
+        .lp-chart { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
         .lp-c-line { fill: none; stroke: rgba(201,168,76,.32); stroke-width: 1; }
         .lp-c-tick { stroke: rgba(201,168,76,.22); stroke-width: 1; }
         .lp-c-inner { fill: rgba(9,12,26,.35); stroke: rgba(170,165,209,.22); stroke-width: 1; }
@@ -384,18 +423,17 @@ export default function LandingPage() {
         .lp-c-dot { fill: #e6cd85; }
         .lp-c-sign { fill: rgba(230,205,133,.7); font-size: 15px; text-anchor: middle; dominant-baseline: central; font-variant-emoji: text; }
         .lp-c-planet { fill: rgba(241,237,228,.75); font-size: 14px; text-anchor: middle; dominant-baseline: central; font-variant-emoji: text; }
-        .lp-mx { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); display: grid; grid-template-columns: repeat(4, 1fr);
-          width: 74%; background: rgba(10,13,28,.86); border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
-          backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 24px 50px -24px rgba(0,0,0,.9); }
-        .lp-mx-col { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 0 12px; position: relative; }
+        .lp-mx { display: grid; grid-template-columns: repeat(4, 1fr); width: 100%; aspect-ratio: 1;
+          background: rgba(10,13,28,.7); border: 1px solid rgba(201,168,76,.22); border-radius: 14px; overflow: hidden; }
+        .lp-mx-col { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 6px 0; position: relative; }
         .lp-mx-col + .lp-mx-col { border-left: 1px solid var(--line); }
         .lp-mx-col.is-day { background: rgba(201,168,76,.07); }
         .lp-mx-col.is-day::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: var(--gold); }
-        .lp-mx-label { font-size: 10.5px; letter-spacing: .12em; color: var(--ink-3); }
+        .lp-mx-label { font-size: 10px; letter-spacing: .08em; color: var(--ink-3); }
         .lp-mx-col.is-day .lp-mx-label { color: var(--gold-light); }
-        .lp-mx-char { font-size: 24px; font-weight: 400; line-height: 1.05; color: var(--ink); }
+        .lp-mx-char { font-size: clamp(19px, 5.4vw, 30px); font-weight: 400; line-height: 1.05; color: var(--ink); }
         .lp-mx-col.is-day .lp-mx-char { color: #f3e6bd; }
-        .lp-h1-b { color: var(--gold-light); }
+        .lp-h1-b { color: #e2cf96; }
         .lp-arch { position:absolute; inset: 9% 13% 0; border-radius: 999px 999px 24px 24px; overflow:hidden;
           border: 1px solid var(--gold-line); box-shadow: 0 30px 80px -30px rgba(0,0,0,.8); }
         .lp-arch img { width:100%; height:100%; object-fit:cover; object-position: center 22%; display:block; filter: saturate(.5) brightness(.82) contrast(1.08); }
@@ -450,7 +488,8 @@ export default function LandingPage() {
 
         @media (min-width: 640px) {
           .lp-readings { grid-template-columns: 1fr 1fr; }
-          .lp-ctas { flex-direction:row; justify-content:center; }
+          .lp-ctas { flex-direction:row; justify-content:flex-start; align-items:center; }
+          .lp-cta { padding: 0 32px; }
         }
         @media (min-width: 900px) {
           .lp-lenses { grid-template-columns: 1.35fr 1fr; grid-template-rows: auto auto; }
@@ -467,10 +506,13 @@ export default function LandingPage() {
           .lp-flow-item { padding-left: 0; padding-top: 64px; }
         }
         @media (min-width: 1024px) {
-          .lp-hero { grid-template-columns: 1.05fr 1fr; gap: 48px; min-height: calc(100dvh - var(--nav-h) - 24px); padding-top: 24px; padding-bottom: 24px; }
+          .lp-hero { display:grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items:center; min-height: calc(100dvh - var(--nav-h) - 24px); padding-top: 24px; padding-bottom: 24px; }
           .lp-hero-copy { order: 1; text-align:left; }
-          .lp-hero-art { order: 2; width: min(40vw, 500px); }
-          .lp-h1 { font-size: clamp(38px, 3.6vw, 54px); }
+          .lp-hero-art { order: 2; max-width: 540px; gap: 16px; }
+          .lp-h1 { font-size: clamp(40px, 3.8vw, 58px); }
+          .lp-note { justify-content:flex-start; }
+          .lp-mx-char { font-size: 40px; }
+          .lp-mx-col { gap: 12px; }
           .lp-h1 span { white-space: nowrap; }
           .lp-sub { margin-left: 0; font-size: 17px; max-width: 40ch; }
           .lp-ctas { justify-content:flex-start; }
