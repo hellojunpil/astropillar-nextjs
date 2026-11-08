@@ -78,10 +78,41 @@ const SIGN_GLYPH: Record<string, string> = Object.fromEntries(
     .map((n, i) => [n, String.fromCodePoint(0x2648 + i) + '\uFE0E'])
 )
 
-const MOON_PHASE_EMOJIS: Record<string, string> = {
-  'new moon': '🌑', 'waxing crescent': '🌒', 'first quarter': '🌓',
-  'waxing gibbous': '🌔', 'full moon': '🌕', 'waning gibbous': '🌖',
-  'third quarter': '🌗', 'last quarter': '🌗', 'waning crescent': '🌘',
+// 달 위상(0=삭, .5=망) — 이모지 대신 선으로 그린 달
+// 띠는 만화 일러스트 대신 지지 한자로
+const CN_HANJA: Record<string, string> = {
+  Rat:'子', Ox:'丑', Tiger:'寅', Rabbit:'卯', Dragon:'辰', Snake:'巳',
+  Horse:'午', Goat:'未', Monkey:'申', Rooster:'酉', Dog:'戌', Pig:'亥',
+}
+
+const MOON_PHASE_FRACTION: Record<string, number> = {
+  'new moon': 0, 'waxing crescent': 0.14, 'first quarter': 0.25,
+  'waxing gibbous': 0.37, 'full moon': 0.5, 'waning gibbous': 0.63,
+  'third quarter': 0.75, 'last quarter': 0.75, 'waning crescent': 0.86,
+}
+
+function MoonGlyph({ phase, size = 34 }: { phase: string; size?: number }) {
+  const f = MOON_PHASE_FRACTION[phase.toLowerCase()] ?? 0.5
+  const r = 14, c = 16
+  const rx = Math.abs(Math.cos(2 * Math.PI * f)) * r
+  let lit = ''
+  if (f > 0.02 && f < 0.98 && Math.abs(f - 0.5) > 0.02) {
+    if (f < 0.5) {
+      // 차오르는 달: 오른쪽이 밝음
+      lit = `M${c},${c - r} A${r},${r} 0 0 1 ${c},${c + r} A${rx},${r} 0 0 ${f < 0.25 ? 0 : 1} ${c},${c - r}Z`
+    } else {
+      // 기우는 달: 왼쪽이 밝음
+      lit = `M${c},${c - r} A${r},${r} 0 0 0 ${c},${c + r} A${rx},${r} 0 0 ${f < 0.75 ? 0 : 1} ${c},${c - r}Z`
+    }
+  }
+  const full = Math.abs(f - 0.5) <= 0.02
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden="true" className="td-moon-glyph">
+      <circle cx={c} cy={c} r={r} fill="rgba(170,165,209,0.08)" stroke="rgba(230,224,206,0.45)" strokeWidth="1" />
+      {full && <circle cx={c} cy={c} r={r} fill="#e9e2cc" />}
+      {lit && <path d={lit} fill="#e9e2cc" />}
+    </svg>
+  )
 }
 
 interface MoonPhaseData { phase?: string; illumination?: number | null; moon_age?: number | null }
@@ -478,12 +509,12 @@ export default function TodayFortunePage() {
 
   const scoreLabels = ui.scoreLabels as Record<string, string>
   const SCORE_ITEMS = [
-    { key: 'score_love',     color: '#f0a3c4' },
-    { key: 'score_work',     color: '#e6cd85' },
-    { key: 'score_money',    color: '#93c5ae' },
-    { key: 'score_health',   color: '#aaa5d1' },
-    { key: 'score_social',   color: '#8fb4e8' },
-    { key: 'score_creative', color: '#e8b08a' },
+    { key: 'score_love',     color: '#d9c48c' },
+    { key: 'score_work',     color: '#d9c48c' },
+    { key: 'score_money',    color: '#d9c48c' },
+    { key: 'score_health',   color: '#d9c48c' },
+    { key: 'score_social',   color: '#d9c48c' },
+    { key: 'score_creative', color: '#d9c48c' },
   ] as const
 
   const localePrefix = locale === 'en' ? '' : `/${locale}`
@@ -525,18 +556,17 @@ export default function TodayFortunePage() {
         ? HOROSCOPE_NAMES[locale as keyof typeof HOROSCOPE_NAMES]?.[shareInfo.label] ?? shareInfo.label
         : CHINESE_NAMES[locale as keyof typeof CHINESE_NAMES]?.[shareInfo.label] ?? shareInfo.label)
       : null
-    const glyph = mode === 'horoscope' && shareInfo ? SIGN_GLYPH[shareInfo.label] : null
     return (
       <div className="td-fortune ap-rise">
         <aside className="td-fortune-side">
           <div className="ap-glass td-sign-card">
-            {signImg && (
-              <div className="td-sign-orb">
-                <Image src={`${IMG}${signImg}`} alt={signName ?? ''} width={96} height={96} style={{ objectFit: 'contain', borderRadius: 20 }} unoptimized />
+            {signImg && shareInfo && (
+              <div className={`td-sign-orb${mode === 'horoscope' ? '' : ' is-cn'}`} aria-hidden="true">
+                {mode === 'horoscope' ? SIGN_GLYPH[shareInfo.label] : CN_HANJA[shareInfo.label]}
               </div>
             )}
             <p className="td-kicker">{mode === 'horoscope' ? ui.horoLabel : ui.chineseLabel}</p>
-            {signName && <p className="td-sign-name">{glyph && <span className="td-glyph" aria-hidden="true">{glyph}</span>}{signName}</p>}
+            {signName && <p className="td-sign-name">{signName}</p>}
 
             {scores.length > 0 && (
               <div className="td-scores">
@@ -555,7 +585,7 @@ export default function TodayFortunePage() {
             )}
             {bestMatch && (
               <div className="td-match">
-                {bestMatchSign && <Image src={`${IMG}${bestMatchSign.img}`} alt={bestMatch} width={36} height={36} style={{ objectFit: 'contain', borderRadius: 8 }} unoptimized />}
+                {bestMatchSign && <span className="td-match-glyph" aria-hidden="true">{SIGN_GLYPH[bestMatchSign.name]}</span>}
                 <div>
                   <p className="td-match-label">{ui.bestMatch}</p>
                   <p className="td-match-name">{HOROSCOPE_NAMES[locale as keyof typeof HOROSCOPE_NAMES]?.[bestMatch] ?? bestMatch}</p>
@@ -731,7 +761,7 @@ export default function TodayFortunePage() {
             <div>
               {moonPhase?.phase && (
                 <div className="td-moon ap-rise">
-                  <span className="td-moon-emoji" aria-hidden="true">{MOON_PHASE_EMOJIS[moonPhase.phase.toLowerCase()] ?? '🌙'}</span>
+                  <MoonGlyph phase={moonPhase.phase} />
                   <div>
                     <p className="td-moon-label">{ui.moonPhaseLabel}</p>
                     <p className="td-moon-name">
@@ -775,10 +805,8 @@ export default function TodayFortunePage() {
                       return (
                         <button key={s.name} type="button" aria-pressed={isSel} onClick={() => setHoroSelected(horoSelected===s.name ? null : s.name)}
                           className={`td-sign${isSel ? ' is-sel' : ''}${isAuto ? ' is-auto' : ''}`}>
-                          <span className="td-sign-img">
-                            <Image src={`${IMG}${s.img}`} alt="" width={56} height={56} style={{ objectFit: 'contain', borderRadius: 12 }} unoptimized />
-                          </span>
-                          <span className="td-sign-label"><span className="td-glyph-sm" aria-hidden="true">{SIGN_GLYPH[s.name]}</span>{displayName}</span>
+                          <span className="td-sign-img td-sign-glyph" aria-hidden="true">{SIGN_GLYPH[s.name]}</span>
+                          <span className="td-sign-label">{displayName}</span>
                         </button>
                       )
                     })}
@@ -820,9 +848,7 @@ export default function TodayFortunePage() {
                       return (
                         <button key={s.name} type="button" aria-pressed={isSel} onClick={() => setChineseSelected(chineseSelected===s.name ? null : s.name)}
                           className={`td-sign td-sign-cn${isSel ? ' is-sel' : ''}${isAuto ? ' is-auto' : ''}`}>
-                          <span className="td-sign-img">
-                            <Image src={`${IMG}${s.img}`} alt="" width={56} height={56} style={{ objectFit: 'contain', borderRadius: 12 }} unoptimized />
-                          </span>
+                          <span className="td-sign-img td-sign-hanja" aria-hidden="true">{CN_HANJA[s.name]}</span>
                           <span className="td-sign-label">{CHINESE_NAMES[locale as keyof typeof CHINESE_NAMES]?.[s.name] ?? s.name}</span>
                         </button>
                       )
@@ -843,8 +869,8 @@ export default function TodayFortunePage() {
 
       <style>{`
         .td-toast { position: fixed; top: 84px; left: 50%; transform: translateX(-50%); z-index: 999;
-          background: linear-gradient(180deg, #e3c879, #c9a84c); color: #1a1408; padding: 10px 22px; border-radius: 999px;
-          font-size: 13px; font-weight: 700; white-space: nowrap; animation: fadeIn .2s ease; box-shadow: 0 10px 30px -8px rgba(201,168,76,.6); }
+          background: rgba(17,22,40,.96); color: var(--ink); border: 1px solid var(--gold-line); padding: 10px 20px; border-radius: 12px;
+          font-size: 13px; font-weight: 500; white-space: nowrap; animation: fadeIn .2s ease; box-shadow: 0 16px 40px -16px rgba(0,0,0,.8); }
 
         .td-mhead { position: sticky; top: 0; z-index: 40; display:flex; justify-content:space-between; align-items:center;
           padding: 6px 20px; background: rgba(7,9,20,.88); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); }
@@ -863,10 +889,10 @@ export default function TodayFortunePage() {
         .td-tabs { margin: 24px auto 0; display:grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 5px; max-width: 520px;
           border-radius: 999px; background: rgba(255,255,255,.035); border: 1px solid var(--line); }
         .td-tab { display:flex; align-items:center; justify-content:center; gap: 6px; min-height: 46px; border-radius: 999px; border: 0; cursor: pointer;
-          background: transparent; color: var(--ink-2); font: inherit; font-size: 14px; font-weight: 600; white-space: nowrap; padding: 0 8px;
+          background: transparent; color: var(--ink-2); font: inherit; font-size: 14px; font-weight: 500; white-space: nowrap; padding: 0 8px;
           transition: background var(--t-med), color var(--t-med), box-shadow var(--t-med); }
         .td-tab:hover { color: var(--ink); }
-        .td-tab.is-active { color: #1a1408; background: linear-gradient(180deg, #e3c879, #c9a84c); box-shadow: 0 8px 24px -10px rgba(201,168,76,.7); }
+        .td-tab.is-active { color: var(--gold-light); background: rgba(241,237,228,.08); box-shadow: inset 0 0 0 1px rgba(201,168,76,.32); }
         .td-tab-icon { font-size: 19px; }
 
         .td-panel { margin-top: 28px; }
@@ -937,11 +963,13 @@ export default function TodayFortunePage() {
         /* 운세 결과 */
         .td-fortune { display:grid; grid-template-columns: 1fr; gap: 16px; }
         .td-sign-card { padding: 22px 20px; display:flex; flex-direction:column; align-items:center; text-align:center; }
-        .td-sign-orb { width: 116px; height: 116px; border-radius: 50%; display:grid; place-items:center; margin-bottom: 14px;
-          background: radial-gradient(circle, rgba(230,205,133,.2), transparent 70%); border: 1px solid var(--gold-line);
-          box-shadow: 0 0 40px -6px rgba(201,168,76,.35); }
+        .td-sign-orb { width: 104px; height: 104px; border-radius: 50%; display:grid; place-items:center; margin-bottom: 14px;
+          background: rgba(9,12,26,.55); border: 1px solid var(--gold-line); box-shadow: 0 0 0 6px rgba(201,168,76,.04);
+          color: var(--gold-light); font-size: 46px; line-height: 1; font-weight: 300; }
+        .td-sign-orb.is-cn { color: var(--ink); font-size: 44px; font-weight: 400; border-color: rgba(170,165,209,.35); }
         .td-kicker { font-size: 12px; letter-spacing: .1em; color: var(--lavender); }
-        .td-sign-name { margin-top: 4px; font-family: 'Noto Serif KR','Noto Serif JP', var(--font-display), serif; font-size: 24px; font-weight: 700; display:flex; align-items:center; gap: 8px; }
+        .td-sign-name { margin-top: 4px; font-size: 22px; font-weight: 600; display:flex; align-items:center; gap: 8px; }
+        .td-match-glyph { width: 36px; height: 36px; flex-shrink: 0; display:grid; place-items:center; border-radius: 10px; border: 1px solid var(--line); color: var(--gold-light); font-size: 18px; }
         .td-glyph { color: var(--gold-light); font-family: 'Segoe UI Symbol','Noto Sans Symbols 2','Apple Symbols',serif; font-size: 22px; }
         .td-scores { width: 100%; margin-top: 18px; display:grid; grid-template-columns: 1fr 1fr; gap: 12px 20px; text-align:left; }
         .td-score-row { display:flex; justify-content:space-between; align-items:baseline; margin-bottom: 5px; }
@@ -961,7 +989,7 @@ export default function TodayFortunePage() {
         /* 별자리·띠 선택 */
         .td-moon { display:flex; align-items:center; gap: 14px; padding: 12px 16px; margin-bottom: 16px; border-radius: 14px;
           background: linear-gradient(90deg, rgba(170,165,209,.1), rgba(170,165,209,.02)); border: 1px solid rgba(170,165,209,.22); }
-        .td-moon-emoji { font-size: 30px; filter: drop-shadow(0 0 10px rgba(220,226,255,.35)); }
+        .td-moon-glyph { flex-shrink: 0; filter: drop-shadow(0 0 8px rgba(220,226,255,.18)); }
         .td-moon-label { font-size: 12px; color: var(--lavender); }
         .td-moon-name { font-size: 15px; font-weight: 700; }
         .td-moon-ill { color: var(--ink-2); font-weight: 400; font-size: 12.5px; }
@@ -979,14 +1007,16 @@ export default function TodayFortunePage() {
         .td-signs { display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 6px; }
         .td-sign { min-width: 0; }
         .td-sign { appearance:none; background:none; border:0; cursor:pointer; padding: 6px 0; display:flex; flex-direction:column; align-items:center; gap: 6px; font: inherit; border-radius: 14px; }
-        .td-sign-img { width: min(68px, 100%); aspect-ratio: 1; height: auto; border-radius: 18px; display:grid; place-items:center; background: rgba(255,255,255,.035);
-          border: 1px solid transparent; transition: transform .2s var(--ease-out), border-color .2s, box-shadow .2s, background .2s; }
+        .td-sign-img { width: min(64px, 100%); aspect-ratio: 1; height: auto; border-radius: 16px; display:grid; place-items:center; background: rgba(9,12,26,.5);
+          border: 1px solid var(--line); line-height: 1; transition: transform .2s var(--ease-out), border-color .2s, background .2s, color .2s; }
+        .td-sign-glyph { font-size: 26px; color: rgba(230,205,133,.85); }
+        .td-sign-hanja { font-size: 25px; color: var(--ink); font-weight: 400; }
         @media (hover: hover) { .td-sign:hover .td-sign-img { transform: translateY(-3px); border-color: var(--line-strong); } }
         .td-sign.is-auto .td-sign-img { border-color: rgba(201,168,76,.45); background: rgba(201,168,76,.06); }
-        .td-sign.is-sel .td-sign-img { border-color: var(--gold-light); background: rgba(201,168,76,.12); box-shadow: 0 0 24px -4px rgba(230,205,133,.5); }
+        .td-sign.is-sel .td-sign-img { border-color: var(--gold-light); background: rgba(201,168,76,.10); color: var(--gold-light); }
         .td-sign-cn.is-auto .td-sign-img { border-color: rgba(170,165,209,.5); background: rgba(170,165,209,.08); }
-        .td-sign-cn.is-sel .td-sign-img { border-color: var(--lavender); background: rgba(170,165,209,.14); box-shadow: 0 0 24px -4px rgba(170,165,209,.55); }
-        .td-sign-label { font-size: 12px; color: var(--ink-2); font-weight: 600; display:flex; align-items:center; gap: 3px; white-space: nowrap; }
+        .td-sign-cn.is-sel .td-sign-img { border-color: var(--lavender); background: rgba(170,165,209,.12); }
+        .td-sign-label { font-size: 12px; color: var(--ink-2); font-weight: 500; display:flex; align-items:center; gap: 3px; white-space: nowrap; }
         .td-sign.is-sel .td-sign-label { color: var(--gold-light); }
         .td-sign-cn.is-sel .td-sign-label { color: var(--lavender); }
         .td-glyph-sm { font-family: 'Segoe UI Symbol','Noto Sans Symbols 2','Apple Symbols',serif; color: rgba(230,205,133,.7); font-size: 11px; }

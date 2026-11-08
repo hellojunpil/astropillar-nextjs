@@ -157,9 +157,9 @@ button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
 }
 @media (hover: hover) {
   .ap-hover:hover {
-    transform: translateY(-3px);
+    transform: translateY(-2px);
     border-color: var(--gold-line);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 24px 60px -24px rgba(201, 168, 76, 0.28);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 20px 44px -26px rgba(0, 0, 0, 0.8);
   }
 }
 .ap-hover:active { transform: scale(0.985); }
@@ -169,15 +169,15 @@ button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   min-height: 48px; padding: 0 28px;
   border-radius: var(--r-pill); border: none; cursor: pointer;
-  font: inherit; font-size: 15px; font-weight: 700; letter-spacing: .01em;
+  font: inherit; font-size: 15px; font-weight: 600; letter-spacing: .01em;
   text-decoration: none; white-space: nowrap;
-  color: #1a1408;
-  background: linear-gradient(180deg, #e3c879 0%, #c9a84c 55%, #b8963d 100%);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.45), 0 10px 30px -10px rgba(201,168,76,.55);
+  color: #17120a;
+  background: linear-gradient(180deg, #d8bd6e 0%, #c6a54b 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.28), 0 1px 2px rgba(0,0,0,.4);
   transition: transform var(--t-fast) var(--ease-out), box-shadow var(--t-med) var(--ease-out), filter var(--t-med);
 }
 @media (hover: hover) {
-  .btn-gold:hover, .ap-btn:hover { transform: translateY(-1px); filter: brightness(1.05); box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 14px 36px -10px rgba(201,168,76,.7); }
+  .btn-gold:hover, .ap-btn:hover { filter: brightness(1.07); }
 }
 .btn-gold:active, .ap-btn:active { transform: scale(0.98); }
 .btn-gold:disabled, .ap-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
@@ -208,7 +208,7 @@ button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
 .ap-badge {
   display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;
   padding: 3px 10px; border-radius: var(--r-pill);
-  font-size: 12px; font-weight: 700; color: var(--gold-light);
+  font-size: 12px; font-weight: 600; color: var(--gold-light);
   background: var(--gold-soft); border: 1px solid var(--gold-line);
 }
 .ap-badge-free { color: var(--success); background: rgba(147,197,174,.1); border-color: rgba(147,197,174,.35); }

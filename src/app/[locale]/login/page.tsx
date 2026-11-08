@@ -312,8 +312,8 @@ function LoginContent() {
         .lg-logo { font-family:'Cormorant Garamond',serif; font-size: 26px; font-weight: 700; letter-spacing: .2em; color: var(--gold); text-decoration:none; }
         .lg-welcome { margin-top: 8px; font-size: 14px; color: var(--ink-2); }
         .lg-tabs { display:grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 999px; background: rgba(255,255,255,.04); border: 1px solid var(--line); margin-bottom: 22px; }
-        .lg-tab { min-height: 40px; border: 0; border-radius: 999px; background: transparent; color: var(--ink-2); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; transition: background .2s, color .2s; }
-        .lg-tab.is-on { background: linear-gradient(180deg, #e3c879, #c9a84c); color: #1a1408; }
+        .lg-tab { min-height: 40px; border: 0; border-radius: 999px; background: transparent; color: var(--ink-2); font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; transition: background .2s, color .2s; }
+        .lg-tab.is-on { color: var(--gold-light); background: rgba(241,237,228,.08); box-shadow: inset 0 0 0 1px rgba(201,168,76,.32); }
         .lg-google { width:100%; min-height: 52px; display:flex; align-items:center; justify-content:center; gap: 10px; border-radius: 999px; cursor: pointer;
           background: #f6f4ef; color: #1f2330; border: 1px solid rgba(255,255,255,.6); font: inherit; font-size: 15px; font-weight: 600;
           transition: transform .16s, box-shadow .2s; box-shadow: 0 10px 24px -12px rgba(0,0,0,.6); }

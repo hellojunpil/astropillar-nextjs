@@ -241,16 +241,17 @@ const TYPE_LABELS: Record<string, string> = {
   tarot_celtic_cross: 'Tarot · Celtic Cross',
   tarot_scenario: 'Tarot · Scenario',
 }
+// 태그 색은 두 계열만: 사주·별자리 리딩 = 금색, 타로 = 라벤더
 const TYPE_COLORS: Record<string, string> = {
-  personal_fortune: 'var(--gold)',
-  daily: '#f59e0b',
-  yearly: '#60a5fa',
-  compatibility: '#f472b6',
-  scenario: '#a78bfa',
-  tarot_three_card: '#c084fc',
-  tarot_relationship: '#f472b6',
-  tarot_celtic_cross: '#818cf8',
-  tarot_scenario: '#34d399',
+  personal_fortune: '#d9c48c',
+  daily: '#d9c48c',
+  yearly: '#d9c48c',
+  compatibility: '#d9c48c',
+  scenario: '#d9c48c',
+  tarot_three_card: '#aaa5d1',
+  tarot_relationship: '#aaa5d1',
+  tarot_celtic_cross: '#aaa5d1',
+  tarot_scenario: '#aaa5d1',
 }
 
 const inputStyle: React.CSSProperties = {
@@ -590,7 +591,7 @@ const LIB_CSS = `
   .lib-tabs { display:inline-grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 999px; background: rgba(255,255,255,.04); border: 1px solid var(--line); margin-bottom: 24px; width: 100%; max-width: 420px; }
   .lib-tab { display:flex; align-items:center; justify-content:center; gap: 6px; min-height: 42px; border: 0; border-radius: 999px; background: transparent; color: var(--ink-2); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; transition: background .2s, color .2s; }
   .lib-tab .material-icons { font-size: 18px; }
-  .lib-tab.is-on { background: linear-gradient(180deg, #e3c879, #c9a84c); color: #1a1408; }
+  .lib-tab.is-on { color: var(--gold-light); background: rgba(241,237,228,.08); box-shadow: inset 0 0 0 1px rgba(201,168,76,.32); }
   .lib-grid { display:grid; grid-template-columns: 1fr; gap: 12px; }
   .lib-item { width:100%; text-align:left; padding: 16px 18px; cursor:pointer; color: inherit; font: inherit; display:flex; flex-direction:column; gap: 6px; }
   .lib-item-top { display:flex; justify-content:space-between; align-items:center; gap: 8px; }

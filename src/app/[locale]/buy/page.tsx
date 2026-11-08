@@ -61,7 +61,7 @@ function BuyContent() {
             currency: locale === 'ja' ? 'JPY' : 'KRW',
             items: [{ item_id: `credits_${creditCount}`, item_name: `${creditCount} Credits`, quantity: 1 }],
           })
-          alert(locale === 'ko' ? `${creditCount} 크레딧이 충전되었습니다! 🎉` : locale === 'ja' ? `${creditCount}クレジットが追加されました！🎉` : `${creditCount} credits added! 🎉`)
+          alert(locale === 'ko' ? `${creditCount} 크레딧이 충전되었습니다.` : locale === 'ja' ? `${creditCount}クレジットが追加されました。` : `${creditCount} credits added.`)
           // URL 파라미터 제거
           window.history.replaceState({}, '', window.location.pathname)
         } else {
@@ -91,7 +91,7 @@ function BuyContent() {
     try {
       const credits = await buyCreditsIAP(productId, user.email)
       refreshCredits(credits)
-      alert(locale === 'ko' ? `${credits} 크레딧이 충전되었습니다! 🎉` : locale === 'ja' ? `${credits}クレジットが追加されました！🎉` : `${credits} credits added! 🎉`)
+      alert(locale === 'ko' ? `${credits} 크레딧이 충전되었습니다.` : locale === 'ja' ? `${credits}クレジットが追加されました。` : `${credits} credits added.`)
       gtagEvent('credit_purchase_iap', { credits: String(credits), platform: productId })
     } catch (e) {
       const msg = (e as Error).message ?? ''
@@ -208,7 +208,7 @@ function BuyContent() {
         items: [{ item_id: `credits_${creditCount}`, item_name: `${creditCount} Credits`, quantity: 1 }],
       })
 
-      alert(locale === 'ko' ? `${creditCount} 크레딧이 충전되었습니다! 🎉` : locale === 'ja' ? `${creditCount}クレジットが追加されました！🎉` : `${creditCount} credits added! 🎉`)
+      alert(locale === 'ko' ? `${creditCount} 크레딧이 충전되었습니다.` : locale === 'ja' ? `${creditCount}クレジットが追加されました。` : `${creditCount} credits added.`)
     } catch (e) {
       console.error('PortOne buy error:', e)
       alert(locale === 'ko' ? '결제 중 오류가 발생했습니다.' : locale === 'ja' ? '決済中にエラーが発生しました。' : 'Payment error occurred.')
@@ -300,7 +300,7 @@ function BuyContent() {
             <article className="bp-pack ap-glass">
               <div className="bp-pack-top">
                 <div>
-                  <h2 className="bp-pack-title"><span aria-hidden="true" className="bp-star">✦</span>{t('pack1_title')}</h2>
+                  <h2 className="bp-pack-title">{t('pack1_title')}</h2>
                   <p className="bp-pack-sub">{UI.one}</p>
                 </div>
                 <div className="bp-price">
@@ -316,7 +316,7 @@ function BuyContent() {
               <div className="bp-pack-top">
                 <div>
                   <p className="bp-best-label">{UI.best}</p>
-                  <h2 className="bp-pack-title"><span aria-hidden="true" className="bp-star">✦✦✦</span>{t('pack5_title')}</h2>
+                  <h2 className="bp-pack-title">{t('pack5_title')}</h2>
                   <p className="bp-pack-sub">{UI.five}</p>
                 </div>
                 <div className="bp-price">
@@ -369,12 +369,12 @@ function BuyContent() {
         .bp-grid { display:grid; grid-template-columns: 1fr; gap: 20px; }
         .bp-packs { display:flex; flex-direction:column; gap: 18px; }
         .bp-pack { position:relative; padding: 22px; display:flex; flex-direction:column; gap: 18px; }
-        .bp-pack-best { padding-top: 26px; background: radial-gradient(120% 120% at 100% 0%, rgba(201,168,76,.14), transparent 55%), linear-gradient(180deg, rgba(30,37,64,.7), rgba(15,19,36,.82)); box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 24px 60px -24px rgba(201,168,76,.35); }
-        .bp-ribbon { position:absolute; top: -11px; right: 18px; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; color: #1a1408;
-          background: linear-gradient(180deg, #e3c879, #c9a84c); box-shadow: 0 6px 18px -6px rgba(201,168,76,.6); }
+        .bp-pack-best { padding-top: 26px; background: radial-gradient(120% 120% at 100% 0%, rgba(201,168,76,.14), transparent 55%), linear-gradient(180deg, rgba(30,37,64,.7), rgba(15,19,36,.82)); box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 24px 60px -30px rgba(0,0,0,.8); }
+        .bp-ribbon { position:absolute; top: -11px; right: 18px; padding: 3px 11px; border-radius: 999px; font-size: 12px; font-weight: 600; color: var(--gold-light);
+          background: #151a2e; border: 1px solid var(--gold-line); }
         .bp-best-label { font-size: 12px; color: var(--lavender); letter-spacing: .06em; margin-bottom: 4px; }
         .bp-pack-top { display:flex; justify-content:space-between; align-items:flex-start; gap: 12px; }
-        .bp-pack-title { display:flex; align-items:center; gap: 8px; font-size: 19px; font-weight: 700; }
+        .bp-pack-title { display:flex; align-items:center; gap: 8px; font-size: 19px; font-weight: 600; }
         .bp-star { color: var(--gold-light); font-size: 13px; letter-spacing: 2px; }
         .bp-pack-sub { margin-top: 4px; font-size: 13.5px; color: var(--ink-2); }
         .bp-price { display:flex; flex-direction:column; align-items:flex-end; gap: 2px; }

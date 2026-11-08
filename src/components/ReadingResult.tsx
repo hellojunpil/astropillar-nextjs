@@ -1,6 +1,5 @@
 'use client'
 import Link from 'next/link'
-import Image from 'next/image'
 import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
@@ -13,8 +12,6 @@ import { usePricing } from '@/hooks/usePricing'
 
 const GH = 'https://raw.githubusercontent.com/hellojunpil/astropillar_images/main/'
 
-function ganImg(char: string) { return `${GH}gan_${encodeURIComponent(char)}.png` }
-function zhiImg(char: string) { return `${GH}zhi_${encodeURIComponent(char)}.png` }
 
 const ZODIAC_SVG_KEYS = [
   'aries','taurus','gemini','cancer','leo','virgo',
@@ -26,8 +23,8 @@ const ZODIAC_SYMBOL: Record<string, string> = {
 }
 
 const PILLAR_LABELS_MAP: Record<string, string[]> = {
-  ko: ['연도','월','일','시'],
-  ja: ['年','月','日','時'],
+  ko: ['연주','월주','일주','시주'],
+  ja: ['年柱','月柱','日柱','時柱'],
 }
 const PILLAR_LABELS_EN = ['YEAR','MONTH','DAY','HOUR']
 const PILLAR_KEYS = ['year','month','day','hour']
@@ -41,8 +38,45 @@ const GAN_TO_ELEMENT: Record<string,string> = {
   '甲':'wood','乙':'wood','丙':'fire','丁':'fire','戊':'earth',
   '己':'earth','庚':'metal','辛':'metal','壬':'water','癸':'water',
 }
+// 오행 색: 원색 대신 채도를 낮춘 톤 (남색·금색 테마와 어울리게)
 const ELEMENT_COLOR: Record<string,string> = {
-  wood:'#4CAF50',fire:'#F44336',earth:'#FF9800',metal:'#9E9E9E',water:'#2196F3',
+  wood:'#8FAE8B',fire:'#D08770',earth:'#C2A267',metal:'#B7BCC8',water:'#7E9CC0',
+}
+const ZHI_TO_ELEMENT: Record<string,string> = {
+  '子':'water','亥':'water','寅':'wood','卯':'wood','巳':'fire','午':'fire',
+  '申':'metal','酉':'metal','辰':'earth','戌':'earth','丑':'earth','未':'earth',
+}
+const ELEMENT_HANJA: Record<string,string> = { wood:'木', fire:'火', earth:'土', metal:'金', water:'水' }
+const ELEMENT_NAME: Record<string, Record<string,string>> = {
+  ko: { wood:'목', fire:'화', earth:'토', metal:'금', water:'수' },
+  ja: { wood:'木', fire:'火', earth:'土', metal:'金', water:'水' },
+  en: { wood:'Wood', fire:'Fire', earth:'Earth', metal:'Metal', water:'Water' },
+}
+const ZHI_READING_KO: Record<string,string> = {
+  '子':'자','丑':'축','寅':'인','卯':'묘','辰':'진','巳':'사','午':'오','未':'미','申':'신','酉':'유','戌':'술','亥':'해',
+}
+const GAN_READING_KO: Record<string,string> = {
+  '甲':'갑','乙':'을','丙':'병','丁':'정','戊':'무','己':'기','庚':'경','辛':'신','壬':'임','癸':'계',
+}
+const ELEMENT_DESC_BY_LOCALE: Record<string, Record<string,string>> = {
+  ko: {
+    wood:'성장을 향해 뻗어 가는 기운이에요. 새로운 도전에서 힘을 얻고, 의미 있는 것을 키워 갈 때 가장 빛나요.',
+    fire:'표현하고 연결하는 기운이에요. 깊이 느끼고 분명하게 전하며, 머무는 자리에 온기를 더해요.',
+    earth:'중심을 잡아 주는 기운이에요. 차분하고 믿음직하며, 생각을 실제 결과로 바꿔 내요.',
+    metal:'정확함과 원칙의 기운이에요. 기준이 높고 신념이 분명해서, 자신과 주변을 더 나은 쪽으로 이끌어요.',
+    water:'지혜와 깊이의 기운이에요. 사람과 상황을 잘 읽고 유연하게 적응하며, 조용한 통찰을 품고 있어요.',
+  },
+  ja: {
+    wood:'成長へと伸びていく気質。新しい挑戦から力を得て、意味あるものを育てるときに最も輝きます。',
+    fire:'表現とつながりの気質。深く感じ、はっきり伝え、その場に温かさをもたらします。',
+    earth:'軸を支える気質。落ち着いていて頼もしく、考えを確かな形に変えていきます。',
+    metal:'精確さと信念の気質。基準が高く、自分と周りをより良い方向へ導きます。',
+    water:'知恵と深みの気質。人や状況をよく読み、柔軟に適応し、静かな洞察を秘めています。',
+  },
+}
+const PLANET_NAME: Record<string, Record<string,string>> = {
+  ko: { sun:'태양', moon:'달', rising:'상승궁', mercury:'수성', venus:'금성', mars:'화성', jupiter:'목성', saturn:'토성', uranus:'천왕성', neptune:'해왕성', pluto:'명왕성' },
+  ja: { sun:'太陽', moon:'月', rising:'上昇宮', mercury:'水星', venus:'金星', mars:'火星', jupiter:'木星', saturn:'土星', uranus:'天王星', neptune:'海王星', pluto:'冥王星' },
 }
 const ELEMENT_DESC: Record<string,string> = {
   wood:'Growth-driven and ambitious. Energized by new challenges. At best when building something meaningful.',
@@ -450,7 +484,6 @@ const RADAR_AXES_MAP: Record<string, string[]> = {
 }
 const RADAR_AXES_EN = ['Love','Career','Wealth','Health','Vitality','Life']
 const RADAR_KEYS = ['love','career','wealth','health','vitality','life']
-const RADAR_COLORS = ['#f472b6','#a78bfa','#fbbf24','#34d399','#60a5fa','#C9A84C']
 
 function RadarChart({ scores, axes }: { scores: Record<string, number>; axes?: string[] }) {
   const radarAxes = axes ?? RADAR_AXES_EN
@@ -475,9 +508,9 @@ function RadarChart({ scores, axes }: { scores: Record<string, number>; axes?: s
         {axisPts.map(([x,y], i) => (
           <line key={i} x1={CX} y1={CY} x2={x} y2={y} stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
         ))}
-        <polygon points={poly(dataPts)} fill="rgba(201,168,76,0.15)" stroke="#C9A84C" strokeWidth="1.8" />
+        <polygon points={poly(dataPts)} fill="rgba(201,168,76,0.10)" stroke="#C9A84C" strokeWidth="1.2" />
         {dataPts.map(([x,y], i) => (
-          <circle key={i} cx={x} cy={y} r="3" fill={RADAR_COLORS[i]} />
+          <circle key={i} cx={x} cy={y} r="2.5" fill="#e6cd85" />
         ))}
         {radarAxes.map((label, i) => {
           const [x, y] = pt(i, 112)
@@ -485,10 +518,9 @@ function RadarChart({ scores, axes }: { scores: Record<string, number>; axes?: s
           const score = Math.round(scores[RADAR_KEYS[i]] ?? 50)
           return (
             <g key={i}>
-              <text x={x} y={y - 1} textAnchor={anchor} fontSize="10" fill={RADAR_COLORS[i]}
-                fontWeight="700" letterSpacing="0.8" fontFamily="'Noto Sans', sans-serif">{label.toUpperCase()}</text>
-              <text x={x} y={y + 11} textAnchor={anchor} fontSize="10" fill="rgba(255,255,255,0.65)"
-                fontFamily="'Noto Sans', sans-serif">{score}</text>
+              <text x={x} y={y - 1} textAnchor={anchor} fontSize="10.5" fill="rgba(241,237,228,0.62)"
+                fontWeight="500" letterSpacing="0.4">{label}</text>
+              <text x={x} y={y + 12} textAnchor={anchor} fontSize="11" fill="#e6cd85" fontWeight="600">{score}</text>
             </g>
           )
         })}
@@ -634,131 +666,53 @@ function AmPmBarChart({ am, pm }: { am:number, pm:number }) {
 function WuXingChart({ soulElement, wood, fire, earth, metal, water }: {
   soulElement: string; wood: number; fire: number; earth: number; metal: number; water: number
 }) {
-  const t = useTranslations('reading')
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-    const W = canvas.width, H = canvas.height
-    const cx = W / 2, cy = H / 2
-    const R = 110
-
-    const elements = [
-      { name: 'Wood',  hanja: '木', color: '#4CAF50', score: wood  },
-      { name: 'Fire',  hanja: '火', color: '#F44336', score: fire  },
-      { name: 'Earth', hanja: '土', color: '#FF9800', score: earth },
-      { name: 'Metal', hanja: '金', color: '#9E9E9E', score: metal },
-      { name: 'Water', hanja: '水', color: '#2196F3', score: water },
-    ]
-
-    const positions = elements.map((_, i) => {
-      const angle = (i * 2 * Math.PI / 5) - Math.PI / 2
-      return { x: cx + R * Math.cos(angle), y: cy + R * Math.sin(angle) }
-    })
-
-    const totalScore = (wood + fire + earth + metal + water) || 1
-    const nodeRadius = (score: number) => 18 + (score / totalScore) * 70
-
-    const drawArrow = (fromIdx: number, toIdx: number, color: string, isDashed: boolean) => {
-      const from = positions[fromIdx], to = positions[toIdx]
-      const rFrom = nodeRadius(elements[fromIdx].score), rTo = nodeRadius(elements[toIdx].score)
-      const angle = Math.atan2(to.y - from.y, to.x - from.x)
-      const startX = from.x + rFrom * Math.cos(angle), startY = from.y + rFrom * Math.sin(angle)
-      const endX = to.x - (rTo + 5) * Math.cos(angle), endY = to.y - (rTo + 5) * Math.sin(angle)
-
-      ctx.beginPath()
-      ctx.setLineDash(isDashed ? [5, 4] : [])
-      ctx.strokeStyle = color
-      ctx.lineWidth = isDashed ? 1.5 : 2
-      ctx.globalAlpha = 0.75
-      ctx.moveTo(startX, startY)
-      ctx.lineTo(endX, endY)
-      ctx.stroke()
-
-      ctx.globalAlpha = 0.9
-      ctx.setLineDash([])
-      ctx.beginPath()
-      ctx.fillStyle = color
-      ctx.save()
-      ctx.translate(endX, endY)
-      ctx.rotate(angle)
-      ctx.moveTo(0, 0)
-      ctx.lineTo(-8, 4)
-      ctx.lineTo(-8, -4)
-      ctx.closePath()
-      ctx.fill()
-      ctx.restore()
-      ctx.globalAlpha = 1
-    }
-
-    ctx.clearRect(0, 0, W, H)
-
-    ctx.beginPath()
-    positions.forEach((p, i) => { if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y) })
-    ctx.closePath()
-    ctx.strokeStyle = 'rgba(200,168,76,0.15)'
-    ctx.lineWidth = 1
-    ctx.setLineDash([3, 4])
-    ctx.stroke()
-    ctx.setLineDash([])
-
-    ;[0, 1, 2, 3, 4].forEach(i => drawArrow(i, (i + 1) % 5, '#4CAF50', false))
-    ;([[0,2],[2,4],[4,1],[1,3],[3,0]] as [number,number][]).forEach(([a, b]) => drawArrow(a, b, '#F44336', true))
-
-    elements.forEach((el, i) => {
-      const p = positions[i]
-      const r = nodeRadius(el.score)
-
-      const grd = ctx.createRadialGradient(p.x, p.y, r * 0.3, p.x, p.y, r * 1.5)
-      grd.addColorStop(0, el.color + '40')
-      grd.addColorStop(1, 'transparent')
-      ctx.beginPath()
-      ctx.arc(p.x, p.y, r * 1.5, 0, Math.PI * 2)
-      ctx.fillStyle = grd
-      ctx.fill()
-
-      ctx.beginPath()
-      ctx.arc(p.x, p.y, r, 0, Math.PI * 2)
-      ctx.fillStyle = '#16213E'
-      ctx.fill()
-      ctx.strokeStyle = el.color
-      ctx.lineWidth = 2
-      ctx.stroke()
-
-      ctx.fillStyle = el.color
-      ctx.font = `bold ${Math.round(r * 0.75)}px serif`
-      ctx.textAlign = 'center'
-      ctx.textBaseline = 'middle'
-      ctx.fillText(el.hanja, p.x, p.y - r * 0.1)
-
-      ctx.fillStyle = '#D7D7D9'
-      ctx.font = `${Math.round(r * 0.32)}px Arial`
-      ctx.fillText(el.name, p.x, p.y + r * 0.52)
-
-      if (el.name === soulElement) {
-        ctx.fillStyle = '#FFD700'
-        ctx.font = `bold ${Math.round(r * 0.32)}px Arial`
-        ctx.fillText('★ You', p.x, p.y + r + 12)
-      }
-    })
-  }, [soulElement, wood, fire, earth, metal, water])
+  const locale = useLocale()
+  const rows = [
+    { key: 'wood', name: 'Wood', score: wood },
+    { key: 'fire', name: 'Fire', score: fire },
+    { key: 'earth', name: 'Earth', score: earth },
+    { key: 'metal', name: 'Metal', score: metal },
+    { key: 'water', name: 'Water', score: water },
+  ]
+  const total = rows.reduce((a, r) => a + Math.max(0, r.score), 0) || 1
+  const names = ELEMENT_NAME[locale] ?? ELEMENT_NAME.en
+  const LEVEL: Record<string, string[]> = {
+    ko: ['강함', '보통', '약함', '없음'],
+    ja: ['強い', '普通', '弱い', 'なし'],
+    en: ['Strong', 'Balanced', 'Weak', 'None'],
+  }
+  const lv = LEVEL[locale] ?? LEVEL.en
+  const levelOf = (pct: number) => pct >= 30 ? lv[0] : pct >= 15 ? lv[1] : pct > 0 ? lv[2] : lv[3]
+  const youLabel = locale === 'ko' ? '나' : locale === 'ja' ? '私' : 'You'
 
   return (
-    <div style={{ width: '100%', maxWidth: 320, margin: '0 auto' }}>
-      <canvas ref={canvasRef} width={320} height={320} style={{ width: '100%', height: 'auto', display: 'block' }} />
-      <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginTop: 8 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'Arial', fontSize: 11, color: '#D7D7D9' }}>
-          <div style={{ width: 20, height: 2, borderRadius: 2, background: '#4CAF50' }} />
-          {t('nourishes')}
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'Arial', fontSize: 11, color: '#D7D7D9' }}>
-          <div style={{ width: 20, height: 2, borderRadius: 2, background: '#F44336' }} />
-          {t('restrains')}
-        </div>
+    <div className="rr-wx">
+      {/* 한 줄 비율 막대 */}
+      <div className="rr-wx-strip" aria-hidden="true">
+        {rows.map(r => {
+          const pct = (Math.max(0, r.score) / total) * 100
+          return pct > 0 ? <span key={r.key} style={{ width: `${pct}%`, background: ELEMENT_COLOR[r.key] }} /> : null
+        })}
       </div>
+      {/* 오행별 행 */}
+      <ul className="rr-wx-list">
+        {rows.map(r => {
+          const pct = Math.round((Math.max(0, r.score) / total) * 100)
+          const isYou = r.name === soulElement
+          return (
+            <li key={r.key} className={`rr-wx-row${isYou ? ' is-you' : ''}`}>
+              <span className="rr-wx-han" style={{ color: ELEMENT_COLOR[r.key] }}>{ELEMENT_HANJA[r.key]}</span>
+              <span className="rr-wx-name">
+                {locale === 'ja' ? '' : names[r.key]}
+                {isYou && <em>{youLabel}</em>}
+              </span>
+              <span className="rr-wx-track"><span style={{ width: `${pct}%`, background: ELEMENT_COLOR[r.key] }} /></span>
+              <span className="rr-wx-pct">{pct}%</span>
+              <span className={`rr-wx-lv${pct === 0 ? ' is-none' : ''}`}>{levelOf(pct)}</span>
+            </li>
+          )
+        })}
+      </ul>
     </div>
   )
 }
@@ -766,10 +720,10 @@ function WuXingChart({ soulElement, wood, fire, earth, metal, water }: {
 // ── Monthly Line Chart ──────────────────────────────────────────────
 const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 const CHART_COLORS: Record<string, string> = {
-  career: '#a78bfa',
-  love: '#f472b6',
-  health: '#34d399',
-  money: '#fbbf24',
+  career: '#aaa5d1',
+  love: '#d4a0a7',
+  health: '#8fae8b',
+  money: '#e6cd85',
 }
 
 function MonthlyLineChart({ label, data, color, width = 330 }: { label: string; data: number[]; color: string; width?: number }) {
@@ -906,7 +860,6 @@ function CompatibilityRadarChart({ scores }: { scores: Record<string, {label:str
   const axisPts = dims.map((_, i) => pt(i, 100))
   const dataPts = dims.map((d, i) => pt(i, d.score))
   const poly = (pts: [number,number][]) => pts.map(([x,y]) => `${x},${y}`).join(' ')
-  const COLORS = ['#f472b6','#a78bfa','#fbbf24','#34d399','#60a5fa','#C9A84C']
   const gridLevels = [0.25, 0.5, 0.75, 1.0]
   return (
     <div style={{ display:'flex', flexDirection:'column', alignItems:'center', marginBottom:4 }}>
@@ -918,19 +871,18 @@ function CompatibilityRadarChart({ scores }: { scores: Record<string, {label:str
         {axisPts.map(([x,y], i) => (
           <line key={i} x1={CX} y1={CY} x2={x} y2={y} stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
         ))}
-        <polygon points={poly(dataPts)} fill="rgba(201,168,76,0.15)" stroke="#C9A84C" strokeWidth="1.8" />
+        <polygon points={poly(dataPts)} fill="rgba(201,168,76,0.10)" stroke="#C9A84C" strokeWidth="1.2" />
         {dataPts.map(([x,y], i) => (
-          <circle key={i} cx={x} cy={y} r="3" fill={COLORS[i % COLORS.length]} />
+          <circle key={i} cx={x} cy={y} r="2.5" fill="#e6cd85" />
         ))}
         {dims.map((d, i) => {
           const [x, y] = pt(i, 118)
           const anchor = x < CX - 4 ? 'end' : x > CX + 4 ? 'start' : 'middle'
           return (
             <g key={i}>
-              <text x={x} y={y - 1} textAnchor={anchor} fontSize="9.5" fill={COLORS[i % COLORS.length]}
-                fontWeight="700" letterSpacing="0.8" fontFamily="'Noto Sans', sans-serif">{d.label.toUpperCase()}</text>
-              <text x={x} y={y + 11} textAnchor={anchor} fontSize="10" fill="rgba(255,255,255,0.65)"
-                fontFamily="'Noto Sans', sans-serif">{d.score}</text>
+              <text x={x} y={y - 1} textAnchor={anchor} fontSize="10" fill="rgba(241,237,228,0.62)"
+                fontWeight="500" letterSpacing="0.4">{d.label}</text>
+              <text x={x} y={y + 12} textAnchor={anchor} fontSize="11" fill="#e6cd85" fontWeight="600">{d.score}</text>
             </g>
           )
         })}
@@ -949,34 +901,44 @@ function zodiacSvg(sign: string) {
   return ZODIAC_SVG_KEYS.includes(key) ? `${GH}r_${key}.svg` : ''
 }
 
+function planetLabel(planet: string, locale: string) {
+  return PLANET_NAME[locale]?.[planet.toLowerCase()] ?? planet
+}
+function signLabel(sign: string, locale: string) {
+  if (!sign) return locale === 'ko' ? '알 수 없음' : locale === 'ja' ? '不明' : 'Unknown'
+  return zodiacSignName(sign.charAt(0).toUpperCase() + sign.slice(1).toLowerCase(), locale)
+}
+
 function PlanetCardBig({ planet, symbol, sign }: { planet: string; symbol: string; sign: string }) {
+  const locale = useLocale()
   const src = zodiacSvg(sign)
-  const label = sign ? sign.charAt(0).toUpperCase() + sign.slice(1).toLowerCase() : 'Unknown'
+  const label = signLabel(sign, locale)
   return (
     <div className="rr-planet rr-planet-big">
-      <span style={{ fontSize:12, color:'var(--gold-light)', letterSpacing:1.5, textTransform:'uppercase' }}>{planet}</span>
+      <span style={{ fontSize:12, color:'var(--gold-light)', letterSpacing:1, textTransform:'uppercase', fontWeight:500 }}>{planetLabel(planet, locale)}</span>
       <span style={{ fontSize:18, color:'rgba(246,246,248,0.7)', lineHeight:1 }}>{symbol}</span>
       {src ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={src} alt={sign} width={62} height={62} />
       ) : <div style={{ width:62, height:62, display:'flex', alignItems:'center', justifyContent:'center', fontSize:28 }}>{ZODIAC_SYMBOL[sign.toLowerCase()] ?? '✦'}</div>}
-      <span style={{ fontSize:14, color:'var(--ink)', fontWeight:700, textAlign:'center' }}>{label}</span>
+      <span style={{ fontSize:14, color:'var(--ink)', fontWeight:600, textAlign:'center', wordBreak:'keep-all' }}>{label}</span>
     </div>
   )
 }
 
 function PlanetCardSm({ planet, symbol, sign }: { planet: string; symbol: string; sign: string }) {
+  const locale = useLocale()
   const src = zodiacSvg(sign)
-  const label = sign ? sign.charAt(0).toUpperCase() + sign.slice(1).toLowerCase() : 'Unknown'
+  const label = signLabel(sign, locale)
   return (
     <div className="rr-planet">
-      <span style={{ fontSize:12, color:'var(--gold-light)', letterSpacing:.5 }}>{planet}</span>
+      <span style={{ fontSize:11.5, color:'var(--gold-light)', letterSpacing:.3, fontWeight:500 }}>{planetLabel(planet, locale)}</span>
       <span style={{ fontSize:13, color:'rgba(246,246,248,0.55)', lineHeight:1 }}>{symbol}</span>
       {src ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={src} alt={sign} width={36} height={36} />
       ) : <div style={{ width:36, height:36, display:'flex', alignItems:'center', justifyContent:'center', fontSize:20 }}>{ZODIAC_SYMBOL[sign.toLowerCase()] ?? '✦'}</div>}
-      <span style={{ fontSize:12, color:'var(--ink)', fontWeight:700, textAlign:'center' }}>{label}</span>
+      <span style={{ fontSize:11.5, color:'var(--ink)', fontWeight:500, textAlign:'center', wordBreak:'keep-all', lineHeight:1.3 }}>{label}</span>
     </div>
   )
 }
@@ -1069,10 +1031,10 @@ function ShareButton({ shareId: shareIdProp, raw, birthData }: { shareId?: strin
   const t = useTranslations('reading')
   const locale = useLocale()
   const SHARE_TXT = {
-    ko: { text: '사주와 별자리로 읽은 나의 운명 리딩이에요 ✨ 오늘의 운세는 무료로 볼 수 있어요.', copied: '링크를 복사했어요!' },
-    ja: { text: '四柱推命と星で読んだ私の運命リーディング ✨ 今日の運勢は無料で見られます。', copied: 'リンクをコピーしました！' },
-    en: { text: 'My BaZi + Astrology reading ✨ Your daily fortune is free.', copied: 'Link copied!' },
-  }[locale as 'ko' | 'ja' | 'en'] ?? { text: 'My BaZi + Astrology reading ✨ Your daily fortune is free.', copied: 'Link copied!' }
+    ko: { text: '사주와 별자리로 읽은 나의 운명 리딩이에요. 오늘의 운세는 무료로 볼 수 있어요.', copied: '링크를 복사했어요!' },
+    ja: { text: '四柱推命と星で読んだ私の運命リーディング。今日の運勢は無料で見られます。', copied: 'リンクをコピーしました！' },
+    en: { text: 'My BaZi + Astrology reading. Your daily fortune is free.', copied: 'Link copied!' },
+  }[locale as 'ko' | 'ja' | 'en'] ?? { text: 'My BaZi + Astrology reading. Your daily fortune is free.', copied: 'Link copied!' }
   const [msg, setMsg] = useState('')
   const [loading, setLoading] = useState(false)
   const [shareId, setShareId] = useState<string | null>(shareIdProp ?? null)
@@ -1184,8 +1146,15 @@ function ScenarioButton({ birthData }: { birthData: BirthData }) {
     router.push('/reading/scenario')
   }
   if (!open) return (
-    <button onClick={() => setOpen(true)} className="ap-btn-ghost rr-action" style={{ color:'var(--lavender)', borderColor:'rgba(170,165,209,.4)', background:'var(--lavender-soft)' }}>
-      {t('analyze_scenario')}
+    <button type="button" onClick={() => setOpen(true)} className="rr-scn">
+      <span className="rr-scn-text">
+        <span className="rr-scn-title">
+          {t('analyze_scenario')}
+          <span className="rr-scn-cost">{locale === 'ko' ? `${scenarioCost} 크레딧` : locale === 'ja' ? `${scenarioCost}クレジット` : `${scenarioCost} ${scenarioCost === 1 ? 'Credit' : 'Credits'}`}</span>
+        </span>
+        <span className="rr-scn-desc">{t('analyze_scenario_desc')}</span>
+      </span>
+      <svg className="rr-scn-arrow" width="18" height="18" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5L10.5 8 6 12.5" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
     </button>
   )
   return (
@@ -1210,9 +1179,8 @@ function AccordionSection({ title, content, defaultOpen, chartContent }: { title
   return (
     <div className={`rr-acc${open ? ' is-open' : ''}`}>
       <button type="button" onClick={()=>setOpen(o=>!o)} className="rr-acc-head" aria-expanded={open}>
-        <span className="rr-acc-star" aria-hidden="true">✦</span>
         <span className="rr-acc-title">{title}</span>
-        <span className="rr-acc-chev" aria-hidden="true">⌄</span>
+        <svg className="rr-acc-chev" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
       </button>
       {open && (
         <div className="rr-acc-body">
@@ -1355,20 +1323,25 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
             <div>
               {activePillars && activePillars.length >= 2 ? (
                 <>
-                  <div className="rr-pillars" style={{ gridTemplateColumns:`repeat(${activePillars.length},1fr)` }}>
-                    {activePillars.map((p,i) => (
-                      <div key={i} className={`rr-pillar${i === 2 ? ' is-day' : ''}`}>
-                        <p className="rr-pillar-label">{pillarLabels[i]}</p>
-                        <Image src={ganImg(p.gan)} alt={p.gan} width={64} height={64} unoptimized className="rr-pillar-img" onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
-                        <p className="rr-pillar-note" style={{ color:'var(--gold-light)' }}>
-                          {p.gan}{ANNOTATIONS_BY_LOCALE[locale]?.[p.gan] ? ` (${ANNOTATIONS_BY_LOCALE[locale][p.gan]})` : ''}
-                        </p>
-                        <Image src={zhiImg(p.zhi)} alt={p.zhi} width={64} height={64} unoptimized className="rr-pillar-img" onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
-                        <p className="rr-pillar-note">
-                          {p.zhi}{ANNOTATIONS_BY_LOCALE[locale]?.[p.zhi] ? ` (${ANNOTATIONS_BY_LOCALE[locale][p.zhi]})` : ''}
-                        </p>
-                      </div>
-                    ))}
+                  <div className="rr-mx" style={{ gridTemplateColumns:`repeat(${activePillars.length},1fr)` }}>
+                    {activePillars.map((p,i) => {
+                      const ge = GAN_TO_ELEMENT[p.gan], ze = ZHI_TO_ELEMENT[p.zhi]
+                      const ganSub = locale === 'ko' ? `${GAN_READING_KO[p.gan] ?? ''}${ELEMENT_NAME.ko[ge] ?? ''}` : (ANNOTATIONS_BY_LOCALE[locale]?.[p.gan] ?? '')
+                      const zhiSub = locale === 'ko' ? `${ZHI_READING_KO[p.zhi] ?? ''} · ${ANNOTATIONS_BY_LOCALE.ko?.[p.zhi] ?? ''}` : (ANNOTATIONS_BY_LOCALE[locale]?.[p.zhi] ?? '')
+                      return (
+                        <div key={i} className={`rr-mx-col${i === 2 ? ' is-day' : ''}`}>
+                          <p className="rr-mx-label">{pillarLabels[i]}</p>
+                          <div className="rr-mx-cell" title={ANNOTATIONS_BY_LOCALE[locale]?.[p.gan]}>
+                            <span className="rr-mx-char">{p.gan}</span>
+                            <span className="rr-mx-sub"><i style={{ background: ELEMENT_COLOR[ge] }} />{ganSub}</span>
+                          </div>
+                          <div className="rr-mx-cell">
+                            <span className="rr-mx-char">{p.zhi}</span>
+                            <span className="rr-mx-sub"><i style={{ background: ELEMENT_COLOR[ze] }} />{zhiSub}</span>
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
                   {activeYourSignName && activeYourSignLabel && (
                     <div style={{ display:'flex', justifyContent:'center', marginBottom:14 }}>
@@ -1399,23 +1372,33 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
             <div>
               {activeDayElement ? (
                 <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-                  <div style={{ background:'rgba(201,168,76,0.04)', border:`1px solid ${ELEMENT_COLOR[activeDayElement]}40`, borderRadius:12, padding:'16px' }}>
+                  <div style={{ background:'rgba(9,12,26,0.45)', border:'1px solid var(--line)', borderRadius:14, padding:'18px' }}>
                     <p className="rr-kicker" style={{ textAlign:'left' }}>{t('day_master_element')}</p>
-                    <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:10 }}>
-                      <div style={{ width:44, height:44, borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', background:`${ELEMENT_COLOR[activeDayElement]}18`, border:`1.5px solid ${ELEMENT_COLOR[activeDayElement]}`, color:ELEMENT_COLOR[activeDayElement], fontSize:20, fontWeight:700 }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:12 }}>
+                      <div className="rr-glyph rr-glyph-sm" style={{ ['--el' as string]: ELEMENT_COLOR[activeDayElement] } as React.CSSProperties}>
                         {activeDayPillar?.gan}
                       </div>
                       <div>
-                        <p style={{ color:'var(--ink)', fontSize:18, fontWeight:700, textTransform:'capitalize' }}>{activeDayElement}</p>
-                        <p style={{ color:'var(--ink-2)', fontSize:13 }}>{activeDayGanKey ? activeDayGanKey.charAt(0).toUpperCase()+activeDayGanKey.slice(1) : ''} {t('day_master')}</p>
+                        <p style={{ color:'var(--ink)', fontSize:18, fontWeight:600 }}>
+                          {locale === 'en'
+                            ? ELEMENT_NAME.en[activeDayElement]
+                            : `${ELEMENT_NAME[locale]?.[activeDayElement] ?? ''}(${ELEMENT_HANJA[activeDayElement]})${locale === 'ja' ? 'の気質' : '의 기운'}`}
+                        </p>
+                        <p style={{ color:'var(--ink-2)', fontSize:13 }}>
+                          {locale === 'ko'
+                            ? `${GAN_READING_KO[activeDayPillar?.gan ?? ''] ?? ''}${ELEMENT_NAME.ko[activeDayElement]}(${activeDayPillar?.gan ?? ''}${ELEMENT_HANJA[activeDayElement]}) ${t('day_master')}`
+                            : locale === 'ja'
+                              ? `${activeDayPillar?.gan ?? ''}${ELEMENT_HANJA[activeDayElement]} ${t('day_master')}`
+                              : `${activeDayGanKey ? activeDayGanKey.charAt(0).toUpperCase()+activeDayGanKey.slice(1) : ''} ${t('day_master')}`}
+                        </p>
                       </div>
                     </div>
-                    <p style={{ color:'var(--ink-2)', fontSize:14.5, lineHeight:1.75 }}>{ELEMENT_DESC[activeDayElement]}</p>
+                    <p style={{ color:'var(--ink-2)', fontSize:14.5, lineHeight:1.75 }}>{ELEMENT_DESC_BY_LOCALE[locale]?.[activeDayElement] ?? ELEMENT_DESC[activeDayElement]}</p>
                   </div>
 
                   {/* Wu Xing Relationship Chart */}
-                  <div style={{ background:'rgba(9,12,26,0.45)', border:'1px solid var(--line)', borderRadius:14, padding:'16px 12px 12px' }}>
-                    <p className="rr-kicker">{t('five_elements')}</p>
+                  <div style={{ background:'rgba(9,12,26,0.45)', border:'1px solid var(--line)', borderRadius:14, padding:'18px' }}>
+                    <p className="rr-kicker" style={{ textAlign:'left' }}>{t('five_elements')}</p>
                     <WuXingChart
                       soulElement={activeSoulElement}
                       wood={activeWoodScore} fire={activeFireScore} earth={activeEarthScore} metal={activeMetalScore} water={activeWaterScore}
@@ -1529,50 +1512,86 @@ const RR_CSS = `
   .rr-top { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 24px; }
   .rr-card { padding: 18px; min-width: 0; }
   .rr-reveal { animation: apRise .7s var(--ease-out) both; }
-  .rr-kicker { text-align: center; font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: rgba(230,205,133,.8); margin-bottom: 10px; }
+  .rr-kicker { text-align: center; font-size: 11.5px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: rgba(230,205,133,.8); margin-bottom: 10px; }
   .rr-card-title { text-align: center; font-family: 'Cormorant Garamond','Noto Serif KR','Noto Serif JP',serif; font-size: 20px; font-weight: 600; color: var(--gold-light); margin-bottom: 4px; letter-spacing: .04em; }
 
   .rr-seg { display: flex; gap: 4px; padding: 4px; margin-bottom: 18px; border-radius: 14px;
     background: rgba(7,9,20,.6); border: 1px solid var(--line); }
   .rr-seg-person { margin-bottom: 12px; }
-  .rr-seg-btn { flex: 1; min-height: 42px; padding: 0 8px; border-radius: 10px; border: 1px solid transparent; background: transparent; cursor: pointer;
-    font: inherit; font-size: 14px; font-weight: 600; color: var(--ink-2); transition: all var(--t-fast); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rr-seg-btn { flex: 1; min-height: 40px; padding: 0 8px; border-radius: 10px; border: 1px solid transparent; background: transparent; cursor: pointer;
+    font: inherit; font-size: 14px; font-weight: 500; color: var(--ink-2); transition: all var(--t-fast); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .rr-seg-btn:hover { color: var(--ink); }
-  .rr-seg-btn.is-on { color: #1a1408; background: linear-gradient(180deg, #e3c879, #c9a84c); box-shadow: 0 6px 18px -8px rgba(201,168,76,.7); }
+  .rr-seg-btn.is-on { color: var(--gold-light); background: rgba(241,237,228,.07); border-color: rgba(201,168,76,.32); }
 
   .rr-pillars { display: grid; gap: 8px; margin-bottom: 18px; }
+
+  /* 명식표: 색 타일 없이 가는 선으로 나눈 표 */
+  .rr-mx { display: grid; max-width: 520px; margin: 4px auto 22px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .rr-mx-col { position: relative; display: flex; flex-direction: column; align-items: stretch; min-width: 0; }
+  .rr-mx-col + .rr-mx-col { border-left: 1px solid var(--line); }
+  .rr-mx-col.is-day { background: linear-gradient(180deg, rgba(201,168,76,.07), rgba(201,168,76,.015)); }
+  .rr-mx-col.is-day::before { content: ""; position: absolute; top: -1px; left: 0; right: 0; height: 1px; background: var(--gold); }
+  .rr-mx-label { padding: 12px 0 10px; text-align: center; font-size: 11.5px; font-weight: 500; letter-spacing: .14em; color: var(--ink-3); border-bottom: 1px solid var(--line); }
+  .rr-mx-col.is-day .rr-mx-label { color: var(--gold-light); }
+  .rr-mx-cell { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 18px 2px 16px; }
+  .rr-mx-cell + .rr-mx-cell { border-top: 1px dashed rgba(160,170,210,.12); }
+  .rr-mx-char { font-size: 34px; font-weight: 300; line-height: 1; color: var(--ink); }
+  .rr-mx-col.is-day .rr-mx-char { color: #f3e6bd; }
+  .rr-mx-sub { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--ink-3); white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+  .rr-mx-sub i { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; opacity: .9; }
+
+  /* 오행 분포 */
+  .rr-wx-strip { display: flex; height: 6px; border-radius: 3px; overflow: hidden; gap: 2px; margin: 4px 0 18px; }
+  .rr-wx-strip span { display: block; height: 100%; opacity: .85; }
+  .rr-wx-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+  .rr-wx-row { display: grid; grid-template-columns: 22px 44px 1fr 38px 34px; align-items: center; gap: 10px; font-size: 13px; color: var(--ink-2); }
+  html[lang="ja"] .rr-wx-row { grid-template-columns: 22px 0 1fr 38px 34px; }
+  .rr-wx-han { font-size: 18px; font-weight: 400; text-align: center; }
+  .rr-wx-name { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .rr-wx-name em { font-style: normal; font-size: 10.5px; color: var(--gold-light); border: 1px solid var(--gold-line); border-radius: 4px; padding: 0 4px; line-height: 16px; }
+  .rr-wx-track { height: 4px; border-radius: 2px; background: rgba(160,170,210,.10); overflow: hidden; }
+  .rr-wx-track span { display: block; height: 100%; border-radius: 2px; opacity: .8; }
+  .rr-wx-pct { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink); }
+  .rr-wx-lv { font-size: 11.5px; color: var(--ink-3); text-align: right; }
+  .rr-wx-lv.is-none { color: var(--danger); opacity: .8; }
+  .rr-wx-row.is-you .rr-wx-name { color: var(--ink); }
   .rr-pillar { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 2px 12px; border-radius: 14px;
     border: 1px solid transparent; }
-  .rr-pillar.is-day { border-color: var(--gold-line); background: linear-gradient(180deg, rgba(201,168,76,.10), rgba(201,168,76,.02)); }
-  .rr-pillar-label { font-size: 12px; font-weight: 700; letter-spacing: .08em; color: var(--ink-2); }
+  .rr-pillar.is-day { border-color: rgba(201,168,76,.22); background: rgba(201,168,76,.04); }
+  .rr-pillar-label { font-size: 11.5px; font-weight: 500; letter-spacing: .12em; color: var(--ink-3); }
   .rr-pillar.is-day .rr-pillar-label { color: var(--gold-light); }
-  .rr-pillar-img { border-radius: 10px; width: 100%; max-width: 64px; height: auto; aspect-ratio: 1; }
-  .rr-pillar-note { font-size: 12px; text-align: center; line-height: 1.35; color: var(--ink-2); word-break: keep-all; }
-  .rr-sign { display: inline-flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 22px; border-radius: 999px;
-    background: linear-gradient(135deg, rgba(201,168,76,.16), rgba(120,104,190,.10)); border: 1px solid var(--gold-line); }
+  .rr-glyph { --el: var(--gold); position: relative; width: 100%; max-width: 64px; aspect-ratio: 1; display: grid; place-items: center;
+    border-radius: 12px; font-size: 28px; font-weight: 400; line-height: 1; color: var(--ink);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--el) 10%, rgba(12,16,32,.9)), rgba(9,12,26,.75));
+    border: 1px solid color-mix(in srgb, var(--el) 34%, transparent); }
+  .rr-glyph::after { content: ""; position: absolute; left: 50%; bottom: 8px; width: 12px; height: 2px; margin-left: -6px; border-radius: 2px; background: var(--el); opacity: .85; }
+  .rr-glyph-sm { width: 48px; max-width: 48px; font-size: 22px; flex-shrink: 0; }
+  .rr-glyph-sm::after { bottom: 6px; width: 10px; margin-left: -5px; }
+  .rr-pillar-note { font-size: 11.5px; text-align: center; line-height: 1.35; color: var(--ink-3); word-break: keep-all; min-height: 2.7em; }
+  .rr-sign { display: inline-flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 22px; border-radius: 14px;
+    background: rgba(9,12,26,.5); border: 1px solid var(--line); }
   .rr-link { display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 16px; border-radius: 12px; text-decoration: none;
-    font-size: 14px; font-weight: 600; color: var(--gold-light); background: var(--gold-soft); border: 1px solid var(--gold-line); transition: background var(--t-fast); }
-  .rr-link:hover { background: rgba(201,168,76,.22); }
+    font-size: 14px; font-weight: 500; color: var(--gold-light); background: transparent; border: 1px solid var(--gold-line); transition: background var(--t-fast); }
+  .rr-link:hover { background: var(--gold-soft); }
 
   .rr-planet { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 4px;
     border-radius: 14px; background: rgba(9,12,26,.5); border: 1px solid var(--line); }
   .rr-planet-big { gap: 8px; padding: 16px 6px; border-color: var(--gold-line); background: linear-gradient(180deg, rgba(201,168,76,.08), rgba(9,12,26,.5)); }
 
   .rr-sections { margin-bottom: 24px; }
-  .rr-acc { margin-bottom: 12px; border-radius: 16px; overflow: hidden; border: 1px solid var(--line);
+  .rr-acc { margin-bottom: 10px; border-radius: 14px; overflow: hidden; border: 1px solid var(--line);
     background: linear-gradient(180deg, rgba(27,34,58,.62), rgba(13,17,33,.78));
     backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); transition: border-color var(--t-med); }
   .rr-acc.is-open { border-color: var(--gold-line); }
   .rr-acc-head { width: 100%; display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 16px 20px; border: 0; background: transparent;
     cursor: pointer; text-align: left; font: inherit; color: inherit; }
   .rr-acc-head:hover .rr-acc-title { color: var(--gold-light); }
-  .rr-acc-star { color: var(--gold); font-size: 12px; flex-shrink: 0; transition: transform var(--t-med); }
-  .rr-acc.is-open .rr-acc-star { transform: rotate(45deg); color: var(--gold-light); }
-  .rr-acc-title { flex: 1; font-family: 'Noto Serif KR','Noto Serif JP','Cormorant Garamond',serif; font-size: 17px; font-weight: 700; line-height: 1.4;
+  .rr-acc-title { flex: 1; font-size: 16.5px; font-weight: 600; line-height: 1.4; letter-spacing: -.01em;
     color: var(--ink); transition: color var(--t-fast); }
-  .rr-acc-chev { color: var(--gold); font-size: 18px; line-height: 1; transition: transform var(--t-med); flex-shrink: 0; }
+  .rr-acc-chev { color: var(--ink-3); transition: transform var(--t-med), color var(--t-fast); flex-shrink: 0; }
+  .rr-acc.is-open .rr-acc-chev { color: var(--gold-light); }
   .rr-acc.is-open .rr-acc-chev { transform: rotate(180deg); }
-  .rr-acc-body { padding: 4px 20px 22px; border-top: 1px solid rgba(201,168,76,.12); animation: fadeIn .35s var(--ease-out); }
+  .rr-acc-body { padding: 4px 20px 22px; border-top: 1px solid var(--line); animation: fadeIn .35s var(--ease-out); }
   .rr-acc-chart { margin: 14px 0 6px; overflow-x: auto; }
   .rr-prose { padding-top: 14px; font-size: 16px; line-height: 1.85; color: rgba(241,237,228,.9); max-width: 68ch; }
   html[lang="ko"] .rr-prose, html[lang="ja"] .rr-prose { line-height: 1.9; }
@@ -1584,6 +1603,14 @@ const RR_CSS = `
   .rr-textarea::placeholder { color: var(--ink-3); }
 
   .rr-actions { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
+  .rr-scn { width: 100%; display: flex; align-items: center; gap: 14px; padding: 16px 18px; border-radius: 14px; cursor: pointer; text-align: left;
+    font: inherit; color: var(--ink); background: rgba(170,165,209,.07); border: 1px solid rgba(170,165,209,.32); transition: border-color var(--t-fast), background var(--t-fast); }
+  .rr-scn:hover { border-color: rgba(170,165,209,.6); background: rgba(170,165,209,.11); }
+  .rr-scn-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+  .rr-scn-title { display: flex; align-items: center; gap: 8px; font-size: 15.5px; font-weight: 600; color: #d6d2f0; }
+  .rr-scn-cost { font-size: 11.5px; font-weight: 500; color: var(--lavender); border: 1px solid rgba(170,165,209,.35); border-radius: 999px; padding: 1px 8px; }
+  .rr-scn-desc { font-size: 13px; line-height: 1.5; color: var(--ink-2); }
+  .rr-scn-arrow { flex-shrink: 0; color: var(--lavender); }
   .rr-action { width: 100%; }
   .rr-back { align-self: center; padding: 10px; min-height: 44px; display: inline-flex; align-items: center; font-size: 14px; color: var(--ink-2); text-decoration: none; }
   .rr-back:hover { color: var(--gold-light); }
@@ -1598,6 +1625,7 @@ const RR_CSS = `
     .rr-acc-body { padding: 4px 28px 26px; }
     .rr-acc-title { font-size: 18px; }
     .rr-prose { font-size: 16.5px; }
-    .rr-pillar-img { max-width: 72px; }
+    .rr-glyph { max-width: 72px; font-size: 32px; }
+    .rr-mx-char { font-size: 40px; }
   }
 `

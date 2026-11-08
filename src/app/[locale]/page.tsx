@@ -324,9 +324,9 @@ export default function LandingPage() {
 
         .lp-hero-art { position: relative; width: min(74vw, 320px); aspect-ratio: 1 / 1.08; margin: 0 auto; container-type: inline-size; }
         .lp-arch { position:absolute; inset: 9% 13% 0; border-radius: 999px 999px 24px 24px; overflow:hidden;
-          border: 1px solid var(--gold-line); box-shadow: 0 0 0 6px rgba(201,168,76,.05), 0 30px 80px -20px rgba(120,104,190,.45); }
-        .lp-arch img { width:100%; height:100%; object-fit:cover; object-position: center 22%; display:block; }
-        .lp-arch::after { content:""; position:absolute; inset:0; background: linear-gradient(180deg, transparent 55%, rgba(7,9,20,.85)); }
+          border: 1px solid var(--gold-line); box-shadow: 0 30px 80px -30px rgba(0,0,0,.8); }
+        .lp-arch img { width:100%; height:100%; object-fit:cover; object-position: center 22%; display:block; filter: saturate(.5) brightness(.82) contrast(1.08); }
+        .lp-arch::after { content:""; position:absolute; inset:0; background: linear-gradient(180deg, rgba(7,9,20,.15), transparent 30%, transparent 50%, rgba(7,9,20,.9)); }
         .lp-ring { position:absolute; left:50%; top:46%; width: 94%; aspect-ratio:1; translate: -50% -50%; border-radius:50%; }
         .lp-ring-1 { border: 1px solid rgba(201,168,76,.18); }
         .lp-ring-1 span, .lp-mini-ring span { font-family: 'Segoe UI Symbol','Noto Sans Symbols 2','Apple Symbols',serif; font-variant-emoji: text; }
