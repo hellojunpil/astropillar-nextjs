@@ -33,8 +33,8 @@ type Copy = {
 const COPY: Record<string, Copy> = {
   ko: {
     eyebrow: '사주 × 서양 점성술',
-    h1a: '사주로 한 번,', h1b: '별자리로 한 번.',
-    sub: '태어난 날의 네 기둥과, 그 순간의 하늘. 두 개의 오래된 지도를 겹쳐 보면 나에 대한 이야기가 더 또렷해져요.',
+    h1a: '사주 앱 따로,', h1b: '별자리 앱 따로 보셨죠?',
+    sub: '이제 한 번에 봐요. 사주와 서양 점성술을 동시에 읽고, 하나의 해석으로 섞어드려요.',
     cta: '오늘의 운세 무료로 보기', ctaNote: '가입 없이 바로 확인', secondary: '리딩 둘러보기', signIn: '로그인',
     lensTitle: '세 개의 시선으로 한 사람을 읽습니다',
     lenses: [
@@ -63,8 +63,8 @@ const COPY: Record<string, Copy> = {
   },
   ja: {
     eyebrow: '四柱推命 × 西洋占星術',
-    h1a: '四柱推命で一度、', h1b: '星でもう一度。',
-    sub: '生まれた日の四つの柱と、その瞬間の空。二つの古い地図を重ねると、あなたの物語がもっとはっきり見えてきます。',
+    h1a: '四柱推命はこのアプリ、', h1b: '星座占いはあのアプリ。',
+    sub: 'これからは一度に。四柱推命と西洋占星術を同時に読み、ひとつの答えにまとめます。',
     cta: '今日の運勢を無料で見る', ctaNote: '登録不要ですぐに', secondary: '占いを見てみる', signIn: 'ログイン',
     lensTitle: '三つのまなざしで、ひとりを読む',
     lenses: [
@@ -93,8 +93,8 @@ const COPY: Record<string, Copy> = {
   },
   en: {
     eyebrow: 'BaZi × Western Astrology',
-    h1a: 'Read once by your pillars.', h1b: 'Again by your stars.',
-    sub: 'The four pillars of the day you were born, and the sky at that exact moment. Lay the two old maps over each other and your story comes into focus.',
+    h1a: 'BaZi in one app,', h1b: 'your horoscope in another?',
+    sub: 'Now read both at once. We blend Eastern saju and Western astrology into a single reading.',
     cta: "See Today's Fortune Free", ctaNote: 'No sign-up needed', secondary: 'Browse readings', signIn: 'Sign In',
     lensTitle: 'Three lenses on one life',
     lenses: [
@@ -470,7 +470,8 @@ export default function LandingPage() {
           .lp-hero { grid-template-columns: 1.05fr 1fr; gap: 48px; min-height: calc(100dvh - var(--nav-h) - 24px); padding-top: 24px; padding-bottom: 24px; }
           .lp-hero-copy { order: 1; text-align:left; }
           .lp-hero-art { order: 2; width: min(40vw, 500px); }
-          .lp-h1 { font-size: clamp(44px, 4.4vw, 62px); }
+          .lp-h1 { font-size: clamp(38px, 3.6vw, 54px); }
+          .lp-h1 span { white-space: nowrap; }
           .lp-sub { margin-left: 0; font-size: 17px; max-width: 40ch; }
           .lp-ctas { justify-content:flex-start; }
           .lp-ring-1 span { font-size: 16px; }
