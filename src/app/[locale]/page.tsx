@@ -393,7 +393,7 @@ export default function LandingPage() {
         .lp-mx-col.is-day::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: var(--gold); }
         .lp-mx-label { font-size: 10.5px; letter-spacing: .12em; color: var(--ink-3); }
         .lp-mx-col.is-day .lp-mx-label { color: var(--gold-light); }
-        .lp-mx-char { font-size: 24px; font-weight: 300; line-height: 1.05; color: var(--ink); }
+        .lp-mx-char { font-size: 24px; font-weight: 400; line-height: 1.05; color: var(--ink); }
         .lp-mx-col.is-day .lp-mx-char { color: #f3e6bd; }
         .lp-h1-b { color: var(--gold-light); }
         .lp-arch { position:absolute; inset: 9% 13% 0; border-radius: 999px 999px 24px 24px; overflow:hidden;

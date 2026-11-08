@@ -56,6 +56,7 @@
   --border: var(--line-strong);
 
   /* 전체 서체: Pretendard (JP는 Pretendard JP). 레이아웃 head에서 CDN 로드 */
+  --font-hanja: 'Noto Serif KR', 'Noto Serif JP', 'Songti SC', 'Hiragino Mincho ProN', 'Batang', serif;
   --font-pretendard: 'Pretendard Variable', Pretendard, 'Pretendard JP Variable', 'Pretendard JP', -apple-system, BlinkMacSystemFont, system-ui, 'Apple SD Gothic Neo', 'Noto Sans KR', 'Hiragino Sans', 'Malgun Gothic', sans-serif;
   --font-display: var(--font-pretendard);
   --font-body: var(--font-pretendard);
@@ -83,7 +84,12 @@ html[lang="ja"] body { line-break: strict; --font-pretendard: 'Pretendard JP Var
 
 /* 모든 글씨는 Pretendard — 페이지 곳곳의 인라인 폰트 지정(Cormorant/Noto 등)까지 덮어씀.
    단, 아이콘 폰트(Material Icons)는 제외 */
-*:not(.material-icons):not(.material-icons-outlined) { font-family: var(--font-pretendard) !important; }
+*:not(.material-icons):not(.material-icons-outlined):not(.ap-hanja):not(.rr-mx-char):not(.lp-mx-char):not(.rr-glyph):not(.rr-wx-han):not(.td-sign-hanja):not(.is-cn):not(.ex-sym) { font-family: var(--font-pretendard) !important; }
+
+/* 한자(천간·지지·오행)는 명조 계열 — 붓글씨 느낌의 획 대비로 고급스럽게 */
+.ap-hanja, .rr-mx-char, .lp-mx-char, .rr-glyph, .rr-wx-han, .td-sign-hanja, .td-sign-orb.is-cn, .ex-sym {
+  font-family: var(--font-hanja) !important; font-feature-settings: normal; letter-spacing: 0;
+}
 
 /* 페이지 루트가 자체 배경을 칠해도 하늘이 보이도록 main은 투명 */
 /* z-index를 주지 않아야 내부 모달이 상단 내비 위로 올라옴 (배경 하늘보다는 DOM 순서상 위) */

@@ -34,7 +34,12 @@ export default function DailyFortunePage() {
       const y = d.getFullYear()
       const m = String(d.getMonth() + 1).padStart(2, '0')
       const day = String(d.getDate()).padStart(2, '0')
-      const label = i === 0 ? t('today') : i === 1 ? t('tomorrow') : d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+      // 화면 언어에 맞춘 날짜 표기 (ko: 11월 10일 (화), ja: 11月10日(火))
+      const wd = (loc: string) => d.toLocaleDateString(loc, { weekday: 'short' })
+      const label = i === 0 ? t('today') : i === 1 ? t('tomorrow')
+        : locale === 'ko' ? `${d.getMonth() + 1}월 ${d.getDate()}일 (${wd('ko-KR')})`
+        : locale === 'ja' ? `${d.getMonth() + 1}月${d.getDate()}日(${wd('ja-JP')})`
+        : d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
       return { value: `${y}-${m}-${day}`, label }
     })
   })()

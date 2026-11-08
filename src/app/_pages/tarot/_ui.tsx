@@ -8,6 +8,14 @@ import { useState } from 'react'
 import { useLocale } from 'next-intl'
 import { Link } from '@/navigation'
 import { TarotCard, cardImageUrl } from '@/lib/tarotDeck'
+import { localizedCardName, localizeCardNamesInText, splitLongParagraphs } from '@/lib/tarotNames'
+
+/** 본문 표시용: 영어 카드명 현지화 + 긴 문단 나누기 */
+function useProse(content: string) {
+  const locale = useLocale()
+  return splitLongParagraphs(localizeCardNamesInText(content, locale))
+}
+const ACTION_TITLES = /이렇게 해보세요|やるべきこと|What To Do|One Thing To Do/i
 
 /* ── 공용 스타일 ─────────────────────────────────────────── */
 export function TarotStyles() {
@@ -141,18 +149,19 @@ export function TarotStyles() {
       .tr-acc:last-child { border-bottom: 0; }
       .tr-acc-btn { width:100%; background:none; border:0; cursor:pointer; padding: 18px 0; display:flex; justify-content:space-between;
         align-items:center; gap: 14px; text-align:left; color: inherit; font: inherit; min-height: 56px; }
-      .tr-acc-title { color: var(--ink); font-weight: 700; font-size: 15.5px; line-height: 1.4; }
+      .tr-acc-title { color: var(--ink); font-weight: 650; font-size: 17.5px; line-height: 1.4; letter-spacing: -.025em; }
       .tr-acc-icon { flex-shrink:0; width: 28px; height: 28px; border-radius: 50%; display:grid; place-items:center;
         border: 1px solid var(--gold-line); color: var(--gold-light); font-size: 16px; transition: transform .25s var(--ease-out), background .2s; }
       .tr-acc.is-open .tr-acc-icon { transform: rotate(45deg); background: var(--gold-soft); }
       .tr-acc-body { padding: 0 0 22px; animation: fadeIn .4s var(--ease-out) both; }
-      .tr-acc-body p { color: var(--ink-2); font-size: 15px; line-height: 1.9; white-space: pre-wrap; }
+      .tr-acc-body p { color: rgba(241,237,228,.86); font-size: 16px; line-height: 1.85; white-space: pre-wrap; word-break: keep-all; }
       .tr-acc-body.has-card { padding-left: 0; }
       @media (min-width: 640px) { .tr-acc-body.has-card { padding-left: 66px; } }
       .tr-acc-card { display:flex; align-items:center; gap: 14px; }
       .tr-acc-card img { width: 46px; aspect-ratio: 2/3; object-fit: cover; border-radius: 5px; border: 1px solid rgba(201,168,76,.6); flex-shrink: 0; }
       .tr-acc-pos { display:block; font-size: 12px; font-weight: 700; color: var(--gold-light); margin-bottom: 3px; }
-      .tr-acc-name { display:block; font-size: 15.5px; font-weight: 700; color: var(--ink); }
+      .tr-acc-name { display:block; font-size: 17px; font-weight: 650; letter-spacing: -.02em; color: var(--ink); }
+      .tr-acc-en { margin-left: 6px; font-size: 11.5px; font-weight: 400; color: var(--ink-3); }
       .tr-acc-desc { display:block; font-size: 12.5px; color: var(--ink-3); margin-top: 2px; }
 
       .tr-deeper { padding: 24px; margin-bottom: 16px; }
@@ -306,6 +315,7 @@ export function SlotRow({ slots, labels, entering, grid }: {
 
 /** 공개된 카드 줄 (뒤집기 애니메이션) */
 export function RevealRow({ slots, labels, grid }: { slots: (TarotCard | null)[]; labels: string[]; grid?: boolean }) {
+  const locale = useLocale()
   return (
     <div className={`tr-reveal-row${grid ? ' is-grid' : ''}`}>
       {labels.map((label, i) => {
@@ -320,7 +330,7 @@ export function RevealRow({ slots, labels, grid }: { slots: (TarotCard | null)[]
               <CardBack />
             </div>
             <p className="tr-rcard-pos">{label}</p>
-            {card && <p className="tr-rcard-name">{card.name}</p>}
+            {card && <p className="tr-rcard-name">{localizedCardName(card.name, locale)}</p>}
           </div>
         )
       })}
@@ -358,13 +368,19 @@ export function TarotLoading({ pct, title, sub, warn }: { pct: number; title: st
 /* ── 결과 아코디언 ────────────────────────────────────────── */
 export function Section({ title, content, defaultOpen }: { title: string; content: string; defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen ?? false)
+  let prose = useProse(content)
+  // '이렇게 해보세요'가 한 문단으로 오면 한 문장씩 줄을 나눔 (다른 스프레드와 같은 형식)
+  if (ACTION_TITLES.test(title) && !prose.includes('\n')) {
+    const parts = prose.match(/[^.!?。！？]+[.!?。！？]+["”’)]*\s*|[^.!?。！？]+$/g)
+    if (parts && parts.length > 1) prose = parts.map(x => x.trim()).filter(Boolean).join('\n')
+  }
   return (
     <div className={`tr-acc${open ? ' is-open' : ''}`}>
       <button className="tr-acc-btn" onClick={() => setOpen(v => !v)} aria-expanded={open}>
         <span className="tr-acc-title">{title}</span>
         <span className="tr-acc-icon" aria-hidden="true">+</span>
       </button>
-      {open && <div className="tr-acc-body"><p>{content}</p></div>}
+      {open && <div className="tr-acc-body"><p>{prose}</p></div>}
     </div>
   )
 }
@@ -373,6 +389,9 @@ export function CardSection({ card, positionLabel, positionDesc, content, defaul
   card: TarotCard; positionLabel: string; positionDesc: string; content: string; defaultOpen?: boolean
 }) {
   const [open, setOpen] = useState(defaultOpen ?? false)
+  const locale = useLocale()
+  const prose = useProse(content)
+  const local = localizedCardName(card.name, locale)
   return (
     <div className={`tr-acc${open ? ' is-open' : ''}`}>
       <button className="tr-acc-btn" onClick={() => setOpen(v => !v)} aria-expanded={open}>
@@ -381,13 +400,13 @@ export function CardSection({ card, positionLabel, positionDesc, content, defaul
           <img src={cardImageUrl(card.file)} alt={card.name} />
           <span>
             <span className="tr-acc-pos">{positionLabel}</span>
-            <span className="tr-acc-name">{card.name}</span>
+            <span className="tr-acc-name">{local}{local !== card.name && <small className="tr-acc-en">{card.name}</small>}</span>
             <span className="tr-acc-desc">{positionDesc}</span>
           </span>
         </span>
         <span className="tr-acc-icon" aria-hidden="true">+</span>
       </button>
-      {open && <div className="tr-acc-body has-card"><p>{content}</p></div>}
+      {open && <div className="tr-acc-body has-card"><p>{prose}</p></div>}
     </div>
   )
 }

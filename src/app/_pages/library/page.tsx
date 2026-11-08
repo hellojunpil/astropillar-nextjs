@@ -15,6 +15,9 @@ import { gtagEvent } from '@/lib/gtag'
 import BottomNav from '@/components/BottomNav'
 import { useLocale } from 'next-intl'
 import { localizeTarotTitle } from '@/lib/tarotTitles'
+import { localizedCardName } from '@/lib/tarotNames'
+import { TarotStyles, CardSection, Section as TarotSection } from '@/app/_pages/tarot/_ui'
+import type { TarotCard } from '@/lib/tarotDeck'
 import { monthOptionLabel, timeRangeLabel } from '@/lib/birthLabels'
 
 const TAROT_POSITIONS: Record<string, { label: string; desc: string }[]> = {
@@ -101,56 +104,6 @@ function tarotPositions(readingType: string, locale: string): { label: string; d
   return TAROT_POSITIONS[readingType] ?? []
 }
 
-function TarotCardAccordion({ cardName, cardFile, posLabel, posDesc, content, defaultOpen }: {
-  cardName: string; cardFile?: string; posLabel: string; posDesc: string; content: string; defaultOpen?: boolean
-}) {
-  const [open, setOpen] = useState(defaultOpen ?? false)
-  const imgSrc = cardFile ? cardImageUrl(cardFile) : null
-  const nameToFile = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^the_/, '')
-  const fallbackSrc = cardImageUrl('major_arcana_' + nameToFile(cardName))
-  return (
-    <div style={{ borderBottom: '1px solid var(--border)' }}>
-      <button onClick={() => setOpen(v => !v)} style={{
-        width: '100%', background: 'none', border: 'none', cursor: 'pointer',
-        padding: '12px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <img src={imgSrc ?? fallbackSrc} alt={cardName}
-            onError={e => { (e.currentTarget as HTMLImageElement).style.opacity = '0.3' }}
-            style={{ width: 38, height: 58, objectFit: 'cover', borderRadius: 5, border: '1.5px solid var(--gold)', flexShrink: 0 }} />
-          <div style={{ textAlign: 'left' }}>
-            <p style={{ color: 'var(--gold)', fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase', fontWeight: 700, marginBottom: 3 }}>{posLabel}</p>
-            <p style={{ color: '#fff', fontWeight: 700, fontSize: 14 }}>{cardName}</p>
-            <p style={{ color: 'var(--text-muted)', fontSize: 11, marginTop: 2 }}>{posDesc}</p>
-          </div>
-        </div>
-        <span style={{ color: 'var(--gold)', fontSize: 18, transform: open ? 'rotate(45deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }}>+</span>
-      </button>
-      {open && <div style={{ paddingBottom: 16, paddingLeft: 50 }}>
-        <p style={{ color: 'var(--ink-2)', fontSize: 15, lineHeight: 1.85, whiteSpace: 'pre-wrap' }}>{content}</p>
-      </div>}
-    </div>
-  )
-}
-
-function TarotSectionAccordion({ title, content, defaultOpen }: { title: string; content: string; defaultOpen?: boolean }) {
-  const [open, setOpen] = useState(defaultOpen ?? false)
-  return (
-    <div style={{ borderBottom: '1px solid var(--border)' }}>
-      <button onClick={() => setOpen(v => !v)} style={{
-        width: '100%', background: 'none', border: 'none', cursor: 'pointer',
-        padding: '14px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', textAlign: 'left',
-      }}>
-        <span style={{ color: '#fff', fontWeight: 600, fontSize: 14 }}>{title}</span>
-        <span style={{ color: 'var(--gold)', fontSize: 18, transform: open ? 'rotate(45deg)' : 'none', transition: 'transform 0.2s' }}>+</span>
-      </button>
-      {open && <div style={{ paddingBottom: 16 }}>
-        <p style={{ color: 'var(--ink-2)', fontSize: 15, lineHeight: 1.85, whiteSpace: 'pre-wrap' }}>{content}</p>
-      </div>}
-    </div>
-  )
-}
-
 function TarotResultView({ readingType, tarotResult }: {
   readingType: string
   tarotResult: { content_text?: string; cards?: { name?: string; position?: string; file?: string }[]; question?: string; scenario_question?: string; spread_type?: string }
@@ -189,7 +142,7 @@ function TarotResultView({ readingType, tarotResult }: {
                 <p style={{ color: 'var(--gold-light)', fontSize: 11.5, fontWeight: 700, maxWidth: 80, textAlign: 'center' }}>
                   {pos?.label ?? c.position ?? `Card ${i + 1}`}
                 </p>
-                <p style={{ color: 'var(--ink-3)', fontSize: 11, maxWidth: 80, textAlign: 'center' }}>{c.name}</p>
+                <p style={{ color: 'var(--ink-3)', fontSize: 11, maxWidth: 80, textAlign: 'center' }}>{localizedCardName(c.name ?? '', locale)}</p>
               </div>
             )
           })}
@@ -199,24 +152,25 @@ function TarotResultView({ readingType, tarotResult }: {
       {/* Accordion sections */}
       {sections.length > 0 && (
         <div className="ap-glass" style={{ padding: '0 20px', marginBottom: 16 }}>
+          <TarotStyles />
           {sections.map((sec, i) => {
             const card = cards[i]
             const pos = positions[i]
             if (i < cardCount && card?.name && pos) {
+              const file = card.file ?? 'major_arcana_' + card.name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^the_/, '')
               return (
-                <TarotCardAccordion
+                <CardSection
                   key={i}
-                  cardName={card.name}
-                  cardFile={card.file}
-                  posLabel={pos.label}
-                  posDesc={pos.desc}
+                  card={{ name: card.name, file, type: card.file?.startsWith('major') || !card.file ? 'major' : 'minor' } as TarotCard}
+                  positionLabel={pos.label}
+                  positionDesc={pos.desc}
                   content={sec.content}
                   defaultOpen={i === 0}
                 />
               )
             }
             return (
-              <TarotSectionAccordion
+              <TarotSection
                 key={i}
                 title={localizeTarotTitle(sec.title ?? `Section ${i + 1}`, locale)}
                 content={sec.content}

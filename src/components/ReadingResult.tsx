@@ -226,9 +226,16 @@ const ANNOTATION_ENTRIES_BY_LOCALE: Record<string, [string, string][]> = Object.
 function annotateChineseChars(text: string, locale: string): string {
   const entries = ANNOTATION_ENTRIES_BY_LOCALE[locale] ?? ANNOTATION_ENTRIES_BY_LOCALE.en
   let result = text
+  // 이미 괄호 안에 들어간 한자("무토(戊土, 큰 산…)")나 바로 뒤에 설명 괄호가 붙은 한자는 건너뜀 → 설명 중복 방지
+  const insideParen = (s: string, at: number) => {
+    const open = Math.max(s.lastIndexOf('(', at), s.lastIndexOf('（', at))
+    if (open < 0 || at - open > 24) return false
+    const close = Math.max(s.lastIndexOf(')', at), s.lastIndexOf('）', at))
+    return close < open
+  }
   for (const [char, label] of entries) {
-    const re = new RegExp(`${char}(?! \\()`, 'g')
-    result = result.replace(re, `${char} (${label})`)
+    const re = new RegExp(`${char}(?!\\s*[(（])`, 'g')
+    result = result.replace(re, (m: string, at: number, s: string) => insideParen(s, at) ? m : `${char} (${label})`)
   }
   // 연속된 한자 어노테이션 사이 공백 추가: "己 (유연한 흙)酉" → "己 (유연한 흙) 酉"
   result = result.replace(/\)\s*([一-鿿㐀-䶿])/g, ') $1')
@@ -1174,11 +1181,11 @@ function ScenarioButton({ birthData }: { birthData: BirthData }) {
 }
 
 // ─── Accordion section ────────────────────────────────────────────────────────
-function AccordionSection({ title, content, defaultOpen, chartContent }: { title: string; content: string; defaultOpen?: boolean; chartContent?: React.ReactNode }) {
-  const [open, setOpen] = useState(defaultOpen ?? false)
+function AccordionSection({ id, index, title, content, open, onToggle, chartContent }: { id: string; index: number; title: string; content: string; open: boolean; onToggle: () => void; chartContent?: React.ReactNode }) {
   return (
-    <div className={`rr-acc${open ? ' is-open' : ''}`}>
-      <button type="button" onClick={()=>setOpen(o=>!o)} className="rr-acc-head" aria-expanded={open}>
+    <div id={id} className={`rr-acc${open ? ' is-open' : ''}`}>
+      <button type="button" onClick={onToggle} className="rr-acc-head" aria-expanded={open}>
+        <span className="rr-acc-no">{String(index + 1).padStart(2, '0')}</span>
         <span className="rr-acc-title">{title}</span>
         <svg className="rr-acc-chev" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
       </button>
@@ -1190,6 +1197,14 @@ function AccordionSection({ title, content, defaultOpen, chartContent }: { title
       )}
     </div>
   )
+}
+
+// 리딩 첫 문장 → 맨 위 '한 줄 요약' 카드
+function firstSentence(text: string): string {
+  const plain = text.replace(/\*\*|__|#+\s*/g, '').replace(/\s+/g, ' ').trim()
+  const m = plain.match(/^.{12,140}?[.!?。！？](?=\s|$|["”’])/)
+  if (m) return m[0].trim()
+  return plain.length > 110 ? plain.slice(0, 110).trim() + '…' : plain
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -1210,6 +1225,7 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
   const pillars = extractPillars(data)
   const western = extractWestern(data)
   const sections = parseResult(raw, data.reading_type as string | undefined)
+  const [openSecs, setOpenSecs] = useState<Set<number>>(() => new Set([0]))
 
   // Day master info for /explain link
   const dayPillar = pillars?.[2] ?? null
@@ -1446,13 +1462,20 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
       </div>
 
       {/* ── GPT Reading ── */}
-      {sections.length > 0 && (
-        <div className="rr-sections">
-          {sections.map((s,i) => {
-            let normTitle = s.title ? normalizeTitle(s.title) : `Section ${i+1}`
+      {sections.length > 0 && (() => {
+        const items = sections.map((s,i) => {
+            // 제목 없는 첫 섹션: 본문 첫 줄이 짧으면 그걸 제목으로, 아니면 언어별 기본 제목
+            let secContent = s.content
+            let rawTitle = s.title
+            if (!rawTitle) {
+              const m = secContent.match(/^\s*([^\n]{1,24})\n+/)
+              if (m) { rawTitle = m[1].trim(); secContent = secContent.slice(m[0].length) }
+              else rawTitle = locale === 'ko' ? '핵심 답변' : locale === 'ja' ? '結論' : 'The Short Answer'
+            }
+            let normTitle = normalizeTitle(rawTitle) || `${i + 1}`
             if (data.reading_type === 'daily' && normTitle === 'Who You Are Today' && data.target_date) {
               const d = new Date((data.target_date as string) + 'T00:00:00')
-              const label = d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })
+              const label = d.toLocaleDateString(locale === 'ko' ? 'ko-KR' : locale === 'ja' ? 'ja-JP' : 'en-US', { month:'short', day:'numeric', year:'numeric' })
               normTitle = `Who You Are Today (${label})`
             }
             const monthlyScores = (data.reading_type === 'yearly' && data.monthly_scores != null)
@@ -1472,18 +1495,51 @@ export default function ReadingResult({ raw, onReset, userEmail, fromCache, birt
               }
             }
 
-            return (
+            return { title: normTitle, content: secContent, chart }
+          })
+        const summary = firstSentence(items[0]?.content ?? '')
+        // 요약 카드에 쓴 첫 문장은 01 본문에서 빼서 반복을 없앰
+        if (summary && !summary.endsWith('…') && items[0]) {
+          const tail = summary.slice(-8)
+          const at = items[0].content.indexOf(tail)
+          if (at >= 0 && at < 260) items[0] = { ...items[0], content: items[0].content.slice(at + tail.length).replace(/^[\s*]+/, '') }
+        }
+        const go = (i: number) => {
+          setOpenSecs(prev => { const n = new Set(prev); n.add(i); return n })
+          requestAnimationFrame(() => document.getElementById(`rr-sec-${i}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+        }
+        return (
+          <div className="rr-sections">
+            {summary && (
+              <div className="rr-tldr">
+                <span className="rr-tldr-k">{locale === 'ko' ? '한 줄로 말하면' : locale === 'ja' ? 'ひとことで言うと' : 'In one line'}</span>
+                <p className="rr-tldr-q">{summary}</p>
+              </div>
+            )}
+            {items.length > 2 && (
+              <nav className="rr-toc" aria-label={locale === 'ko' ? '리딩 목차' : locale === 'ja' ? '目次' : 'Contents'}>
+                {items.map((it, i) => (
+                  <button key={i} type="button" className={`rr-toc-chip${openSecs.has(i) ? ' is-on' : ''}`} onClick={() => go(i)}>
+                    <span className="rr-toc-no">{String(i + 1).padStart(2, '0')}</span>{it.title}
+                  </button>
+                ))}
+              </nav>
+            )}
+            {items.map((it, i) => (
               <AccordionSection
                 key={i}
-                title={normTitle}
-                content={s.content}
-                defaultOpen={i === 0}
-                chartContent={chart}
+                id={`rr-sec-${i}`}
+                index={i}
+                title={it.title}
+                content={it.content}
+                open={openSecs.has(i)}
+                onToggle={() => setOpenSecs(prev => { const n = new Set(prev); if (n.has(i)) n.delete(i); else n.add(i); return n })}
+                chartContent={it.chart}
               />
-            )
-          })}
-        </div>
-      )}
+            ))}
+          </div>
+        )
+      })()}
 
       {/* ── Actions ── */}
       <div className="rr-actions">
@@ -1535,7 +1591,7 @@ const RR_CSS = `
   .rr-mx-col.is-day .rr-mx-label { color: var(--gold-light); }
   .rr-mx-cell { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 18px 2px 16px; }
   .rr-mx-cell + .rr-mx-cell { border-top: 1px dashed rgba(160,170,210,.12); }
-  .rr-mx-char { font-size: 34px; font-weight: 300; line-height: 1; color: var(--ink); }
+  .rr-mx-char { font-size: 34px; font-weight: 400; line-height: 1; color: var(--ink); }
   .rr-mx-col.is-day .rr-mx-char { color: #f3e6bd; }
   .rr-mx-sub { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--ink-3); white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
   .rr-mx-sub i { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; opacity: .9; }
@@ -1579,21 +1635,36 @@ const RR_CSS = `
   .rr-planet-big { gap: 8px; padding: 16px 6px; border-color: var(--gold-line); background: linear-gradient(180deg, rgba(201,168,76,.08), rgba(9,12,26,.5)); }
 
   .rr-sections { margin-bottom: 24px; }
-  .rr-acc { margin-bottom: 10px; border-radius: 14px; overflow: hidden; border: 1px solid var(--line);
-    background: linear-gradient(180deg, rgba(27,34,58,.62), rgba(13,17,33,.78));
-    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); transition: border-color var(--t-med); }
-  .rr-acc.is-open { border-color: var(--gold-line); }
-  .rr-acc-head { width: 100%; display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 16px 20px; border: 0; background: transparent;
+  .rr-tldr { position: relative; padding: 22px 22px 24px; margin-bottom: 18px; border-radius: 20px; overflow: hidden;
+    background: radial-gradient(120% 140% at 0% 0%, rgba(201,168,76,.16), transparent 55%), linear-gradient(180deg, rgba(24,29,52,.9), rgba(12,15,30,.92));
+    border: 1px solid rgba(201,168,76,.28); }
+  .rr-tldr-k { display: inline-block; font-size: 11.5px; font-weight: 600; letter-spacing: .14em; color: var(--gold-light); margin-bottom: 10px; }
+  .rr-tldr-q { font-size: 20px; line-height: 1.55; font-weight: 600; letter-spacing: -.025em; color: #f6f1e4; text-wrap: pretty; word-break: keep-all; }
+  .rr-toc { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 14px; margin-bottom: 4px; scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(90deg, #000 88%, transparent); mask-image: linear-gradient(90deg, #000 88%, transparent); }
+  .rr-toc::-webkit-scrollbar { display: none; }
+  .rr-toc-chip { flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 13px; border-radius: 999px; cursor: pointer;
+    font: inherit; font-size: 13px; font-weight: 500; color: var(--ink-2); background: rgba(255,255,255,.04); border: 1px solid var(--line); white-space: nowrap;
+    transition: color var(--t-fast), border-color var(--t-fast), background var(--t-fast); }
+  .rr-toc-chip:hover { color: var(--ink); border-color: var(--line-strong); }
+  .rr-toc-chip.is-on { color: #f3e6bd; border-color: rgba(201,168,76,.4); background: rgba(201,168,76,.08); }
+  .rr-toc-no { font-size: 11px; font-variant-numeric: tabular-nums; color: var(--ink-3); }
+  .rr-toc-chip.is-on .rr-toc-no { color: var(--gold-light); }
+  .rr-acc { border-top: 1px solid var(--line); scroll-margin-top: 84px; }
+  .rr-acc:last-child { border-bottom: 1px solid var(--line); }
+  .rr-acc-head { width: 100%; display: flex; align-items: baseline; gap: 14px; min-height: 64px; padding: 20px 2px; border: 0; background: transparent;
     cursor: pointer; text-align: left; font: inherit; color: inherit; }
+  .rr-acc-no { flex-shrink: 0; width: 22px; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ink-3); letter-spacing: .02em; transition: color var(--t-fast); }
+  .rr-acc.is-open .rr-acc-no { color: var(--gold-light); }
   .rr-acc-head:hover .rr-acc-title { color: var(--gold-light); }
-  .rr-acc-title { flex: 1; font-size: 16.5px; font-weight: 600; line-height: 1.4; letter-spacing: -.01em;
+  .rr-acc-title { flex: 1; font-size: 18px; font-weight: 650; line-height: 1.4; letter-spacing: -.025em;
     color: var(--ink); transition: color var(--t-fast); }
-  .rr-acc-chev { color: var(--ink-3); transition: transform var(--t-med), color var(--t-fast); flex-shrink: 0; }
+  .rr-acc-chev { color: var(--ink-3); transition: transform var(--t-med), color var(--t-fast); flex-shrink: 0; align-self: center; }
   .rr-acc.is-open .rr-acc-chev { color: var(--gold-light); }
   .rr-acc.is-open .rr-acc-chev { transform: rotate(180deg); }
-  .rr-acc-body { padding: 4px 20px 22px; border-top: 1px solid var(--line); animation: fadeIn .35s var(--ease-out); }
+  .rr-acc-body { padding: 0 2px 28px 36px; animation: fadeIn .35s var(--ease-out); }
   .rr-acc-chart { margin: 14px 0 6px; overflow-x: auto; }
-  .rr-prose { padding-top: 14px; font-size: 16px; line-height: 1.85; color: rgba(241,237,228,.9); max-width: 68ch; }
+  .rr-prose { padding-top: 0; font-size: 16px; line-height: 1.85; color: rgba(241,237,228,.86); max-width: 68ch; word-break: keep-all; }
   html[lang="ko"] .rr-prose, html[lang="ja"] .rr-prose { line-height: 1.9; }
 
   .rr-textarea { display: block; width: 100%; min-height: 96px; padding: 12px 14px; margin-bottom: 12px; resize: vertical;
@@ -1621,9 +1692,11 @@ const RR_CSS = `
     .rr-top { grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); align-items: start; gap: 20px; margin-bottom: 32px; }
     .rr-card { padding: 24px !important; }
     .rr-sections, .rr-actions { max-width: 720px; margin-left: auto; margin-right: auto; }
-    .rr-acc-head { padding: 18px 24px; }
-    .rr-acc-body { padding: 4px 28px 26px; }
-    .rr-acc-title { font-size: 18px; }
+    .rr-acc-head { padding: 24px 4px; }
+    .rr-acc-body { padding: 0 4px 32px 40px; }
+    .rr-acc-title { font-size: 20px; }
+    .rr-tldr { padding: 30px 32px 32px; }
+    .rr-tldr-q { font-size: 24px; }
     .rr-prose { font-size: 16.5px; }
     .rr-glyph { max-width: 72px; font-size: 32px; }
     .rr-mx-char { font-size: 40px; }
